@@ -1,0 +1,16 @@
+import axios from 'axios';
+window.axios = axios;
+
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+// Alpine.js
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;
+
+// Import customer components (these will register Alpine data)
+import './customers/index.js';
+import './customers/create.js';
+import './customers/show.js';
+
+Alpine.start();
