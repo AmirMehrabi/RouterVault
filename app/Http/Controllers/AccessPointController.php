@@ -29,44 +29,7 @@ class AccessPointController extends Controller
             ->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 15))
-            ->through(fn (AccessPoint $accessPoint) => [
-                'id' => $accessPoint->id,
-                'name' => $accessPoint->name,
-                'model' => $accessPoint->model,
-                'board_name' => $accessPoint->board_name,
-                'vendor' => $accessPoint->vendor,
-                'ip_address' => $accessPoint->ip_address,
-                'mac_address' => $accessPoint->mac_address,
-                'ssid' => $accessPoint->ssid,
-                'band' => $accessPoint->band,
-                'channel' => $accessPoint->channel,
-                'frequency' => $accessPoint->frequency,
-                'tx_power' => $accessPoint->tx_power,
-                'location' => $accessPoint->location,
-                'status' => $accessPoint->status ?? 'offline',
-                'firmware_version' => $accessPoint->firmware_version,
-                'architecture_name' => $accessPoint->architecture_name,
-                'platform' => $accessPoint->platform,
-                'uptime' => $accessPoint->uptime,
-                'cpu_usage' => $accessPoint->cpu_usage ?? 0,
-                'cpu_count' => $accessPoint->cpu_count,
-                'cpu_frequency' => $accessPoint->cpu_frequency,
-                'memory_usage' => $accessPoint->memory_usage ?? 0,
-                'total_memory' => $accessPoint->total_memory,
-                'free_memory' => $accessPoint->free_memory,
-                'total_hdd_space' => $accessPoint->total_hdd_space,
-                'free_hdd_space' => $accessPoint->free_hdd_space,
-                'connected_clients_count' => $accessPoint->connected_clients_count ?? 0,
-                'signal_quality' => $accessPoint->signal_quality ?? 0,
-                'noise_floor' => $accessPoint->noise_floor,
-                'channel_utilization' => $accessPoint->channel_utilization ?? 0,
-                'enable_monitoring' => $accessPoint->enable_monitoring,
-                'enable_provisioning' => $accessPoint->enable_provisioning,
-                'last_seen_at' => $accessPoint->last_seen_at?->diffForHumans(),
-                'router' => $accessPoint->router?->name,
-                'site' => $accessPoint->site?->name,
-                'created_at' => $accessPoint->created_at?->format('M d, Y'),
-            ]);
+            ->through(fn (AccessPoint $accessPoint) => $this->transformAccessPoint($accessPoint));
 
         return response()->json([
             'access_points' => $accessPoints->items(),
@@ -143,35 +106,7 @@ class AccessPointController extends Controller
         $history = $accessPointStatusService->latestStatusSummary($payload['access_point']);
 
         return response()->json([
-            'access_point' => [
-                'id' => $payload['access_point']->id,
-                'name' => $payload['access_point']->name,
-                'status' => $payload['access_point']->status,
-                'last_seen_at' => $payload['access_point']->last_seen_at?->toIso8601String(),
-                'last_seen_human' => $payload['access_point']->last_seen_at?->diffForHumans(),
-                'board_name' => $payload['access_point']->board_name,
-                'connected_clients_count' => $payload['access_point']->connected_clients_count,
-                'signal_quality' => $payload['access_point']->signal_quality,
-                'cpu_usage' => $payload['access_point']->cpu_usage,
-                'cpu_count' => $payload['access_point']->cpu_count,
-                'cpu_frequency' => $payload['access_point']->cpu_frequency,
-                'memory_usage' => $payload['access_point']->memory_usage,
-                'total_memory' => $payload['access_point']->total_memory,
-                'free_memory' => $payload['access_point']->free_memory,
-                'total_hdd_space' => $payload['access_point']->total_hdd_space,
-                'free_hdd_space' => $payload['access_point']->free_hdd_space,
-                'firmware_version' => $payload['access_point']->firmware_version,
-                'architecture_name' => $payload['access_point']->architecture_name,
-                'platform' => $payload['access_point']->platform,
-                'uptime' => $payload['access_point']->uptime,
-                'ssid' => $payload['access_point']->ssid,
-                'band' => $payload['access_point']->band,
-                'channel' => $payload['access_point']->channel,
-                'frequency' => $payload['access_point']->frequency,
-                'tx_power' => $payload['access_point']->tx_power,
-                'noise_floor' => $payload['access_point']->noise_floor,
-                'channel_utilization' => $payload['access_point']->channel_utilization,
-            ],
+            'access_point' => $this->transformAccessPoint($payload['access_point'], includeDates: true),
             'live_data' => [
                 'online' => $payload['online'],
                 'reason' => $payload['reason'],
@@ -265,5 +200,65 @@ class AccessPointController extends Controller
         $validated['enable_provisioning'] = $validated['enable_provisioning'] ?? false;
 
         return $validated;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function transformAccessPoint(AccessPoint $accessPoint, bool $includeDates = false): array
+    {
+        $attributes = $accessPoint->getAttributes();
+
+        return [
+            'id' => $accessPoint->getKey(),
+            'name' => $this->attributeValue($attributes, 'name'),
+            'model' => $this->attributeValue($attributes, 'model'),
+            'board_name' => $this->attributeValue($attributes, 'board_name'),
+            'vendor' => $this->attributeValue($attributes, 'vendor'),
+            'ip_address' => $this->attributeValue($attributes, 'ip_address'),
+            'mac_address' => $this->attributeValue($attributes, 'mac_address'),
+            'ssid' => $this->attributeValue($attributes, 'ssid'),
+            'band' => $this->attributeValue($attributes, 'band'),
+            'channel' => $this->attributeValue($attributes, 'channel'),
+            'frequency' => $this->attributeValue($attributes, 'frequency'),
+            'tx_power' => $this->attributeValue($attributes, 'tx_power'),
+            'location' => $this->attributeValue($attributes, 'location'),
+            'status' => $this->attributeValue($attributes, 'status', 'offline'),
+            'firmware_version' => $this->attributeValue($attributes, 'firmware_version'),
+            'architecture_name' => $this->attributeValue($attributes, 'architecture_name'),
+            'platform' => $this->attributeValue($attributes, 'platform'),
+            'uptime' => $this->attributeValue($attributes, 'uptime'),
+            'cpu_usage' => $this->attributeValue($attributes, 'cpu_usage', 0),
+            'cpu_count' => $this->attributeValue($attributes, 'cpu_count'),
+            'cpu_frequency' => $this->attributeValue($attributes, 'cpu_frequency'),
+            'memory_usage' => $this->attributeValue($attributes, 'memory_usage', 0),
+            'total_memory' => $this->attributeValue($attributes, 'total_memory'),
+            'free_memory' => $this->attributeValue($attributes, 'free_memory'),
+            'total_hdd_space' => $this->attributeValue($attributes, 'total_hdd_space'),
+            'free_hdd_space' => $this->attributeValue($attributes, 'free_hdd_space'),
+            'connected_clients_count' => $this->attributeValue($attributes, 'connected_clients_count', 0),
+            'signal_quality' => $this->attributeValue($attributes, 'signal_quality', 0),
+            'noise_floor' => $this->attributeValue($attributes, 'noise_floor'),
+            'channel_utilization' => $this->attributeValue($attributes, 'channel_utilization', 0),
+            'enable_monitoring' => $accessPoint->enable_monitoring,
+            'enable_provisioning' => $accessPoint->enable_provisioning,
+            'router' => $accessPoint->router?->name,
+            'site' => $accessPoint->site?->name,
+            'created_at' => $accessPoint->created_at?->format('M d, Y'),
+            'last_seen_at' => $includeDates ? $accessPoint->last_seen_at?->toIso8601String() : $accessPoint->last_seen_at?->diffForHumans(),
+            'last_seen_human' => $includeDates ? $accessPoint->last_seen_at?->diffForHumans() : null,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function attributeValue(array $attributes, string $key, mixed $default = null): mixed
+    {
+        if (! array_key_exists($key, $attributes)) {
+            return $default;
+        }
+
+        return $attributes[$key] ?? $default;
     }
 }

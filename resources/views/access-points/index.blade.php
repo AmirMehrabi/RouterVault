@@ -9,6 +9,8 @@
 @endpush
 
 @section('content')
+
+
 <div class="space-y-6" x-data="accessPointsIndex()" x-cloak>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -294,6 +296,7 @@
 
                     const response = await fetch(`{{ route('access-points.data') }}?${params.toString()}`);
                     const data = await response.json();
+                    console.log(data);
                     this.accessPoints = data.access_points;
                 } catch (error) {
                     console.error('Error loading access points:', error);
