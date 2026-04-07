@@ -18,10 +18,17 @@
             'connected_clients_count' => $accessPoint->connected_clients_count,
             'signal_quality' => $accessPoint->signal_quality,
             'cpu_usage' => $accessPoint->cpu_usage,
+            'cpu_count' => $accessPoint->cpu_count,
+            'cpu_frequency' => $accessPoint->cpu_frequency,
             'memory_usage' => $accessPoint->memory_usage,
+            'total_memory' => $accessPoint->total_memory,
+            'free_memory' => $accessPoint->free_memory,
+            'total_hdd_space' => $accessPoint->total_hdd_space,
+            'free_hdd_space' => $accessPoint->free_hdd_space,
             'last_seen_human' => $accessPoint->last_seen_at?->diffForHumans() ?: 'Never',
             'vendor' => $accessPoint->vendor,
             'model' => $accessPoint->model,
+            'board_name' => $accessPoint->board_name,
             'ssid' => $accessPoint->ssid,
             'band' => $accessPoint->band,
             'channel' => $accessPoint->channel,
@@ -34,6 +41,8 @@
             'enable_monitoring' => $accessPoint->enable_monitoring,
             'enable_provisioning' => $accessPoint->enable_provisioning,
             'firmware_version' => $accessPoint->firmware_version,
+            'architecture_name' => $accessPoint->architecture_name,
+            'platform' => $accessPoint->platform,
             'uptime' => $accessPoint->uptime,
             'noise_floor' => $accessPoint->noise_floor,
             'channel_utilization' => $accessPoint->channel_utilization,
@@ -134,6 +143,11 @@
             <p class="mt-3 text-3xl font-bold text-gray-900" x-text="`${accessPoint.cpu_usage ?? 0}% / ${accessPoint.memory_usage ?? 0}%`"></p>
         </div>
         <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-medium text-gray-500">RAM Available</p>
+            <p class="mt-3 text-lg font-semibold text-gray-900" x-text="formatStorage(accessPoint.free_memory)"></p>
+            <p class="mt-1 text-sm text-gray-500" x-text="accessPoint.total_memory ? `of ${formatStorage(accessPoint.total_memory)}` : 'No total memory reported'"></p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-gray-500">Last Seen</p>
             <p class="mt-3 text-lg font-semibold text-gray-900" x-text="accessPoint.last_seen_human || 'Never'"></p>
         </div>
@@ -145,6 +159,7 @@
             <div class="space-y-4">
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Vendor</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.vendor"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Model</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.model || '—'"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Board Name</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.board_name || '—'"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">SSID</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.ssid || '—'"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Band</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.band || '—'"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Channel / Frequency</span><span class="text-sm font-medium text-gray-900" x-text="`${accessPoint.channel || '—'} / ${accessPoint.frequency || '—'}`"></span></div>
@@ -170,7 +185,12 @@
             <h3 class="mb-4 text-lg font-semibold text-gray-900">System Telemetry</h3>
             <div class="space-y-4">
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Firmware</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.firmware_version || '—'"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Architecture</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.architecture_name || '—'"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Platform</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.platform || '—'"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Uptime</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.uptime || '—'"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">CPU Cores / Frequency</span><span class="text-sm font-medium text-gray-900" x-text="formatCpuDetails(accessPoint.cpu_count, accessPoint.cpu_frequency)"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">RAM Usage</span><span class="text-sm font-medium text-gray-900" x-text="formatMemoryBreakdown()"></span></div>
+                <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Storage</span><span class="text-sm font-medium text-gray-900" x-text="formatDiskBreakdown()"></span></div>
                 <div class="flex justify-between border-b border-gray-100 py-2"><span class="text-sm text-gray-500">Noise Floor</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.noise_floor !== null ? `${accessPoint.noise_floor} dBm` : '—'"></span></div>
                 <div class="flex justify-between py-2"><span class="text-sm text-gray-500">Channel Utilization</span><span class="text-sm font-medium text-gray-900" x-text="accessPoint.channel_utilization !== null ? `${accessPoint.channel_utilization}%` : '—'"></span></div>
             </div>
@@ -316,6 +336,55 @@
                 }
 
                 return new Date(value).toLocaleString();
+            },
+
+            formatStorage(value) {
+                if (value === null || value === undefined || Number.isNaN(Number(value))) {
+                    return '—';
+                }
+
+                const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                let size = Number(value);
+                let unitIndex = 0;
+
+                while (size >= 1024 && unitIndex < units.length - 1) {
+                    size /= 1024;
+                    unitIndex += 1;
+                }
+
+                const precision = size >= 100 || unitIndex === 0 ? 0 : 1;
+
+                return `${size.toFixed(precision)} ${units[unitIndex]}`;
+            },
+
+            formatCpuDetails(cpuCount, cpuFrequency) {
+                const parts = [];
+
+                if (cpuCount) {
+                    parts.push(`${cpuCount} core${cpuCount === 1 ? '' : 's'}`);
+                }
+
+                if (cpuFrequency) {
+                    parts.push(`${cpuFrequency} MHz`);
+                }
+
+                return parts.length ? parts.join(' / ') : '—';
+            },
+
+            formatMemoryBreakdown() {
+                if (! this.accessPoint.total_memory || this.accessPoint.free_memory === null || this.accessPoint.free_memory === undefined) {
+                    return `${this.accessPoint.memory_usage ?? 0}%`;
+                }
+
+                return `${this.accessPoint.memory_usage ?? 0}% (${this.formatStorage(this.accessPoint.free_memory)} free of ${this.formatStorage(this.accessPoint.total_memory)})`;
+            },
+
+            formatDiskBreakdown() {
+                if (! this.accessPoint.total_hdd_space || this.accessPoint.free_hdd_space === null || this.accessPoint.free_hdd_space === undefined) {
+                    return '—';
+                }
+
+                return `${this.formatStorage(this.accessPoint.free_hdd_space)} free of ${this.formatStorage(this.accessPoint.total_hdd_space)}`;
             },
         };
     }

@@ -55,12 +55,21 @@ class AccessPointMonitoringTest extends TestCase
                 'wireless' => ['ssid' => 'SkyBase-Clients'],
                 'clients' => [['mac-address' => 'AA:BB:CC:DD:EE:FF']],
                 'metrics' => [
+                    'board_name' => 'RBcAPGi-5acD2nD',
                     'uptime' => '3d 12h',
                     'cpu_usage' => 17,
+                    'cpu_count' => 4,
+                    'cpu_frequency' => 800,
                     'memory_usage' => 38,
+                    'total_memory' => 268435456,
+                    'free_memory' => 167772160,
+                    'total_hdd_space' => 134217728,
+                    'free_hdd_space' => 67108864,
                     'connected_clients_count' => 1,
                     'signal_quality' => 83,
                     'firmware_version' => '7.18',
+                    'architecture_name' => 'arm64',
+                    'platform' => 'MikroTik',
                     'ssid' => 'SkyBase-Clients',
                     'band' => '5GHz',
                     'channel' => '36',
@@ -80,7 +89,12 @@ class AccessPointMonitoringTest extends TestCase
         $this->assertDatabaseHas('access_points', [
             'id' => $accessPoint->id,
             'status' => 'online',
+            'board_name' => 'RBcAPGi-5acD2nD',
             'cpu_usage' => 17,
+            'cpu_count' => 4,
+            'cpu_frequency' => 800,
+            'total_memory' => 268435456,
+            'free_memory' => 167772160,
             'connected_clients_count' => 1,
         ]);
 
@@ -122,8 +136,17 @@ class AccessPointMonitoringTest extends TestCase
                 'connected_clients_count' => 9,
                 'signal_quality' => 81,
                 'cpu_usage' => 22,
+                'cpu_count' => 4,
+                'cpu_frequency' => 864,
                 'memory_usage' => 44,
+                'total_memory' => 268435456,
+                'free_memory' => 150994944,
+                'total_hdd_space' => 134217728,
+                'free_hdd_space' => 67108864,
                 'firmware_version' => '7.18',
+                'board_name' => 'cAPGi-5HaxD2HaxD',
+                'architecture_name' => 'arm64',
+                'platform' => 'MikroTik',
                 'uptime' => '3d 12h',
                 'last_seen_at' => now(),
             ]);
@@ -162,6 +185,8 @@ class AccessPointMonitoringTest extends TestCase
         $liveResponse->assertOk();
         $liveResponse->assertJsonPath('access_point.connected_clients_count', 9);
         $liveResponse->assertJsonPath('access_point.cpu_usage', 22);
+        $liveResponse->assertJsonPath('access_point.total_memory', 268435456);
+        $liveResponse->assertJsonPath('access_point.board_name', 'cAPGi-5HaxD2HaxD');
     }
 
     protected function createTenantUser(): array

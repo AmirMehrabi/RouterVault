@@ -95,9 +95,17 @@ class AccessPointDataService
             'identity' => Arr::get($identity, 'name', $accessPoint->name),
             'board_name' => Arr::get($resource, 'board-name', $accessPoint->model),
             'firmware_version' => Arr::get($resource, 'version', $accessPoint->firmware_version),
+            'architecture_name' => Arr::get($resource, 'architecture-name', $accessPoint->architecture_name),
+            'platform' => Arr::get($resource, 'platform', $accessPoint->platform),
             'uptime' => Arr::get($resource, 'uptime', $accessPoint->uptime),
             'cpu_usage' => $this->toInt(Arr::get($resource, 'cpu-load')) ?? $accessPoint->cpu_usage,
+            'cpu_count' => $this->toInt(Arr::get($resource, 'cpu-count')) ?? $accessPoint->cpu_count,
+            'cpu_frequency' => $this->toInt(Arr::get($resource, 'cpu-frequency')) ?? $accessPoint->cpu_frequency,
             'memory_usage' => $memoryUsage ?? $accessPoint->memory_usage,
+            'total_memory' => $totalMemory ?? $accessPoint->total_memory,
+            'free_memory' => $freeMemory ?? $accessPoint->free_memory,
+            'total_hdd_space' => $this->toInt(Arr::get($resource, 'total-hdd-space')) ?? $accessPoint->total_hdd_space,
+            'free_hdd_space' => $this->toInt(Arr::get($resource, 'free-hdd-space')) ?? $accessPoint->free_hdd_space,
             'connected_clients_count' => count($clients),
             'signal_quality' => $signalValues->isNotEmpty()
                 ? (int) round($signalValues->avg())
