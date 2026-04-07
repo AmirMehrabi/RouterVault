@@ -29,6 +29,48 @@ class SiteCrudTest extends TestCase
         $response->assertSee('North Tower');
     }
 
+    public function test_index_page_links_to_topology_map(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $response = $this->get(route('sites.index'));
+
+        $response->assertOk();
+        $response->assertSee(route('sites.topology'));
+        $response->assertSee('Topology Map');
+    }
+
+    public function test_topology_page_displays_mapped_sites_only(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        Site::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Mapped Site',
+            'latitude' => '0.3475960',
+            'longitude' => '32.5825200',
+            'status' => 'active',
+        ]);
+
+        Site::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Unmapped Site',
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+
+        $response = $this->get(route('sites.topology'));
+
+        $response->assertOk();
+        $response->assertSee('Site topology map');
+        $response->assertSee('Mapped Site');
+        $response->assertDontSee('Unmapped Site');
+    }
+
     public function test_can_create_site(): void
     {
         [$tenant, $user] = $this->createTenantUser();

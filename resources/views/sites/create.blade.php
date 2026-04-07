@@ -20,7 +20,7 @@
     <form method="POST" action="{{ route('sites.store') }}" class="space-y-6">
         @csrf
 
-        @include('sites._form', ['submitLabel' => 'Create Site'])
+        @include('sites._form', ['submitLabel' => 'Create Site', 'mapLocale' => $mapLocale])
     </form>
 </div>
 @endsection

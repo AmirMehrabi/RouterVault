@@ -21,7 +21,7 @@
         @csrf
         @method('PUT')
 
-        @include('sites._form', ['submitLabel' => 'Update Site', 'site' => $site])
+        @include('sites._form', ['submitLabel' => 'Update Site', 'site' => $site, 'mapLocale' => $mapLocale])
     </form>
 </div>
 @endsection

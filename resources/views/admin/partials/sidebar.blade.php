@@ -15,7 +15,13 @@
         </a>
     </li>
 
-    <!-- Customers -->
+
+
+    <!-- Network Section Header -->
+    <li class="pt-4">
+        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Network</div>
+    </li>
+    <!-- Sites -->
     <li>
         <a href="{{ route('sites.index') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'sites.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
@@ -26,88 +32,6 @@
         </a>
     </li>
 
-    <!-- Subscriptions -->
-    <li>
-        <a href="{{ route('subscriptions.index') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'subscriptions.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span>Subscriptions</span>
-        </a>
-    </li>
-
-    <!-- Plans -->
-    <li>
-        <a href="{{ route('plans.index') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'plans.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-            </svg>
-            <span>Plans</span>
-        </a>
-    </li>
-
-    <!-- Billing Section -->
-    <li x-data="{ open: {{ str_starts_with($currentRoute, 'billing.') ? 'true' : 'false' }} }">
-        <button @click="open = !open" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-50 hover:bg-blue-700 hover:text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-            </svg>
-            <span>Billing</span>
-            <svg class="w-4 h-4 ml-auto transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-        </button>
-        <div x-show="open" class="ml-9 mt-1 space-y-1" style="display: none;">
-            <a href="{{ route('billing.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ $currentRoute === 'billing.dashboard' ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                </svg>
-                Dashboard
-            </a>
-            <a href="{{ route('billing.invoices.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'billing.invoices') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Invoices
-            </a>
-            <a href="{{ route('billing.payments.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'billing.payments') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Payments
-            </a>
-            <a href="{{ route('billing.credits') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ $currentRoute === 'billing.credits' ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                </svg>
-                Credit Notes
-            </a>
-            <a href="{{ route('billing.reports') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ $currentRoute === 'billing.reports' ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                Reports
-            </a>
-        </div>
-    </li>
-
-    <!-- Network Section Header -->
-    <li class="pt-4">
-        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Network</div>
-    </li>
-
-    <!-- IP Address Management -->
-    <li>
-        <a href="{{ route('ipam.dashboard') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'ipam.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-            </svg>
-            <span>IP Address Management</span>
-        </a>
-    </li>
 
     <!-- Routers -->
     <li>
@@ -119,6 +43,19 @@
             <span>Routers</span>
         </a>
     </li>
+
+
+
+    {{-- <!-- IP Address Management -->
+    <li>
+        <a href="{{ route('ipam.dashboard') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'ipam.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+            </svg>
+            <span>IP Address Management</span>
+        </a>
+    </li> --}}
 
     <!-- Bandwidth -->
     <li>
@@ -169,16 +106,6 @@
         </a>
     </li>
 
-    <!-- Financial Reports -->
-    <li>
-        <a href="{{ route('reports.financial') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'reports.financial') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>Financial Reports</span>
-        </a>
-    </li>
 
     <!-- Settings Section -->
     <li class="pt-4">

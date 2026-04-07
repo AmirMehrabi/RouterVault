@@ -8,6 +8,7 @@ use App\Models\Site;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class SiteController extends Controller
@@ -15,8 +16,9 @@ class SiteController extends Controller
     public function index(): View
     {
         $sites = Site::query()->latest()->paginate(12);
+        $stats = Site::getStats();
 
-        return view('sites.index', compact('sites'));
+        return view('sites.index', compact('sites', 'stats'));
     }
 
     public function data(Request $request): JsonResponse
@@ -64,7 +66,9 @@ class SiteController extends Controller
 
     public function create(): View
     {
-        return view('sites.create');
+        return view('sites.create', [
+            'mapLocale' => $this->resolveMapLocale(),
+        ]);
     }
 
     public function store(StoreSiteRequest $request): RedirectResponse
@@ -93,7 +97,10 @@ class SiteController extends Controller
     {
         $this->authorizeTenantAccess($site);
 
-        return view('sites.edit', compact('site'));
+        return view('sites.edit', [
+            'site' => $site,
+            'mapLocale' => $this->resolveMapLocale(),
+        ]);
     }
 
     public function update(UpdateSiteRequest $request, Site $site): RedirectResponse
@@ -118,10 +125,79 @@ class SiteController extends Controller
             ->with('success', 'Site deleted successfully.');
     }
 
+    public function topology(): View
+    {
+        $sites = Site::query()
+            ->select([
+                'id',
+                'name',
+                'code',
+                'city',
+                'state',
+                'country',
+                'status',
+                'latitude',
+                'longitude',
+                'contact_name',
+                'contact_phone',
+                'contact_email',
+            ])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderBy('name')
+            ->get();
+
+        $sitesPayload = $sites->map(function (Site $site): array {
+            return [
+                'id' => $site->id,
+                'name' => $site->name,
+                'code' => $site->code,
+                'city' => $site->city,
+                'state' => $site->state,
+                'country' => $site->country,
+                'status' => $site->status,
+                'latitude' => $site->latitude !== null ? (float) $site->latitude : null,
+                'longitude' => $site->longitude !== null ? (float) $site->longitude : null,
+                'contact_name' => $site->contact_name,
+                'contact_phone' => $site->contact_phone,
+                'contact_email' => $site->contact_email,
+                'show_url' => route('sites.show', $site),
+            ];
+        })->values();
+
+        $stats = Site::getStats();
+        $coverage = [
+            'mapped' => $sitesPayload->count(),
+            'without_coordinates' => max($stats['total'] - $sitesPayload->count(), 0),
+            'countries' => $sites->pluck('country')->filter()->unique()->count(),
+            'cities' => $sites->map(fn (Site $site) => $this->siteLocationLabel($site))->filter()->unique()->count(),
+        ];
+
+        return view('sites.topology', [
+            'sites' => $sitesPayload,
+            'stats' => $stats,
+            'coverage' => $coverage,
+        ]);
+    }
+
     protected function authorizeTenantAccess(Site $site): void
     {
         if (auth()->check() && auth()->user()->tenant_id && $site->tenant_id !== auth()->user()->tenant_id) {
             abort(403, 'You do not have access to this site.');
         }
+    }
+
+    protected function resolveMapLocale(): string
+    {
+        $locale = tenant()?->locale ?? app()->getLocale();
+
+        return is_string($locale) && $locale !== '' ? str_replace('_', '-', $locale) : 'en';
+    }
+
+    protected function siteLocationLabel(Site $site): ?string
+    {
+        $parts = Collection::make([$site->city, $site->state, $site->country])->filter()->values();
+
+        return $parts->isNotEmpty() ? $parts->join(', ') : null;
     }
 }

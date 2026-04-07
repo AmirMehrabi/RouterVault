@@ -128,6 +128,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
     // Site Management Routes
     Route::prefix('sites')->name('sites.')->group(function () {
         Route::get('/', [SiteController::class, 'index'])->name('index');
+        Route::get('/topology', [SiteController::class, 'topology'])->name('topology');
         Route::get('/data', [SiteController::class, 'data'])->name('data');
         Route::get('/filter-options', [SiteController::class, 'filterOptions'])->name('filter-options');
         Route::get('/stats', [SiteController::class, 'stats'])->name('stats');

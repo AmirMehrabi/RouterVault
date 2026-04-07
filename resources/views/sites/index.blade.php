@@ -9,7 +9,10 @@
             <h1 class="text-2xl font-bold text-gray-900">Sites</h1>
             <p class="text-sm text-gray-500 mt-1">Manage deployment locations, field contacts, and geographic coordinates.</p>
         </div>
-        <a href="{{ route('sites.create') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition">Add Site</a>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('sites.topology') }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">Topology Map</a>
+            <a href="{{ route('sites.create') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">Add Site</a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -21,19 +24,19 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <p class="text-sm text-gray-500">Total Sites</p>
-            <p class="mt-2 text-3xl font-semibold text-gray-900">{{ $sites->total() }}</p>
+            <p class="mt-2 text-3xl font-semibold text-gray-900">{{ $stats['total'] }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <p class="text-sm text-gray-500">Active</p>
-            <p class="mt-2 text-3xl font-semibold text-green-700">{{ \App\Models\Site::query()->where('status', 'active')->count() }}</p>
+            <p class="mt-2 text-3xl font-semibold text-green-700">{{ $stats['active'] }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <p class="text-sm text-gray-500">Maintenance</p>
-            <p class="mt-2 text-3xl font-semibold text-amber-700">{{ \App\Models\Site::query()->where('status', 'maintenance')->count() }}</p>
+            <p class="mt-2 text-3xl font-semibold text-amber-700">{{ $stats['maintenance'] }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <p class="text-sm text-gray-500">Inactive</p>
-            <p class="mt-2 text-3xl font-semibold text-gray-700">{{ \App\Models\Site::query()->where('status', 'inactive')->count() }}</p>
+            <p class="mt-2 text-3xl font-semibold text-gray-700">{{ $stats['inactive'] }}</p>
         </div>
     </div>
 
@@ -71,8 +74,8 @@
                             </td>
                             <td class="px-6 py-4 align-top">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('sites.show', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">View</a>
-                                    <a href="{{ route('sites.edit', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Edit</a>
+                                    <a href="{{ route('sites.show', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">View</a>
+                                    <a href="{{ route('sites.edit', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">Edit</a>
                                 </div>
                             </td>
                         </tr>
@@ -81,7 +84,10 @@
                             <td colspan="5" class="px-6 py-16 text-center">
                                 <p class="text-lg font-semibold text-gray-900">No sites yet</p>
                                 <p class="mt-2 text-sm text-gray-500">Create your first site to start organizing routers and location-based operations.</p>
-                                <a href="{{ route('sites.create') }}" class="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition">Create Site</a>
+                                <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                                    <a href="{{ route('sites.create') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">Create Site</a>
+                                    <a href="{{ route('sites.topology') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">Open Topology Map</a>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
