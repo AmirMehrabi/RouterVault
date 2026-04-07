@@ -45,6 +45,18 @@
     </li>
 
 
+    <!-- APs -->
+    <li>
+        <a href="{{ route('access-points.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'access-points.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+            </svg>
+            <span>Access Points</span>
+        </a>
+    </li>
+
+
 
     {{-- <!-- IP Address Management -->
     <li>
@@ -57,7 +69,7 @@
         </a>
     </li> --}}
 
-    <!-- Bandwidth -->
+    {{-- <!-- Bandwidth -->
     <li>
         <a href="{{ route('network.bandwidth') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'network.bandwidth') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
@@ -66,9 +78,9 @@
             </svg>
             <span>Bandwidth</span>
         </a>
-    </li>
+    </li> --}}
 
-    <!-- Data Usage -->
+    {{-- <!-- Data Usage -->
     <li>
         <a href="{{ route('network.data-usage') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'network.data-usage') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
@@ -77,9 +89,9 @@
             </svg>
             <span>Data Usage</span>
         </a>
-    </li>
+    </li> --}}
 
-    <!-- Network Status -->
+    {{-- <!-- Network Status -->
     <li>
         <a href="{{ route('network.status') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'network.status') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
@@ -88,14 +100,14 @@
             </svg>
             <span>Network Status</span>
         </a>
-    </li>
+    </li> --}}
 
     <!-- Reports Section -->
     <li class="pt-4">
         <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Reports</div>
     </li>
 
-    <!-- Usage Reports -->
+    {{-- <!-- Usage Reports -->
     <li>
         <a href="{{ route('reports.usage') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'reports.usage') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
@@ -104,7 +116,7 @@
             </svg>
             <span>Usage Reports</span>
         </a>
-    </li>
+    </li> --}}
 
 
     <!-- Settings Section -->
@@ -124,7 +136,7 @@
     </li>
 
     <!-- Settings -->
-    <li>
+    {{-- <li>
         <a href="{{ route('settings.index') }}"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'settings.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,5 +145,5 @@
             </svg>
             <span>Settings</span>
         </a>
-    </li>
+    </li> --}}
 </ul>
