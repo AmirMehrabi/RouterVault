@@ -123,13 +123,17 @@ class Router extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('tenant', function ($query) {
-            if (auth()->check() && auth()->user()->tenant_id) {
+            if (tenant()?->id) {
+                $query->where('tenant_id', tenant()->id);
+            } elseif (auth()->check() && auth()->user()->tenant_id) {
                 $query->where('tenant_id', auth()->user()->tenant_id);
             }
         });
 
         static::creating(function ($router) {
-            if (auth()->check() && empty($router->tenant_id)) {
+            if (tenant()?->id && empty($router->tenant_id)) {
+                $router->tenant_id = tenant()->id;
+            } elseif (auth()->check() && empty($router->tenant_id)) {
                 $router->tenant_id = auth()->user()->tenant_id;
             }
         });

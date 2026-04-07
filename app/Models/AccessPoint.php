@@ -6,6 +6,7 @@ use Database\Factories\AccessPointFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AccessPoint extends Model
 {
@@ -71,6 +72,11 @@ class AccessPoint extends Model
         return $this->belongsTo(Site::class);
     }
 
+    public function statusChanges(): HasMany
+    {
+        return $this->hasMany(AccessPointStatusChange::class)->latest('checked_at');
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
@@ -129,13 +135,17 @@ class AccessPoint extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('tenant', function ($query) {
-            if (auth()->check() && auth()->user()->tenant_id) {
+            if (tenant()?->id) {
+                $query->where('tenant_id', tenant()->id);
+            } elseif (auth()->check() && auth()->user()->tenant_id) {
                 $query->where('tenant_id', auth()->user()->tenant_id);
             }
         });
 
         static::creating(function (AccessPoint $accessPoint) {
-            if (auth()->check() && empty($accessPoint->tenant_id)) {
+            if (tenant()?->id && empty($accessPoint->tenant_id)) {
+                $accessPoint->tenant_id = tenant()->id;
+            } elseif (auth()->check() && empty($accessPoint->tenant_id)) {
                 $accessPoint->tenant_id = auth()->user()->tenant_id;
             }
         });

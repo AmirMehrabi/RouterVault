@@ -134,6 +134,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/create', [AccessPointController::class, 'create'])->name('create');
         Route::post('/', [AccessPointController::class, 'store'])->name('store');
         Route::get('/{accessPoint}', [AccessPointController::class, 'show'])->name('show');
+        Route::get('/{accessPoint}/live-data', [AccessPointController::class, 'liveData'])->name('live-data');
         Route::get('/{accessPoint}/edit', [AccessPointController::class, 'edit'])->name('edit');
         Route::put('/{accessPoint}', [AccessPointController::class, 'update'])->name('update');
         Route::delete('/{accessPoint}', [AccessPointController::class, 'destroy'])->name('destroy');

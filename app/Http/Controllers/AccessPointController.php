@@ -7,6 +7,7 @@ use App\Http\Requests\AccessPoint\UpdateAccessPointRequest;
 use App\Models\AccessPoint;
 use App\Models\Router;
 use App\Models\Site;
+use App\Services\AccessPointStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -100,12 +101,67 @@ class AccessPointController extends Controller
         return redirect()->route('access-points.show', $accessPoint)->with('success', 'Access point created successfully.');
     }
 
-    public function show(AccessPoint $accessPoint): View
+    public function show(AccessPoint $accessPoint, AccessPointStatusService $accessPointStatusService): View
     {
         $this->authorizeTenantAccess($accessPoint);
 
+        $accessPoint = $accessPoint->load(['router:id,name', 'site:id,name']);
+        $liveData = $accessPoint->enable_monitoring
+            ? $accessPointStatusService->refresh($accessPoint)
+            : [
+                'online' => $accessPoint->isOnline(),
+                'status' => $accessPoint->status,
+                'reason' => null,
+                'resource' => [],
+                'wireless' => null,
+                'clients' => [],
+                'metrics' => [],
+                'access_point' => $accessPoint,
+            ];
+
         return view('access-points.show', [
-            'accessPoint' => $accessPoint->load(['router:id,name', 'site:id,name']),
+            'accessPoint' => $liveData['access_point'],
+            'liveData' => $liveData,
+            'statusHistory' => $accessPointStatusService->latestStatusSummary($liveData['access_point'])['status_history'],
+        ]);
+    }
+
+    public function liveData(AccessPoint $accessPoint, AccessPointStatusService $accessPointStatusService): JsonResponse
+    {
+        $this->authorizeTenantAccess($accessPoint);
+
+        $payload = $accessPointStatusService->refresh($accessPoint->load(['router:id,name', 'site:id,name']));
+        $history = $accessPointStatusService->latestStatusSummary($payload['access_point']);
+
+        return response()->json([
+            'access_point' => [
+                'id' => $payload['access_point']->id,
+                'name' => $payload['access_point']->name,
+                'status' => $payload['access_point']->status,
+                'last_seen_at' => $payload['access_point']->last_seen_at?->toIso8601String(),
+                'last_seen_human' => $payload['access_point']->last_seen_at?->diffForHumans(),
+                'connected_clients_count' => $payload['access_point']->connected_clients_count,
+                'signal_quality' => $payload['access_point']->signal_quality,
+                'cpu_usage' => $payload['access_point']->cpu_usage,
+                'memory_usage' => $payload['access_point']->memory_usage,
+                'firmware_version' => $payload['access_point']->firmware_version,
+                'uptime' => $payload['access_point']->uptime,
+                'ssid' => $payload['access_point']->ssid,
+                'band' => $payload['access_point']->band,
+                'channel' => $payload['access_point']->channel,
+                'frequency' => $payload['access_point']->frequency,
+                'tx_power' => $payload['access_point']->tx_power,
+                'noise_floor' => $payload['access_point']->noise_floor,
+                'channel_utilization' => $payload['access_point']->channel_utilization,
+            ],
+            'live_data' => [
+                'online' => $payload['online'],
+                'reason' => $payload['reason'],
+                'resource' => $payload['resource'],
+                'wireless' => $payload['wireless'],
+                'clients' => $payload['clients'],
+            ],
+            'status_history' => $history['status_history'],
         ]);
     }
 
@@ -151,6 +207,10 @@ class AccessPointController extends Controller
 
     protected function authorizeTenantAccess(AccessPoint $accessPoint): void
     {
+        if (tenant()?->id && $accessPoint->tenant_id !== tenant()->id) {
+            abort(403, 'You do not have access to this access point.');
+        }
+
         if (auth()->check() && auth()->user()->tenant_id && $accessPoint->tenant_id !== auth()->user()->tenant_id) {
             abort(403, 'You do not have access to this access point.');
         }
