@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\RouterFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Router extends Model
 {
-    /** @use HasFactory<\Database\Factories\RouterFactory> */
+    /** @use HasFactory<RouterFactory> */
     use HasFactory;
 
     /**
@@ -64,6 +66,11 @@ class Router extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function accessPoints(): HasMany
+    {
+        return $this->hasMany(AccessPoint::class);
     }
 
     public function scopeFilter($query, array $filters)

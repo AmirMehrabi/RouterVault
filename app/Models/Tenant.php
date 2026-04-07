@@ -63,6 +63,11 @@ class Tenant extends Model
         return $this->hasMany(Router::class);
     }
 
+    public function accessPoints(): HasMany
+    {
+        return $this->hasMany(AccessPoint::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
