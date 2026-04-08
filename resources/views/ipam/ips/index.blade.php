@@ -2,6 +2,14 @@
 
 @section('title', 'All IP Addresses')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'IPAM', 'href' => route('ipam.dashboard')],
+        ['label' => 'IP Addresses', 'href' => route('ipam.ips.index'), 'current' => true],
+    ]" />
+@endpush
+
 @php
 // Generate comprehensive dummy IP data
 $allIPs = [];

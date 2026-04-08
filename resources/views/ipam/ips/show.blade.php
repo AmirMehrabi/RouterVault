@@ -2,6 +2,15 @@
 
 @section('title', 'IP Address Details')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'IPAM', 'href' => route('ipam.dashboard')],
+        ['label' => 'IP Addresses', 'href' => route('ipam.ips.index')],
+        ['label' => 'IP Address Details', 'current' => true],
+    ]" />
+@endpush
+
 @php
 // Dummy IP data
 $ipAddress = [

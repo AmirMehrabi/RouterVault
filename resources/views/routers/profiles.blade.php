@@ -2,6 +2,14 @@
 
 @section('title', 'PPP Profiles')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Routers', 'href' => route('routers.index')],
+        ['label' => 'PPP Profiles', 'current' => true, 'xText' => \"router && router.name ? router.name + ' Profiles' : 'PPP Profiles'\"],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

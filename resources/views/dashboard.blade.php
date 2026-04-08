@@ -2,6 +2,12 @@
 
 @section('title', 'Device Operations Dashboard')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard'), 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

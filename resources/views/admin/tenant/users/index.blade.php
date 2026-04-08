@@ -2,6 +2,14 @@
 
 @section('title', 'User Management')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Settings', 'href' => route('settings.index')],
+        ['label' => 'Users', 'href' => route('admin.tenant.users.index'), 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     .user-avatar {

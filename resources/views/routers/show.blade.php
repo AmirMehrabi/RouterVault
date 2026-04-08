@@ -2,6 +2,14 @@
 
 @section('title', $router->name ?? 'Router Dashboard')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Routers', 'href' => route('routers.index')],
+        ['label' => $router->name ?? 'Router Dashboard', 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

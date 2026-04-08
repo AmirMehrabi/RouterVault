@@ -2,6 +2,13 @@
 
 @section('title', 'IPAM Dashboard')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'IPAM', 'href' => route('ipam.dashboard'), 'current' => true],
+    ]" />
+@endpush
+
 @php
 function getPoolStatusBadge($status)
 {

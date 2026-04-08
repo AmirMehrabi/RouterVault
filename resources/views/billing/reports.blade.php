@@ -2,6 +2,14 @@
 
 @section('title', 'Billing Reports')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Billing', 'href' => route('billing.dashboard')],
+        ['label' => 'Reports', 'href' => route('billing.reports'), 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

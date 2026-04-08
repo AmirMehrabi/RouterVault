@@ -2,6 +2,14 @@
 
 @section('title', $accessPoint->name)
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Access Points', 'href' => route('access-points.index')],
+        ['label' => $accessPoint->name, 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

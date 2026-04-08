@@ -141,7 +141,7 @@
                 <!-- Search Input (Centered) -->
                 <div class="hidden md:flex flex-1 max-w-full mx-8 relative z-50 gap-8 justify-between">
                     <div class="relative w-full max-w-lg" id="navbar-breadcrumb">
-
+                        @stack('navbar-breadcrumb')
                     </div>
                     <div class="relative w-full max-w-lg">
                         <div class="absolute inset-y-0 {{ $isRtl ? 'right-0 pr-3' : 'left-0 pl-3' }} flex items-center pointer-events-none">
@@ -722,4 +722,3 @@
     @stack('scripts')
 </body>
 </html>
-

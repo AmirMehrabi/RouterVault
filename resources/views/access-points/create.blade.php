@@ -2,6 +2,14 @@
 
 @section('title', 'Add New Access Point')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Access Points', 'href' => route('access-points.index')],
+        ['label' => 'Create Access Point', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6 pb-24">
     <div class="flex items-center justify-between">

@@ -2,6 +2,13 @@
 
 @section('title', 'Wireless Clients')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Wireless Clients', 'href' => route('wireless-clients.index'), 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6" x-data="wirelessClientsIndex()" x-init="init()">
     <div class="rounded-3xl border border-slate-200 bg-gradient-to-r from-cyan-50 via-white to-emerald-50 p-6 shadow-sm">

@@ -2,6 +2,14 @@
 
 @section('title', 'Edit Router')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Routers', 'href' => route('routers.index')],
+        ['label' => 'Edit Router', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6 pb-24">
     <!-- Header -->

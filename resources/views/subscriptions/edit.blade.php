@@ -2,6 +2,14 @@
 
 @section('title', 'Edit Subscription')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Subscriptions', 'href' => route('subscriptions.index')],
+        ['label' => 'Edit Subscription', 'current' => true],
+    ]" />
+@endpush
+
 @php
 $subscription = [
     'id' => 1,

@@ -2,6 +2,13 @@
 
 @section('title', 'Plans')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Plans', 'href' => route('plans.index'), 'current' => true],
+    ]" />
+@endpush
+
 @php
 $totalPlans = $plans->count();
 $activeCount = $plans->where('status', 'active')->count();

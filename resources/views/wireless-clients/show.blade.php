@@ -2,6 +2,14 @@
 
 @section('title', $client['host_name'] ?: $client['mac_address'])
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Wireless Clients', 'href' => route('wireless-clients.index')],
+        ['label' => $client['host_name'] ?: $client['mac_address'], 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

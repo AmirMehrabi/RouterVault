@@ -2,6 +2,14 @@
 
 @section('title', 'Create Plan')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Plans', 'href' => route('plans.index')],
+        ['label' => 'Create Plan', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <!-- Header -->

@@ -2,6 +2,14 @@
 
 @section('title', "Customer Profile")
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Customers', 'href' => route('customers.index')],
+        ['label' => 'Customer Profile', 'current' => true, 'xText' => \"customer && customer.name ? customer.name : 'Customer Profile'\"],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

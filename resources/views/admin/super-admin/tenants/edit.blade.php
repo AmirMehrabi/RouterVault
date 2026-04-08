@@ -2,6 +2,15 @@
 
 @section('title', 'Edit Tenant')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Super Admin', 'href' => route('admin.super-admin.tenants.index')],
+        ['label' => 'Tenants', 'href' => route('admin.super-admin.tenants.index')],
+        ['label' => 'Edit Tenant', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="mb-6">
     <a href="{{ route('admin.super-admin.tenants.show', $tenant) }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 mb-2">

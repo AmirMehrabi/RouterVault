@@ -2,6 +2,13 @@
 
 @section('title', 'Sites')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Sites', 'href' => route('sites.index'), 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6 pb-24">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

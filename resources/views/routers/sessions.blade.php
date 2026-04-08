@@ -2,6 +2,14 @@
 
 @section('title', 'Router Sessions')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Routers', 'href' => route('routers.index')],
+        ['label' => 'Router Sessions', 'current' => true, 'xText' => \"router && router.name ? router.name + ' Sessions' : 'Router Sessions'\"],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     [x-cloak] { display: none !important; }

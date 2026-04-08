@@ -2,6 +2,13 @@
 
 @section('title', 'Settings')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Settings', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 @php
     $activeTab = request()->get('tab', 'general');

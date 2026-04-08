@@ -2,6 +2,14 @@
 
 @section('title', 'Plan Details')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Plans', 'href' => route('plans.index')],
+        ['label' => 'Plan Details', 'current' => true],
+    ]" />
+@endpush
+
 @php
 function getStatusBadgeClass($status)
 {

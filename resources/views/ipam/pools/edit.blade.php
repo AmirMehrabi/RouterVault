@@ -2,6 +2,15 @@
 
 @section('title', 'Edit IP Pool')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'IPAM', 'href' => route('ipam.dashboard')],
+        ['label' => 'IP Pools', 'href' => route('ipam.pools.index')],
+        ['label' => 'Edit Pool', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="space-y-6" x-data="editPoolForm()">
     <!-- Header -->

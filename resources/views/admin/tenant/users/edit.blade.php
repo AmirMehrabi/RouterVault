@@ -2,6 +2,15 @@
 
 @section('title', 'Edit User')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Settings', 'href' => route('settings.index')],
+        ['label' => 'Users', 'href' => route('admin.tenant.users.index')],
+        ['label' => 'Edit User', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 <div class="mb-6">
     <a href="{{ route('admin.tenant.users.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 mb-2">

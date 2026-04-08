@@ -2,6 +2,15 @@
 
 @section('title', 'Tenant Details')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Super Admin', 'href' => route('admin.super-admin.tenants.index')],
+        ['label' => 'Tenants', 'href' => route('admin.super-admin.tenants.index')],
+        ['label' => $tenant->company_name, 'current' => true],
+    ]" />
+@endpush
+
 @push('styles')
 <style>
     .stat-card {

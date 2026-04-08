@@ -2,6 +2,14 @@
 
 @section('title', 'Site Topology')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Sites', 'href' => route('sites.index')],
+        ['label' => 'Topology', 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
 @php
     $topologyConfig = [

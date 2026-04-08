@@ -2,6 +2,15 @@
 
 @section('title', 'IP Pool Details')
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'IPAM', 'href' => route('ipam.dashboard')],
+        ['label' => 'IP Pools', 'href' => route('ipam.pools.index')],
+        ['label' => 'IP Pool Details', 'current' => true],
+    ]" />
+@endpush
+
 @php
 $usagePercent = $pool->usage_percentage;
 $usageColor = $usagePercent >= 90 ? 'red' : ($usagePercent >= 80 ? 'yellow' : 'green');
