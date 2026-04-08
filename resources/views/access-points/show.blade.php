@@ -52,8 +52,10 @@
             'reason' => $liveData['reason'],
             'wireless' => $liveData['wireless'],
             'resource' => $liveData['resource'],
+            'clients' => $liveData['clients'],
         ]),
         statusHistory: @js($statusHistory),
+        clientMovements: @js($clientMovements),
     })"
     x-init="init()"
     x-cloak
@@ -222,6 +224,72 @@
         </div>
     </div>
 
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Wireless Clients</h3>
+                    <p class="mt-1 text-sm text-gray-500">Live registrations seen on this AP. Updates refresh every 30 seconds.</p>
+                </div>
+                <span class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700" x-text="`${liveData.clients?.length || 0} client(s)`"></span>
+            </div>
+
+            <div class="mt-6 space-y-3" x-show="(liveData.clients?.length || 0) > 0">
+                <template x-for="client in liveData.clients" :key="client.id || client.mac_address">
+                    <div class="rounded-2xl border border-gray-200 p-4">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900" x-text="client.host_name || client.mac_address"></p>
+                                <p class="mt-1 text-xs text-gray-500" x-text="client.mac_address"></p>
+                                <p class="mt-2 text-xs text-gray-500" x-show="client.last_ip_address" x-text="`IP: ${client.last_ip_address}`"></p>
+                            </div>
+                            <div class="grid gap-2 text-xs text-gray-500 md:text-right">
+                                <span x-text="`Signal: ${client.signal_strength ?? '—'} dBm`"></span>
+                                <span x-text="`SNR: ${client.signal_to_noise ?? '—'}`"></span>
+                                <span x-text="`TX/RX: ${client.tx_rate || '—'} / ${client.rx_rate || '—'}`"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="(liveData.clients?.length || 0) === 0" class="mt-6 rounded-2xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
+                No wireless registrations are currently reported for this access point.
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Client Movement</h3>
+                    <p class="mt-1 text-sm text-gray-500">Recent roams into this AP from other access points.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                <template x-if="clientMovements.length === 0">
+                    <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
+                        No movement into this AP has been recorded yet.
+                    </div>
+                </template>
+
+                <template x-for="movement in clientMovements" :key="`${movement.mac_address}-${movement.moved_at}`">
+                    <div class="rounded-2xl border border-gray-200 p-4">
+                        <p class="text-sm font-semibold text-gray-900" x-text="movement.host_name || movement.mac_address"></p>
+                        <p class="mt-1 text-xs text-gray-500" x-text="movement.mac_address"></p>
+                        <p class="mt-3 text-sm text-gray-700">
+                            <span x-text="movement.from_access_point || 'Unknown AP'"></span>
+                            <span class="mx-1">→</span>
+                            <span x-text="movement.to_access_point || 'Current AP'"></span>
+                        </p>
+                        <p class="mt-1 text-xs text-gray-500" x-text="formatDate(movement.moved_at)"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
     <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 class="mb-4 text-lg font-semibold text-gray-900">Notes</h3>
         <p class="text-sm leading-6 text-gray-600">{{ $accessPoint->notes ?: 'No notes added yet.' }}</p>
@@ -263,6 +331,7 @@
             accessPoint: config.accessPoint,
             liveData: config.liveData,
             statusHistory: config.statusHistory,
+            clientMovements: config.clientMovements,
             isRefreshing: false,
             refreshTimer: null,
 
@@ -299,6 +368,7 @@
                         ...payload.live_data,
                     };
                     this.statusHistory = payload.status_history ?? [];
+                    this.clientMovements = payload.client_movements ?? [];
                 } catch (error) {
                     this.liveData = {
                         ...this.liveData,

@@ -6,11 +6,13 @@ use App\Models\AccessPoint;
 use App\Models\AccessPointStatusChange;
 use App\Services\RouterOs\AccessPointDataService;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 
 class AccessPointStatusService
 {
     public function __construct(
-        public AccessPointDataService $accessPointDataService
+        public AccessPointDataService $accessPointDataService,
+        public WirelessClientTrackingService $wirelessClientTrackingService
     ) {}
 
     /**
@@ -33,6 +35,7 @@ class AccessPointStatusService
         $previousStatus = $accessPoint->status;
         $currentStatus = $payload['status'];
         $metrics = $payload['metrics'];
+        $trackedClients = [];
 
         $attributes = [
             'status' => $currentStatus,
@@ -61,26 +64,35 @@ class AccessPointStatusService
             'last_seen_at' => $payload['online'] ? $checkedAt : $accessPoint->last_seen_at,
         ];
 
-        $accessPoint->forceFill($attributes)->save();
+        DB::transaction(function () use ($accessPoint, $attributes, $payload, $previousStatus, $currentStatus, $checkedAt, $metrics, &$trackedClients): void {
+            $accessPoint->forceFill($attributes)->save();
 
-        if ($previousStatus !== $currentStatus) {
-            AccessPointStatusChange::create([
-                'tenant_id' => $accessPoint->tenant_id,
-                'access_point_id' => $accessPoint->id,
-                'previous_status' => $previousStatus,
-                'current_status' => $currentStatus,
-                'reason' => $payload['reason'],
-                'checked_at' => $checkedAt,
-                'meta' => [
-                    'resource' => $payload['resource'],
-                    'wireless' => $payload['wireless'],
-                    'clients_count' => count($payload['clients']),
-                    'metrics' => $metrics,
-                ],
-            ]);
-        }
+            if ($payload['online']) {
+                $trackedClients = $this->wirelessClientTrackingService->syncFromAccessPoint($accessPoint, $payload['clients']);
+            } else {
+                $accessPoint->wirelessClients()->update(['is_connected' => false]);
+            }
+
+            if ($previousStatus !== $currentStatus) {
+                AccessPointStatusChange::create([
+                    'tenant_id' => $accessPoint->tenant_id,
+                    'access_point_id' => $accessPoint->id,
+                    'previous_status' => $previousStatus,
+                    'current_status' => $currentStatus,
+                    'reason' => $payload['reason'],
+                    'checked_at' => $checkedAt,
+                    'meta' => [
+                        'resource' => $payload['resource'],
+                        'wireless' => $payload['wireless'],
+                        'clients_count' => count($payload['clients']),
+                        'metrics' => $metrics,
+                    ],
+                ]);
+            }
+        });
 
         return $payload + [
+            'clients' => $trackedClients !== [] || $payload['online'] ? $trackedClients : $payload['clients'],
             'access_point' => $accessPoint->fresh(['router:id,name', 'site:id,name']),
         ];
     }

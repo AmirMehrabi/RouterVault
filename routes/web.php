@@ -13,6 +13,7 @@ use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WirelessClientController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page - redirect authenticated users to dashboard
@@ -138,6 +139,16 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/{accessPoint}/edit', [AccessPointController::class, 'edit'])->name('edit');
         Route::put('/{accessPoint}', [AccessPointController::class, 'update'])->name('update');
         Route::delete('/{accessPoint}', [AccessPointController::class, 'destroy'])->name('destroy');
+    });
+
+    // Site Management Routes
+
+    Route::prefix('wireless-clients')->name('wireless-clients.')->group(function () {
+        Route::get('/', [WirelessClientController::class, 'index'])->name('index');
+        Route::get('/data', [WirelessClientController::class, 'data'])->name('data');
+        Route::get('/filter-options', [WirelessClientController::class, 'filterOptions'])->name('filter-options');
+        Route::get('/stats', [WirelessClientController::class, 'stats'])->name('stats');
+        Route::get('/{wirelessClient}', [WirelessClientController::class, 'show'])->name('show');
     });
 
     // Site Management Routes

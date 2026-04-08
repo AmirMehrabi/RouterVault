@@ -73,6 +73,11 @@ class Router extends Model
         return $this->hasMany(AccessPoint::class);
     }
 
+    public function wirelessClients(): HasMany
+    {
+        return $this->hasMany(WirelessClient::class);
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {

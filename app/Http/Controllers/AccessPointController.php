@@ -7,6 +7,7 @@ use App\Http\Requests\AccessPoint\UpdateAccessPointRequest;
 use App\Models\AccessPoint;
 use App\Models\Router;
 use App\Models\Site;
+use App\Models\WirelessClientMovement;
 use App\Services\AccessPointStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -78,6 +79,22 @@ class AccessPointController extends Controller
         $this->authorizeTenantAccess($accessPoint);
 
         $accessPoint = $accessPoint->load(['router:id,name', 'site:id,name']);
+        $clientMovements = WirelessClientMovement::query()
+            ->with(['wirelessClient:id,mac_address,host_name', 'fromAccessPoint:id,name', 'toAccessPoint:id,name'])
+            ->where('to_access_point_id', $accessPoint->id)
+            ->latest('moved_at')
+            ->limit(15)
+            ->get()
+            ->map(function (WirelessClientMovement $movement): array {
+                return [
+                    'mac_address' => $movement->wirelessClient?->mac_address,
+                    'host_name' => $movement->wirelessClient?->host_name,
+                    'from_access_point' => $movement->fromAccessPoint?->name,
+                    'to_access_point' => $movement->toAccessPoint?->name,
+                    'moved_at' => $movement->moved_at?->toIso8601String(),
+                ];
+            })
+            ->values();
         $liveData = $accessPoint->enable_monitoring
             ? $accessPointStatusService->refresh($accessPoint)
             : [
@@ -95,6 +112,7 @@ class AccessPointController extends Controller
             'accessPoint' => $liveData['access_point'],
             'liveData' => $liveData,
             'statusHistory' => $accessPointStatusService->latestStatusSummary($liveData['access_point'])['status_history'],
+            'clientMovements' => $clientMovements,
         ]);
     }
 
@@ -115,6 +133,22 @@ class AccessPointController extends Controller
                 'clients' => $payload['clients'],
             ],
             'status_history' => $history['status_history'],
+            'client_movements' => WirelessClientMovement::query()
+                ->with(['wirelessClient:id,mac_address,host_name', 'fromAccessPoint:id,name', 'toAccessPoint:id,name'])
+                ->where('to_access_point_id', $accessPoint->id)
+                ->latest('moved_at')
+                ->limit(15)
+                ->get()
+                ->map(function (WirelessClientMovement $movement): array {
+                    return [
+                        'mac_address' => $movement->wirelessClient?->mac_address,
+                        'host_name' => $movement->wirelessClient?->host_name,
+                        'from_access_point' => $movement->fromAccessPoint?->name,
+                        'to_access_point' => $movement->toAccessPoint?->name,
+                        'moved_at' => $movement->moved_at?->toIso8601String(),
+                    ];
+                })
+                ->values(),
         ]);
     }
 

@@ -92,6 +92,11 @@ class AccessPoint extends Model
         return $this->hasMany(AccessPointStatusChange::class)->latest('checked_at');
     }
 
+    public function wirelessClients(): HasMany
+    {
+        return $this->hasMany(WirelessClient::class)->latest('last_seen_at');
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
