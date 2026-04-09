@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Router;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Router>
+ * @extends Factory<Router>
  */
 class RouterFactory extends Factory
 {
@@ -19,6 +20,7 @@ class RouterFactory extends Factory
         $isOnline = fake()->boolean(80);
 
         return [
+            'password_manager_credential_id' => null,
             'name' => fake()->randomElement(['Core-Router-1', 'Edge-Router-1', 'Tower-Router-3', 'HQ-Router', 'Branch-Router-'.fake()->numberBetween(1, 5)]),
             'model' => fake()->randomElement(['CCR1036-12G-4S', 'CCR1016-12G', 'RB4011iGS+', 'RB750Gr3', 'CCR2116-12G-4S+']),
             'vendor' => fake()->randomElement(['Mikrotik', 'Cisco', 'Juniper', 'Huawei']),

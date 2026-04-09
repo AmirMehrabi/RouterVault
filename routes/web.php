@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\TenantRegistrationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\IpamController;
 use App\Http\Controllers\PagesController;
+use App\Http\Controllers\PasswordManagerController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
@@ -125,6 +126,16 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/{router}/interfaces', [RouterController::class, 'interfaces'])->name('interfaces');
         Route::get('/{router}/ip-pools', [RouterController::class, 'ipPools'])->name('ip-pools');
         Route::get('/{router}/logs', [RouterController::class, 'logs'])->name('logs');
+    });
+
+    Route::prefix('password-manager')->name('password-manager.')->group(function () {
+        Route::get('/', [PasswordManagerController::class, 'index'])->name('index');
+        Route::get('/create', [PasswordManagerController::class, 'create'])->name('create');
+        Route::post('/', [PasswordManagerController::class, 'store'])->name('store');
+        Route::get('/{passwordManager}', [PasswordManagerController::class, 'show'])->name('show');
+        Route::get('/{passwordManager}/edit', [PasswordManagerController::class, 'edit'])->name('edit');
+        Route::put('/{passwordManager}', [PasswordManagerController::class, 'update'])->name('update');
+        Route::delete('/{passwordManager}', [PasswordManagerController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('access-points')->name('access-points.')->group(function () {

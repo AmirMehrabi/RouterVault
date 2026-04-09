@@ -13,8 +13,12 @@ class AccessPoint extends Model
     /** @use HasFactory<AccessPointFactory> */
     use HasFactory;
 
+    /**
+     * @var array<int, string>
+     */
     protected $fillable = [
         'tenant_id',
+        'password_manager_credential_id',
         'router_id',
         'site_id',
         'name',
@@ -22,6 +26,8 @@ class AccessPoint extends Model
         'board_name',
         'vendor',
         'ip_address',
+        'api_username',
+        'api_password',
         'mac_address',
         'ssid',
         'band',
@@ -52,12 +58,16 @@ class AccessPoint extends Model
         'notes',
     ];
 
+    /**
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
             'enable_monitoring' => 'boolean',
             'enable_provisioning' => 'boolean',
             'last_seen_at' => 'datetime',
+            'api_password' => 'encrypted',
             'cpu_count' => 'integer',
             'cpu_frequency' => 'integer',
             'total_memory' => 'integer',
@@ -75,6 +85,11 @@ class AccessPoint extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function passwordManagerCredential(): BelongsTo
+    {
+        return $this->belongsTo(PasswordManagerCredential::class, 'password_manager_credential_id');
     }
 
     public function router(): BelongsTo
@@ -95,6 +110,20 @@ class AccessPoint extends Model
     public function wirelessClients(): HasMany
     {
         return $this->hasMany(WirelessClient::class)->latest('last_seen_at');
+    }
+
+    public function resolvedApiUsername(): ?string
+    {
+        return $this->passwordManagerCredential?->username
+            ?? $this->api_username
+            ?? $this->router?->resolvedApiUsername();
+    }
+
+    public function resolvedApiPassword(): ?string
+    {
+        return $this->passwordManagerCredential?->password
+            ?? $this->api_password
+            ?? $this->router?->resolvedApiPassword();
     }
 
     public function scopeFilter($query, array $filters)

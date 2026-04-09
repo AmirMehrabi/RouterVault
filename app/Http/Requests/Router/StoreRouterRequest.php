@@ -3,24 +3,20 @@
 namespace App\Http\Requests\Router;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreRouterRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        $tenantId = auth()->user()?->tenant_id ?? tenant()?->id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
@@ -28,7 +24,7 @@ class StoreRouterRequest extends FormRequest
             'ip_address' => ['required', 'ip', 'unique:routers,ip_address'],
             'api_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'api_username' => ['nullable', 'string', 'max:255'],
-            'api_password' => ['nullable', 'string', 'max:255', 'sometimes'],
+            'api_password' => ['nullable', 'string', 'max:255'],
             'ssh_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'location' => ['nullable', 'string', 'max:255'],
             'site' => ['nullable', 'string', 'max:255'],
@@ -36,14 +32,11 @@ class StoreRouterRequest extends FormRequest
             'enable_monitoring' => ['nullable', 'boolean'],
             'enable_provisioning' => ['nullable', 'boolean'],
             'tenant_id' => ['nullable', 'exists:tenants,id'],
+            'credential_source' => ['nullable', 'string', Rule::in(['manual', 'password_manager'])],
+            'password_manager_credential_id' => ['nullable', Rule::exists('password_manager_credentials', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         return [
@@ -53,6 +46,24 @@ class StoreRouterRequest extends FormRequest
             'ip_address.required' => 'The IP address is required.',
             'ip_address.ip' => 'Please enter a valid IP address.',
             'ip_address.unique' => 'A router with this IP address already exists.',
+            'password_manager_credential_id.exists' => 'The selected Password Manager credential is invalid.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $credentialSource = $this->string('credential_source')->value();
+            $username = trim((string) $this->input('api_username', ''));
+            $password = trim((string) $this->input('api_password', ''));
+
+            if ($credentialSource === 'password_manager' && ! $this->filled('password_manager_credential_id')) {
+                $validator->errors()->add('password_manager_credential_id', 'Select a credential from Password Manager.');
+            }
+
+            if ($credentialSource !== 'password_manager' && (($username !== '' && $password === '') || ($username === '' && $password !== ''))) {
+                $validator->errors()->add('api_password', 'Enter both the username and password for manual credentials.');
+            }
+        });
     }
 }

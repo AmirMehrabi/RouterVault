@@ -14,12 +14,11 @@ class Router extends Model
     use HasFactory;
 
     /**
-     * The attributes that are mass assignable.
-     *
      * @var array<int, string>
      */
     protected $fillable = [
         'tenant_id',
+        'password_manager_credential_id',
         'name',
         'model',
         'vendor',
@@ -43,8 +42,6 @@ class Router extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -55,9 +52,6 @@ class Router extends Model
         ];
     }
 
-    /**
-     * Check if router is online.
-     */
     public function isOnline(): bool
     {
         return $this->status === 'online';
@@ -68,6 +62,11 @@ class Router extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function passwordManagerCredential(): BelongsTo
+    {
+        return $this->belongsTo(PasswordManagerCredential::class, 'password_manager_credential_id');
+    }
+
     public function accessPoints(): HasMany
     {
         return $this->hasMany(AccessPoint::class);
@@ -76,6 +75,16 @@ class Router extends Model
     public function wirelessClients(): HasMany
     {
         return $this->hasMany(WirelessClient::class);
+    }
+
+    public function resolvedApiUsername(): ?string
+    {
+        return $this->passwordManagerCredential?->username ?? $this->api_username;
+    }
+
+    public function resolvedApiPassword(): ?string
+    {
+        return $this->passwordManagerCredential?->password ?? $this->api_password;
     }
 
     public function scopeFilter($query, array $filters)

@@ -5,6 +5,7 @@ namespace App\Http\Requests\AccessPoint;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateAccessPointRequest extends FormRequest
 {
@@ -19,10 +20,13 @@ class UpdateAccessPointRequest extends FormRequest
     public function rules(): array
     {
         $tenantId = auth()->user()?->tenant_id;
-        $accessPointId = $this->route('accessPoint')?->id;
+        $accessPoint = $this->route('accessPoint');
+        $accessPointId = $accessPoint?->id;
 
         return [
             'tenant_id' => ['nullable', 'exists:tenants,id'],
+            'password_manager_credential_id' => ['nullable', Rule::exists('password_manager_credentials', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
+            'credential_source' => ['nullable', 'string', Rule::in(['manual', 'password_manager'])],
             'router_id' => ['nullable', Rule::exists('routers', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
             'site_id' => ['nullable', Rule::exists('sites', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
             'name' => ['required', 'string', 'max:255'],
@@ -30,6 +34,8 @@ class UpdateAccessPointRequest extends FormRequest
             'board_name' => ['nullable', 'string', 'max:255'],
             'vendor' => ['required', 'string', 'in:Mikrotik,Ubiquiti,Cambium,TP-Link,Cisco,Other'],
             'ip_address' => ['nullable', 'ip', Rule::unique('access_points')->ignore($accessPointId)->where(fn ($query) => $query->where('tenant_id', $tenantId))],
+            'api_username' => ['nullable', 'string', 'max:255'],
+            'api_password' => ['nullable', 'string', 'max:255'],
             'mac_address' => ['nullable', 'mac_address', Rule::unique('access_points')->ignore($accessPointId)->where(fn ($query) => $query->where('tenant_id', $tenantId))],
             'ssid' => ['nullable', 'string', 'max:255'],
             'band' => ['required', 'string', 'in:2.4GHz,5GHz,6GHz,dual'],
@@ -74,6 +80,29 @@ class UpdateAccessPointRequest extends FormRequest
             'ip_address.unique' => 'An access point with this IP address already exists.',
             'mac_address.mac_address' => 'Please enter a valid MAC address.',
             'mac_address.unique' => 'An access point with this MAC address already exists.',
+            'password_manager_credential_id.exists' => 'The selected Password Manager credential is invalid.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $credentialSource = $this->string('credential_source')->value();
+            $username = trim((string) $this->input('api_username', ''));
+            $password = trim((string) $this->input('api_password', ''));
+            $accessPoint = $this->route('accessPoint');
+
+            if ($credentialSource === 'password_manager' && ! $this->filled('password_manager_credential_id')) {
+                $validator->errors()->add('password_manager_credential_id', 'Select a credential from Password Manager.');
+            }
+
+            if ($credentialSource !== 'password_manager' && $username === '' && $password !== '' && blank($accessPoint?->api_username)) {
+                $validator->errors()->add('api_username', 'Enter a username for manual credentials.');
+            }
+
+            if ($credentialSource !== 'password_manager' && $username !== '' && $password === '' && blank($accessPoint?->api_password)) {
+                $validator->errors()->add('api_password', 'Enter a password for manual credentials.');
+            }
+        });
     }
 }

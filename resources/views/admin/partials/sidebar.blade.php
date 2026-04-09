@@ -145,6 +145,16 @@
         </a>
     </li>
 
+    <li>
+        <a href="{{ route('password-manager.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'password-manager.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 016 0v2H9z"></path>
+            </svg>
+            <span>Password Manager</span>
+        </a>
+    </li>
+
     <!-- Settings -->
     {{-- <li>
         <a href="{{ route('settings.index') }}"

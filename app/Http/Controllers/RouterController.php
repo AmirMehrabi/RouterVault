@@ -4,32 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Router\StoreRouterRequest;
 use App\Http\Requests\Router\UpdateRouterRequest;
+use App\Models\PasswordManagerCredential;
 use App\Models\Router;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class RouterController extends Controller
 {
-    /**
-     * Display a listing of routers.
-     */
     public function index(): View
     {
         return view('routers.index');
     }
 
-    /**
-     * Get paginated routers data for AJAX requests.
-     */
     public function data(Request $request): JsonResponse
     {
         $filters = $request->only(['search', 'status', 'vendor', 'site']);
 
-        $routers = Router::filter($filters)
+        $routers = Router::query()
+            ->with('passwordManagerCredential:id,name')
+            ->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 15))
-            ->through(fn ($router) => [
+            ->through(fn (Router $router) => [
                 'id' => $router->id,
                 'name' => $router->name,
                 'model' => $router->model,
@@ -48,6 +46,7 @@ class RouterController extends Controller
                 'total_customers' => $router->total_customers ?? 0,
                 'enable_monitoring' => $router->enable_monitoring,
                 'enable_provisioning' => $router->enable_provisioning,
+                'credential_name' => $router->passwordManagerCredential?->name,
                 'created_at' => $router->created_at?->format('M d, Y'),
             ]);
 
@@ -64,43 +63,25 @@ class RouterController extends Controller
         ]);
     }
 
-    /**
-     * Get filter options for the routers index page.
-     */
     public function filterOptions(): JsonResponse
     {
         return response()->json(Router::getFilterOptions());
     }
 
-    /**
-     * Get router statistics.
-     */
     public function stats(): JsonResponse
     {
         return response()->json(Router::getStats());
     }
 
-    /**
-     * Show the form for creating a new router.
-     */
     public function create(): View
     {
-        return view('routers.create');
+        return view('routers.create', $this->formOptions());
     }
 
-    /**
-     * Store a newly created router in storage.
-     */
-    public function store(StoreRouterRequest $request): JsonResponse
+    public function store(StoreRouterRequest $request): JsonResponse|RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $this->preparePayload($request->validated());
 
-        // Set tenant if not provided
-        if (auth()->check() && empty($validated['tenant_id'])) {
-            $validated['tenant_id'] = auth()->user()->tenant_id;
-        }
-
-        // Set default values
         $validated['status'] = $validated['status'] ?? 'offline';
         $validated['cpu_usage'] = 0;
         $validated['memory_usage'] = 0;
@@ -109,123 +90,145 @@ class RouterController extends Controller
 
         $router = Router::create($validated);
 
-        return response()->json([
-            'message' => 'Router created successfully.',
-            'router' => $router,
-        ], 201);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Router created successfully.',
+                'router' => $router->load('passwordManagerCredential:id,name'),
+            ], 201);
+        }
+
+        return redirect()
+            ->route('routers.show', $router)
+            ->with('success', 'Router created successfully.');
     }
 
-    /**
-     * Display the specified router.
-     */
     public function show(Router $router): View
     {
         $this->authorizeTenantAccess($router);
 
-        return view('routers.show', ['router' => $router]);
+        return view('routers.show', [
+            'router' => $router->load('passwordManagerCredential:id,name,username'),
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified router.
-     */
     public function edit(Router $router): View
     {
         $this->authorizeTenantAccess($router);
 
-        return view('routers.edit', ['router' => $router]);
+        return view('routers.edit', [
+            'router' => $router->load('passwordManagerCredential:id,name,username'),
+        ] + $this->formOptions());
     }
 
-    /**
-     * Update the specified router in storage.
-     */
-    public function update(UpdateRouterRequest $request, Router $router): JsonResponse
+    public function update(UpdateRouterRequest $request, Router $router): JsonResponse|RedirectResponse
     {
         $this->authorizeTenantAccess($router);
 
-        $validated = $request->validated();
+        $router->update($this->preparePayload($request->validated(), $router));
 
-        // Only update password if provided
-        if (empty($validated['api_password'])) {
-            unset($validated['api_password']);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Router updated successfully.',
+                'router' => $router->fresh('passwordManagerCredential:id,name'),
+            ]);
         }
 
-        $router->update($validated);
-
-        return response()->json([
-            'message' => 'Router updated successfully.',
-            'router' => $router->fresh(),
-        ]);
+        return redirect()
+            ->route('routers.show', $router)
+            ->with('success', 'Router updated successfully.');
     }
 
-    /**
-     * Remove the specified router from storage.
-     */
-    public function destroy(Router $router): JsonResponse
+    public function destroy(Request $request, Router $router): JsonResponse|RedirectResponse
     {
         $this->authorizeTenantAccess($router);
 
         $router->delete();
 
-        return response()->json([
-            'message' => 'Router deleted successfully.',
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Router deleted successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('routers.index')
+            ->with('success', 'Router deleted successfully.');
     }
 
-    /**
-     * Ensure the user has access to the router's tenant.
-     */
     protected function authorizeTenantAccess(Router $router): void
     {
+        if (tenant()?->id && $router->tenant_id !== tenant()->id) {
+            abort(403, 'You do not have access to this router.');
+        }
+
         if (auth()->check() && auth()->user()->tenant_id && $router->tenant_id !== auth()->user()->tenant_id) {
             abort(403, 'You do not have access to this router.');
         }
     }
 
-    /**
-     * Display router sessions.
-     */
     public function sessions(Router $router): View
     {
         return view('routers.sessions', compact('router'));
     }
 
-    /**
-     * Display router queues.
-     */
     public function queues(Router $router): View
     {
         return view('routers.queues', compact('router'));
     }
 
-    /**
-     * Display router profiles.
-     */
     public function profiles(Router $router): View
     {
         return view('routers.profiles', compact('router'));
     }
 
-    /**
-     * Display router interfaces.
-     */
     public function interfaces(Router $router): View
     {
         return view('routers.interfaces', compact('router'));
     }
 
-    /**
-     * Display router IP pools.
-     */
     public function ipPools(Router $router): View
     {
         return view('routers.ip-pools', compact('router'));
     }
 
-    /**
-     * Display router logs.
-     */
     public function logs(Router $router): View
     {
         return view('routers.logs', compact('router'));
+    }
+
+    /**
+     * @return array<string, array<int|string, string>>
+     */
+    protected function formOptions(): array
+    {
+        return [
+            'credentialOptions' => PasswordManagerCredential::query()->orderBy('name')->pluck('name', 'id')->toArray(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    protected function preparePayload(array $validated, ?Router $router = null): array
+    {
+        if (auth()->check() && empty($validated['tenant_id'])) {
+            $validated['tenant_id'] = auth()->user()->tenant_id;
+        }
+
+        $credentialSource = $validated['credential_source'] ?? null;
+        unset($validated['credential_source']);
+
+        if ($credentialSource === 'password_manager') {
+            $validated['password_manager_credential_id'] = $validated['password_manager_credential_id'] ?? null;
+        } else {
+            $validated['password_manager_credential_id'] = null;
+
+            if (($validated['api_password'] ?? '') === '' && $router !== null) {
+                unset($validated['api_password']);
+            }
+        }
+
+        return $validated;
     }
 }

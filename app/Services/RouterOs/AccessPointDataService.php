@@ -28,8 +28,11 @@ class AccessPointDataService
 
         $router = $accessPoint->router;
 
-        if (! $router || ! $router->api_username || ! $router->api_password) {
-            return $this->offlinePayload('Router API credentials are missing.');
+        $username = $accessPoint->resolvedApiUsername();
+        $password = $accessPoint->resolvedApiPassword();
+
+        if (! $router || ! $username || ! $password) {
+            return $this->offlinePayload('Access point credentials are missing.');
         }
 
         if (! $accessPoint->ip_address) {
@@ -39,8 +42,8 @@ class AccessPointDataService
         try {
             $client = new Client([
                 'host' => $accessPoint->ip_address,
-                'user' => $router->api_username,
-                'pass' => $router->api_password,
+                'user' => $username,
+                'pass' => $password,
                 'port' => $router->api_port ?: 8728,
                 'timeout' => $router->timeout ?: 10,
                 'attempts' => 1,

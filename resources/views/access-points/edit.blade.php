@@ -11,7 +11,10 @@
 @endpush
 
 @section('content')
-<div class="space-y-6 pb-24">
+@php
+    $credentialSource = old('credential_source', $accessPoint->password_manager_credential_id ? 'password_manager' : 'manual');
+@endphp
+<div class="space-y-6 pb-24" x-data="{ credentialSource: @js($credentialSource) }">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Edit Access Point</h1>
@@ -38,6 +41,38 @@
                 <x-ui.input.select label="Router" name="router_id" :options="$routerOptions" :value="old('router_id', $accessPoint->router_id)" placeholder="Select router" :error="$errors->first('router_id')" />
                 <x-ui.input.select label="Site" name="site_id" :options="$siteOptions" :value="old('site_id', $accessPoint->site_id)" placeholder="Select site" :error="$errors->first('site_id')" />
                 <x-ui.input.text label="Location" name="location" :value="old('location', $accessPoint->location)" :error="$errors->first('location')" />
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Management Credentials</h3>
+                    <p class="mt-1 text-sm text-gray-500">Switch between a shared Password Manager login and a manual credential for this access point.</p>
+                </div>
+                <a href="{{ route('password-manager.create') }}" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">Add Password Manager credential</a>
+            </div>
+
+            <input type="hidden" name="credential_source" x-model="credentialSource">
+
+            <div class="mt-6 grid gap-4 lg:grid-cols-2">
+                <button type="button" @click="credentialSource = 'password_manager'" :class="credentialSource === 'password_manager' ? 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100' : 'border-gray-200 bg-white text-gray-700'" class="rounded-2xl border p-4 text-left transition">
+                    <p class="text-sm font-semibold">Use Password Manager</p>
+                    <p class="mt-1 text-sm text-gray-500">Current: {{ $accessPoint->passwordManagerCredential?->name ?: 'No saved credential selected' }}</p>
+                </button>
+                <button type="button" @click="credentialSource = 'manual'" :class="credentialSource === 'manual' ? 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100' : 'border-gray-200 bg-white text-gray-700'" class="rounded-2xl border p-4 text-left transition">
+                    <p class="text-sm font-semibold">Enter Manually</p>
+                    <p class="mt-1 text-sm text-gray-500">Manual username: {{ $accessPoint->api_username ?: 'Not set' }}</p>
+                </button>
+            </div>
+
+            <div class="mt-6" x-show="credentialSource === 'password_manager'" x-cloak>
+                <x-ui.input.select label="Saved Credential" name="password_manager_credential_id" :options="$credentialOptions" :value="old('password_manager_credential_id', $accessPoint->password_manager_credential_id)" placeholder="Select a saved credential" :error="$errors->first('password_manager_credential_id')" />
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2" x-show="credentialSource === 'manual'" x-cloak>
+                <x-ui.input.text label="API Username" name="api_username" :value="old('api_username', $accessPoint->api_username)" :error="$errors->first('api_username')" />
+                <x-ui.input.password label="API Password" name="api_password" placeholder="Leave blank to keep current password" :error="$errors->first('api_password')" />
             </div>
         </div>
 
@@ -84,12 +119,8 @@
 
         <div class="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white p-4 shadow-lg lg:left-64">
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('access-points.show', $accessPoint) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    Cancel
-                </a>
-                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                    Update Access Point
-                </button>
+                <a href="{{ route('access-points.show', $accessPoint) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Update Access Point</button>
             </div>
         </div>
     </form>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AccessPoint\StoreAccessPointRequest;
 use App\Http\Requests\AccessPoint\UpdateAccessPointRequest;
 use App\Models\AccessPoint;
+use App\Models\PasswordManagerCredential;
 use App\Models\Router;
 use App\Models\Site;
 use App\Models\WirelessClientMovement;
@@ -26,7 +27,7 @@ class AccessPointController extends Controller
         $filters = $request->only(['search', 'status', 'vendor', 'band', 'router_id', 'site_id']);
 
         $accessPoints = AccessPoint::query()
-            ->with(['router:id,name', 'site:id,name'])
+            ->with(['router:id,name', 'site:id,name', 'passwordManagerCredential:id,name'])
             ->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 15))
@@ -78,7 +79,7 @@ class AccessPointController extends Controller
     {
         $this->authorizeTenantAccess($accessPoint);
 
-        $accessPoint = $accessPoint->load(['router:id,name', 'site:id,name']);
+        $accessPoint = $accessPoint->load(['router:id,name', 'site:id,name', 'passwordManagerCredential:id,name,username']);
         $clientMovements = WirelessClientMovement::query()
             ->with(['wirelessClient:id,mac_address,host_name', 'fromAccessPoint:id,name', 'toAccessPoint:id,name'])
             ->where('to_access_point_id', $accessPoint->id)
@@ -120,7 +121,7 @@ class AccessPointController extends Controller
     {
         $this->authorizeTenantAccess($accessPoint);
 
-        $payload = $accessPointStatusService->refresh($accessPoint->load(['router:id,name', 'site:id,name']));
+        $payload = $accessPointStatusService->refresh($accessPoint->load(['router:id,name', 'site:id,name', 'passwordManagerCredential:id,name']));
         $history = $accessPointStatusService->latestStatusSummary($payload['access_point']);
 
         return response()->json([
@@ -157,7 +158,7 @@ class AccessPointController extends Controller
         $this->authorizeTenantAccess($accessPoint);
 
         return view('access-points.edit', [
-            'accessPoint' => $accessPoint,
+            'accessPoint' => $accessPoint->load('passwordManagerCredential:id,name,username'),
         ] + $this->formOptions());
     }
 
@@ -165,12 +166,12 @@ class AccessPointController extends Controller
     {
         $this->authorizeTenantAccess($accessPoint);
 
-        $accessPoint->update($this->payloadWithDefaults($request->validated()));
+        $accessPoint->update($this->payloadWithDefaults($request->validated(), $accessPoint));
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Access point updated successfully.',
-                'access_point' => $accessPoint->fresh(['router:id,name', 'site:id,name']),
+                'access_point' => $accessPoint->fresh(['router:id,name', 'site:id,name', 'passwordManagerCredential:id,name']),
             ]);
         }
 
@@ -211,6 +212,7 @@ class AccessPointController extends Controller
         return [
             'routerOptions' => Router::query()->orderBy('name')->pluck('name', 'id')->toArray(),
             'siteOptions' => Site::query()->orderBy('name')->pluck('name', 'id')->toArray(),
+            'credentialOptions' => PasswordManagerCredential::query()->orderBy('name')->pluck('name', 'id')->toArray(),
         ];
     }
 
@@ -218,10 +220,23 @@ class AccessPointController extends Controller
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    protected function payloadWithDefaults(array $validated): array
+    protected function payloadWithDefaults(array $validated, ?AccessPoint $accessPoint = null): array
     {
         if (auth()->check() && empty($validated['tenant_id'])) {
             $validated['tenant_id'] = auth()->user()->tenant_id;
+        }
+
+        $credentialSource = $validated['credential_source'] ?? null;
+        unset($validated['credential_source']);
+
+        if ($credentialSource === 'password_manager') {
+            $validated['password_manager_credential_id'] = $validated['password_manager_credential_id'] ?? null;
+        } else {
+            $validated['password_manager_credential_id'] = null;
+
+            if (($validated['api_password'] ?? '') === '' && $accessPoint !== null) {
+                unset($validated['api_password']);
+            }
         }
 
         $validated['status'] = $validated['status'] ?? 'offline';
@@ -278,6 +293,7 @@ class AccessPointController extends Controller
             'enable_provisioning' => $accessPoint->enable_provisioning,
             'router' => $accessPoint->router?->name,
             'site' => $accessPoint->site?->name,
+            'credential_name' => $accessPoint->passwordManagerCredential?->name,
             'created_at' => $accessPoint->created_at?->format('M d, Y'),
             'last_seen_at' => $includeDates ? $accessPoint->last_seen_at?->toIso8601String() : $accessPoint->last_seen_at?->diffForHumans(),
             'last_seen_human' => $includeDates ? $accessPoint->last_seen_at?->diffForHumans() : null,

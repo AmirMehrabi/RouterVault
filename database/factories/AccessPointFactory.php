@@ -29,6 +29,7 @@ class AccessPointFactory extends Factory
 
         return [
             'tenant_id' => $tenant?->id,
+            'password_manager_credential_id' => null,
             'router_id' => $router?->id,
             'site_id' => $site?->id,
             'name' => 'AP-'.strtoupper(fake()->bothify('??-##')),
@@ -36,6 +37,8 @@ class AccessPointFactory extends Factory
             'board_name' => fake()->randomElement(['RBcAPGi-5acD2nD', 'cAPGi-5HaxD2HaxD', 'LHG 5 ac']),
             'vendor' => fake()->randomElement(['Mikrotik', 'Ubiquiti', 'Cambium']),
             'ip_address' => '10.'.fake()->numberBetween(10, 99).'.'.fake()->numberBetween(1, 254).'.'.fake()->numberBetween(1, 254),
+            'api_username' => 'admin',
+            'api_password' => fake()->password(12, 18),
             'mac_address' => fake()->unique()->macAddress(),
             'ssid' => fake()->randomElement(['SkyBase-Clients', 'Tower-Backhaul', 'Guest-WiFi', 'Campus-5G']),
             'band' => fake()->randomElement(['2.4GHz', '5GHz', 'dual']),

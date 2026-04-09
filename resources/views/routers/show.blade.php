@@ -134,7 +134,11 @@
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
                     <span class="text-sm text-gray-500">API Username</span>
-                    <span class="text-sm font-medium text-gray-900" x-text="router.api_username || '—'"></span>
+                    <span class="text-sm font-medium text-gray-900" x-text="router.password_manager_credential?.username || router.api_username || '—'"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-sm text-gray-500">Credential Source</span>
+                    <span class="text-sm font-medium text-gray-900" x-text="router.password_manager_credential?.name || 'Manual entry'"></span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
                     <span class="text-sm text-gray-500">Timeout</span>
