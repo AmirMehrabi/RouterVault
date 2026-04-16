@@ -55,7 +55,7 @@ class AccessPointDataService
             $identity = $this->firstRow($client->query(new Query('/system/identity/print'))->read());
             $wireless = $this->detectWirelessInterface($client, $accessPoint);
             $clients = $this->readRegistrationTable($client);
-
+            \Log::info($clients);
             $metrics = $this->buildMetrics($accessPoint, $resource, $identity, $wireless, $clients);
 
             return [
@@ -130,7 +130,6 @@ class AccessPointDataService
     protected function readRegistrationTable(Client $client): array
     {
         $queries = [
-            '/interface/wifi/registration-table/print',
             '/interface/wireless/registration-table/print',
         ];
 
