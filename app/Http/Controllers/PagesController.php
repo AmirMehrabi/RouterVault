@@ -14,8 +14,7 @@ class PagesController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // Show home page for guests
-        return view('home');
+        return view('landing');
     }
 
     public function pricing(Request $request)
