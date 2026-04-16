@@ -15,6 +15,7 @@ class WirelessClient extends Model
 
     protected $fillable = [
         'tenant_id',
+        'password_manager_credential_id',
         'access_point_id',
         'router_id',
         'site_id',
@@ -34,6 +35,8 @@ class WirelessClient extends Model
         'rx_ccq',
         'uptime',
         'last_ip_address',
+        'provisioning_username',
+        'provisioning_password',
         'is_connected',
         'first_seen_at',
         'last_seen_at',
@@ -50,6 +53,7 @@ class WirelessClient extends Model
             'tx_ccq' => 'integer',
             'rx_ccq' => 'integer',
             'is_connected' => 'boolean',
+            'provisioning_password' => 'encrypted',
             'first_seen_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'last_moved_at' => 'datetime',
@@ -67,6 +71,11 @@ class WirelessClient extends Model
         return $this->belongsTo(AccessPoint::class);
     }
 
+    public function passwordManagerCredential(): BelongsTo
+    {
+        return $this->belongsTo(PasswordManagerCredential::class, 'password_manager_credential_id');
+    }
+
     public function router(): BelongsTo
     {
         return $this->belongsTo(Router::class);
@@ -80,6 +89,39 @@ class WirelessClient extends Model
     public function movements(): HasMany
     {
         return $this->hasMany(WirelessClientMovement::class)->latest('moved_at');
+    }
+
+    public function resolvedProvisioningUsername(): ?string
+    {
+        return $this->passwordManagerCredential?->username ?? $this->provisioning_username;
+    }
+
+    public function resolvedProvisioningPassword(): ?string
+    {
+        return $this->passwordManagerCredential?->password ?? $this->provisioning_password;
+    }
+
+    public function provisioningCredentialSource(): string
+    {
+        if ($this->password_manager_credential_id) {
+            return 'password_manager';
+        }
+
+        if ($this->provisioning_username || $this->provisioning_password) {
+            return 'manual';
+        }
+
+        return 'none';
+    }
+
+    public function isProvisioned(): bool
+    {
+        return $this->resolvedProvisioningUsername() !== null && $this->resolvedProvisioningPassword() !== null;
+    }
+
+    public function provisioningStatusLabel(): string
+    {
+        return $this->isProvisioned() ? 'Provisioned' : 'Unprovisioned';
     }
 
     public function scopeFilter($query, array $filters)

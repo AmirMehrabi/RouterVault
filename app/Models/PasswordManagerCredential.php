@@ -49,6 +49,11 @@ class PasswordManagerCredential extends Model
         return $this->hasMany(AccessPoint::class, 'password_manager_credential_id');
     }
 
+    public function wirelessClients(): HasMany
+    {
+        return $this->hasMany(WirelessClient::class, 'password_manager_credential_id');
+    }
+
     protected static function booted(): void
     {
         static::addGlobalScope('tenant', function ($query) {

@@ -159,7 +159,10 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/data', [WirelessClientController::class, 'data'])->name('data');
         Route::get('/filter-options', [WirelessClientController::class, 'filterOptions'])->name('filter-options');
         Route::get('/stats', [WirelessClientController::class, 'stats'])->name('stats');
+        Route::post('/credentials/bulk', [WirelessClientController::class, 'bulkUpdateCredentials'])->name('credentials.bulk-update');
         Route::get('/{wirelessClient}', [WirelessClientController::class, 'show'])->name('show');
+        Route::put('/{wirelessClient}/credentials', [WirelessClientController::class, 'updateCredentials'])->name('credentials.update');
+        Route::delete('/{wirelessClient}/credentials', [WirelessClientController::class, 'clearCredentials'])->name('credentials.clear');
     });
 
     // Site Management Routes

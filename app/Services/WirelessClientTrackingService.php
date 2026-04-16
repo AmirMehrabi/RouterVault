@@ -135,6 +135,12 @@ class WirelessClientTrackingService
             'last_moved_human' => $wirelessClient->last_moved_at?->diffForHumans(),
             'access_point' => $wirelessClient->accessPoint?->name,
             'site' => $wirelessClient->site?->name,
+            'password_manager_credential_id' => $wirelessClient->password_manager_credential_id,
+            'credential_name' => $wirelessClient->passwordManagerCredential?->name,
+            'credential_source' => $wirelessClient->provisioningCredentialSource(),
+            'provisioning_username' => $wirelessClient->resolvedProvisioningUsername(),
+            'provisioning_status' => $wirelessClient->provisioningStatusLabel(),
+            'is_provisioned' => $wirelessClient->isProvisioned(),
         ];
     }
 

@@ -22,8 +22,11 @@ class WirelessClientFactory extends Factory
         $site = $accessPoint?->site ?? Site::query()->when($tenant, fn ($query) => $query->where('tenant_id', $tenant->id))->inRandomOrder()->first();
         $connected = fake()->boolean(85);
 
+        $provisioned = fake()->boolean(40);
+
         return [
             'tenant_id' => $tenant?->id,
+            'password_manager_credential_id' => null,
             'access_point_id' => $accessPoint?->id,
             'router_id' => $router?->id,
             'site_id' => $site?->id,
@@ -43,6 +46,8 @@ class WirelessClientFactory extends Factory
             'rx_ccq' => fake()->numberBetween(50, 100),
             'uptime' => fake()->randomElement(['5m12s', '1h02m', '2d03h']),
             'last_ip_address' => fake()->ipv4(),
+            'provisioning_username' => $provisioned ? fake()->userName() : null,
+            'provisioning_password' => $provisioned ? fake()->password(12, 18) : null,
             'is_connected' => $connected,
             'first_seen_at' => now()->subDays(fake()->numberBetween(1, 10)),
             'last_seen_at' => now()->subMinutes(fake()->numberBetween(1, 30)),

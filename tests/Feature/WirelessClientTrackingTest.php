@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AccessPoint;
+use App\Models\PasswordManagerCredential;
 use App\Models\Router;
 use App\Models\Site;
 use App\Models\Tenant;
@@ -155,7 +156,79 @@ class WirelessClientTrackingTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'wireless_clients')
             ->assertJsonPath('wireless_clients.0.host_name', 'laptop-east')
-            ->assertJsonPath('wireless_clients.0.access_point', 'AP-EAST');
+            ->assertJsonPath('wireless_clients.0.access_point', 'AP-EAST')
+            ->assertJsonPath('wireless_clients.0.provisioning_status', 'Unprovisioned');
+    }
+
+    public function test_user_can_assign_manual_credentials_to_single_wireless_client(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $wirelessClient = WirelessClient::factory()->create([
+            'tenant_id' => $tenant->id,
+            'password_manager_credential_id' => null,
+            'provisioning_username' => null,
+            'provisioning_password' => null,
+        ]);
+
+        $this->put(route('wireless-clients.credentials.update', $wirelessClient), [
+            'credential_source' => 'manual',
+            'provisioning_username' => 'subscriber-alpha',
+            'provisioning_password' => 'secret-pass-001',
+        ])->assertRedirect(route('wireless-clients.show', $wirelessClient));
+
+        $wirelessClient->refresh();
+
+        $this->assertSame('subscriber-alpha', $wirelessClient->provisioning_username);
+        $this->assertNull($wirelessClient->password_manager_credential_id);
+        $this->assertSame('secret-pass-001', $wirelessClient->provisioning_password);
+
+        $this->getJson(route('wireless-clients.data'))
+            ->assertOk()
+            ->assertJsonPath('wireless_clients.0.provisioning_status', 'Provisioned')
+            ->assertJsonPath('wireless_clients.0.credential_source', 'manual');
+    }
+
+    public function test_user_can_bulk_assign_saved_credentials_to_wireless_clients(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $credential = PasswordManagerCredential::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Bulk Wireless Credential',
+            'username' => 'bulk-user',
+            'password' => 'bulk-pass',
+        ]);
+
+        $clients = WirelessClient::factory()->count(2)->create([
+            'tenant_id' => $tenant->id,
+            'password_manager_credential_id' => null,
+            'provisioning_username' => null,
+            'provisioning_password' => null,
+        ]);
+
+        $this->post(route('wireless-clients.credentials.bulk-update'), [
+            'wireless_client_ids' => $clients->pluck('id')->all(),
+            'credential_source' => 'password_manager',
+            'password_manager_credential_id' => $credential->id,
+        ])->assertRedirect(route('wireless-clients.index'));
+
+        foreach ($clients as $wirelessClient) {
+            $this->assertDatabaseHas('wireless_clients', [
+                'id' => $wirelessClient->id,
+                'tenant_id' => $tenant->id,
+                'password_manager_credential_id' => $credential->id,
+                'provisioning_username' => null,
+            ]);
+        }
+
+        $this->getJson(route('wireless-clients.data'))
+            ->assertOk()
+            ->assertJsonPath('wireless_clients.0.provisioning_status', 'Provisioned');
     }
 
     protected function createTenantUser(): array
