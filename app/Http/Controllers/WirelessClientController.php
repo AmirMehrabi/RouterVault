@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\WirelessClient\BulkUpdateWirelessClientCredentialRequest;
+use App\Http\Requests\WirelessClient\RunWirelessClientManagementActionRequest;
 use App\Http\Requests\WirelessClient\UpdateWirelessClientCredentialRequest;
 use App\Models\PasswordManagerCredential;
 use App\Models\WirelessClient;
+use App\Services\RouterOs\WirelessClientManagementService;
 use App\Services\WirelessClientTrackingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -27,9 +29,10 @@ class WirelessClientController extends Controller
 
         $wirelessClients = WirelessClient::query()
             ->with([
-                'accessPoint:id,name',
+                'accessPoint:id,name,vendor',
                 'site:id,name',
                 'passwordManagerCredential:id,name,username',
+                'router:id,name,vendor',
             ])
             ->filter($filters)
             ->orderByDesc('is_connected')
@@ -76,18 +79,28 @@ class WirelessClientController extends Controller
         ]);
     }
 
-    public function show(WirelessClient $wirelessClient, WirelessClientTrackingService $wirelessClientTrackingService): View
-    {
+    public function show(
+        WirelessClient $wirelessClient,
+        WirelessClientTrackingService $wirelessClientTrackingService,
+        WirelessClientManagementService $wirelessClientManagementService
+    ): View {
         $this->authorizeTenantAccess($wirelessClient->tenant_id);
 
         $wirelessClient->load([
-            'accessPoint:id,name',
+            'accessPoint:id,name,vendor',
             'site:id,name',
+            'router:id,name,vendor',
             'passwordManagerCredential:id,name,username',
             'movements' => fn ($query) => $query
                 ->with(['fromAccessPoint:id,name', 'toAccessPoint:id,name'])
                 ->limit(20),
+            'managementLogs' => fn ($query) => $query
+                ->with('user:id,name')
+                ->limit(12),
+            'managementSnapshots' => fn ($query) => $query->limit(8),
         ]);
+
+        $latestSnapshot = $wirelessClient->managementSnapshots->first();
 
         return view('wireless-clients.show', [
             'wirelessClient' => $wirelessClient,
@@ -101,7 +114,59 @@ class WirelessClientController extends Controller
                     'moved_human' => $movement->moved_at?->diffForHumans(),
                 ];
             })->values(),
+            'managementActionGroups' => $wirelessClientManagementService->groupedDefinitions(),
+            'managementLogs' => $wirelessClient->managementLogs->map(function ($log): array {
+                return [
+                    'id' => $log->id,
+                    'action_label' => $log->action_label,
+                    'status' => $log->status,
+                    'summary' => $log->summary,
+                    'error_message' => $log->error_message,
+                    'target_host' => $log->target_host,
+                    'created_at' => $log->created_at?->toIso8601String(),
+                    'created_human' => $log->created_at?->diffForHumans(),
+                    'started_at' => $log->started_at?->toIso8601String(),
+                    'finished_at' => $log->finished_at?->toIso8601String(),
+                    'user_name' => $log->user?->name,
+                ];
+            })->values(),
+            'managementSnapshots' => $wirelessClient->managementSnapshots->map(function ($snapshot): array {
+                return [
+                    'snapshot_type' => $snapshot->snapshot_type,
+                    'action_key' => $snapshot->action_key,
+                    'payload' => $snapshot->payload,
+                    'collected_at' => $snapshot->collected_at?->toIso8601String(),
+                    'collected_human' => $snapshot->collected_at?->diffForHumans(),
+                ];
+            })->values(),
+            'latestManagementSnapshot' => $latestSnapshot?->payload,
         ]);
+    }
+
+    public function runManagementAction(
+        RunWirelessClientManagementActionRequest $request,
+        WirelessClient $wirelessClient,
+        string $action,
+        WirelessClientManagementService $wirelessClientManagementService
+    ): RedirectResponse {
+        $this->authorizeTenantAccess($wirelessClient->tenant_id);
+
+        $log = $wirelessClientManagementService->executeAction(
+            $wirelessClient,
+            $action,
+            $request->validated(),
+            auth()->user()
+        );
+
+        $flashKey = $log->status === 'success' ? 'success' : 'error';
+        $message = $log->status === 'success'
+            ? ($log->summary ?: 'Management action completed successfully.')
+            : ($log->error_message ?: 'Management action failed.');
+
+        return redirect()
+            ->route('wireless-clients.show', $wirelessClient)
+            ->with($flashKey, $message)
+            ->with('management_action', $action);
     }
 
     public function updateCredentials(UpdateWirelessClientCredentialRequest $request, WirelessClient $wirelessClient): RedirectResponse

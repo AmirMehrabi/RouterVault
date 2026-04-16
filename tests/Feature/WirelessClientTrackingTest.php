@@ -9,8 +9,10 @@ use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\WirelessClient;
+use App\Models\WirelessClientManagementLog;
 use App\Services\AccessPointStatusService;
 use App\Services\RouterOs\AccessPointDataService;
+use App\Services\RouterOs\WirelessClientManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -229,6 +231,139 @@ class WirelessClientTrackingTest extends TestCase
         $this->getJson(route('wireless-clients.data'))
             ->assertOk()
             ->assertJsonPath('wireless_clients.0.provisioning_status', 'Provisioned');
+    }
+
+    public function test_wireless_client_show_page_displays_management_dashboard(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $router = Router::factory()->create([
+            'tenant_id' => $tenant->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $accessPoint = AccessPoint::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $wirelessClient = WirelessClient::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'access_point_id' => $accessPoint->id,
+            'management_ip_address' => '10.10.20.30',
+            'provisioning_username' => 'admin',
+            'provisioning_password' => 'secret-pass',
+            'device_identity' => 'Tower-AP-01',
+        ]);
+
+        $this->get(route('wireless-clients.show', $wirelessClient))
+            ->assertOk()
+            ->assertSee('Radio Management')
+            ->assertSee('Run Discovery Now')
+            ->assertSee('Set Identity')
+            ->assertSee('Reboot Radio');
+    }
+
+    public function test_user_can_run_wireless_client_management_action_from_show_page(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $router = Router::factory()->create([
+            'tenant_id' => $tenant->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $accessPoint = AccessPoint::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $wirelessClient = WirelessClient::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'access_point_id' => $accessPoint->id,
+            'management_ip_address' => '10.10.20.30',
+            'provisioning_username' => 'admin',
+            'provisioning_password' => 'secret-pass',
+        ]);
+
+        $service = Mockery::mock(WirelessClientManagementService::class);
+        $service->shouldReceive('executeAction')
+            ->once()
+            ->andReturnUsing(function (WirelessClient $managedClient, string $action, array $payload, User $actor) {
+                return WirelessClientManagementLog::query()->create([
+                    'tenant_id' => $managedClient->tenant_id,
+                    'wireless_client_id' => $managedClient->id,
+                    'user_id' => $actor->id,
+                    'action_key' => $action,
+                    'action_label' => 'Set Identity',
+                    'status' => 'success',
+                    'target_host' => $managedClient->resolvedManagementHost(),
+                    'request_payload' => $payload,
+                    'summary' => 'Identity updated successfully.',
+                    'started_at' => now(),
+                    'finished_at' => now(),
+                ]);
+            });
+
+        app()->instance(WirelessClientManagementService::class, $service);
+
+        $this->post(route('wireless-clients.management-actions.run', ['wirelessClient' => $wirelessClient, 'action' => 'set_identity']), [
+            'identity' => 'Tower1-AP3-912xxxx',
+            'management_action_key' => 'set_identity',
+        ])
+            ->assertRedirect(route('wireless-clients.show', $wirelessClient))
+            ->assertSessionHas('success', 'Identity updated successfully.');
+
+        $this->assertDatabaseHas('wireless_client_management_logs', [
+            'tenant_id' => $tenant->id,
+            'wireless_client_id' => $wirelessClient->id,
+            'action_key' => 'set_identity',
+            'status' => 'success',
+        ]);
+    }
+
+    public function test_password_management_action_requires_confirmation(): void
+    {
+        [$tenant, $user] = $this->createTenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+
+        $router = Router::factory()->create([
+            'tenant_id' => $tenant->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $accessPoint = AccessPoint::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'vendor' => 'Mikrotik',
+        ]);
+
+        $wirelessClient = WirelessClient::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'access_point_id' => $accessPoint->id,
+            'management_ip_address' => '10.10.20.30',
+            'provisioning_username' => 'admin',
+            'provisioning_password' => 'secret-pass',
+        ]);
+
+        $this->from(route('wireless-clients.show', $wirelessClient))
+            ->post(route('wireless-clients.management-actions.run', ['wirelessClient' => $wirelessClient, 'action' => 'set_password']), [
+                'password' => 'new-secret-password',
+                'password_confirmation' => 'new-secret-password',
+                'management_action_key' => 'set_password',
+            ])
+            ->assertRedirect(route('wireless-clients.show', $wirelessClient))
+            ->assertSessionHasErrors('confirm_action');
     }
 
     protected function createTenantUser(): array

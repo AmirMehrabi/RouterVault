@@ -161,6 +161,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/stats', [WirelessClientController::class, 'stats'])->name('stats');
         Route::post('/credentials/bulk', [WirelessClientController::class, 'bulkUpdateCredentials'])->name('credentials.bulk-update');
         Route::get('/{wirelessClient}', [WirelessClientController::class, 'show'])->name('show');
+        Route::post('/{wirelessClient}/management-actions/{action}', [WirelessClientController::class, 'runManagementAction'])->name('management-actions.run');
         Route::put('/{wirelessClient}/credentials', [WirelessClientController::class, 'updateCredentials'])->name('credentials.update');
         Route::delete('/{wirelessClient}/credentials', [WirelessClientController::class, 'clearCredentials'])->name('credentials.clear');
     });

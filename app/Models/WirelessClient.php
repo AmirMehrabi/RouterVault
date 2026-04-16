@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class WirelessClient extends Model
 {
@@ -23,6 +24,11 @@ class WirelessClient extends Model
         'interface_name',
         'radio_name',
         'host_name',
+        'device_identity',
+        'device_mac_address',
+        'device_version',
+        'device_uptime',
+        'pppoe_username',
         'comment',
         'ssid',
         'band',
@@ -35,11 +41,18 @@ class WirelessClient extends Model
         'rx_ccq',
         'uptime',
         'last_ip_address',
+        'management_ip_address',
+        'management_port',
+        'management_protocol',
         'provisioning_username',
         'provisioning_password',
         'is_connected',
         'first_seen_at',
         'last_seen_at',
+        'last_discovered_at',
+        'last_management_status',
+        'last_management_message',
+        'last_management_ran_at',
         'last_moved_at',
         'last_snapshot',
     ];
@@ -52,10 +65,13 @@ class WirelessClient extends Model
             'signal_to_noise' => 'integer',
             'tx_ccq' => 'integer',
             'rx_ccq' => 'integer',
+            'management_port' => 'integer',
             'is_connected' => 'boolean',
             'provisioning_password' => 'encrypted',
             'first_seen_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'last_discovered_at' => 'datetime',
+            'last_management_ran_at' => 'datetime',
             'last_moved_at' => 'datetime',
             'last_snapshot' => 'array',
         ];
@@ -91,6 +107,16 @@ class WirelessClient extends Model
         return $this->hasMany(WirelessClientMovement::class)->latest('moved_at');
     }
 
+    public function managementLogs(): HasMany
+    {
+        return $this->hasMany(WirelessClientManagementLog::class)->latest('created_at');
+    }
+
+    public function managementSnapshots(): HasMany
+    {
+        return $this->hasMany(WirelessClientManagementSnapshot::class)->latest('collected_at');
+    }
+
     public function resolvedProvisioningUsername(): ?string
     {
         return $this->passwordManagerCredential?->username ?? $this->provisioning_username;
@@ -99,6 +125,43 @@ class WirelessClient extends Model
     public function resolvedProvisioningPassword(): ?string
     {
         return $this->passwordManagerCredential?->password ?? $this->provisioning_password;
+    }
+
+    public function resolvedManagementUsername(): ?string
+    {
+        return $this->resolvedProvisioningUsername();
+    }
+
+    public function resolvedManagementPassword(): ?string
+    {
+        return $this->resolvedProvisioningPassword();
+    }
+
+    public function resolvedManagementHost(): ?string
+    {
+        return $this->management_ip_address ?: $this->last_ip_address;
+    }
+
+    public function resolvedManagementPort(): int
+    {
+        return $this->management_port ?: 8728;
+    }
+
+    public function isMikrotikManageable(): bool
+    {
+        return true;
+        $this->loadMissing(['accessPoint:id,vendor', 'router:id,vendor']);
+
+        $vendors = collect([
+            $this->accessPoint?->vendor,
+            $this->router?->vendor,
+        ])->filter();
+
+        return $vendors->isNotEmpty()
+            && $vendors->contains(fn (string $vendor): bool => Str::contains(Str::lower($vendor), 'mikrotik'))
+            && $this->resolvedManagementHost() !== null
+            && $this->resolvedManagementUsername() !== null
+            && $this->resolvedManagementPassword() !== null;
     }
 
     public function provisioningCredentialSource(): string

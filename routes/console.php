@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:check-access-point-status')->everyMinute()->withoutOverlapping();
+Schedule::command('app:refresh-wireless-client-management')->everyFifteenMinutes()->withoutOverlapping();

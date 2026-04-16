@@ -113,6 +113,9 @@ class WirelessClientTrackingService
             'id' => $wirelessClient->id,
             'mac_address' => $wirelessClient->mac_address,
             'host_name' => $wirelessClient->host_name,
+            'device_identity' => $wirelessClient->device_identity,
+            'device_version' => $wirelessClient->device_version,
+            'pppoe_username' => $wirelessClient->pppoe_username,
             'comment' => $wirelessClient->comment,
             'interface_name' => $wirelessClient->interface_name,
             'radio_name' => $wirelessClient->radio_name,
@@ -127,9 +130,11 @@ class WirelessClientTrackingService
             'rx_ccq' => $wirelessClient->rx_ccq,
             'uptime' => $wirelessClient->uptime,
             'last_ip_address' => $wirelessClient->last_ip_address,
+            'management_ip_address' => $wirelessClient->management_ip_address,
             'is_connected' => $wirelessClient->is_connected,
             'first_seen_at' => $wirelessClient->first_seen_at?->toIso8601String(),
             'last_seen_at' => $wirelessClient->last_seen_at?->toIso8601String(),
+            'last_discovered_at' => $wirelessClient->last_discovered_at?->toIso8601String(),
             'last_seen_human' => $wirelessClient->last_seen_at?->diffForHumans(),
             'last_moved_at' => $wirelessClient->last_moved_at?->toIso8601String(),
             'last_moved_human' => $wirelessClient->last_moved_at?->diffForHumans(),
@@ -141,6 +146,9 @@ class WirelessClientTrackingService
             'provisioning_username' => $wirelessClient->resolvedProvisioningUsername(),
             'provisioning_status' => $wirelessClient->provisioningStatusLabel(),
             'is_provisioned' => $wirelessClient->isProvisioned(),
+            'is_manageable' => $wirelessClient->isMikrotikManageable(),
+            'last_management_status' => $wirelessClient->last_management_status,
+            'last_management_message' => $wirelessClient->last_management_message,
         ];
     }
 
