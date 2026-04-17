@@ -23,6 +23,12 @@ Route::get('/', [PagesController::class, 'index'])->name('home');
 // Pricing page
 Route::get('/pricing', [PagesController::class, 'pricing'])->name('pricing');
 
+// About page
+Route::get('/about-us', [PagesController::class, 'aboutUs'])->name('about-us');
+
+// Contact page
+Route::get('/contact-us', [PagesController::class, 'contactUs'])->name('contact-us');
+
 // Features page
 Route::get('/features', [PagesController::class, 'features'])->name('features');
 

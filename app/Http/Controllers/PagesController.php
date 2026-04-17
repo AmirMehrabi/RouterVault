@@ -35,4 +35,22 @@ class PagesController extends Controller
 
         return view('features');
     }
+
+    public function aboutUs(Request $request): RedirectResponse|View
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('about-us');
+    }
+
+    public function contactUs(Request $request): RedirectResponse|View
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('contact-us');
+    }
 }
