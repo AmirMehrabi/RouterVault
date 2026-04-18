@@ -20,9 +20,9 @@
                     <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-cloud text-white text-xl"></i>
                     </div>
-                    <span class="text-2xl font-bold text-gray-900">SkyBase Cloud</span>
+                    <span class="text-2xl font-bold text-gray-900">ویسپا</span>
                 </a>
-                <p class="mt-2 text-gray-600 text-sm">Complete ISP Management Platform</p>
+                <p class="mt-2 text-gray-600 text-sm">مدیریت شبکه‌ی MikroTik</p>
             </div>
 
             <!-- Flash Messages -->

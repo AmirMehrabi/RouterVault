@@ -59,17 +59,17 @@
 
             <section class="border-b border-slate-200 bg-slate-100">
                 <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
+                    <div class="grid gap-6 lg:grid-cols-1">
+                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm w-2xl max-w-4xl mx-auto">
                             <p class="text-sm font-black text-slate-950">راه‌های ارتباط</p>
                             <div class="mt-6 space-y-5 text-sm leading-8 text-slate-600">
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <p class="font-black text-slate-950">ایمیل</p>
-                                    <p class="mt-2">hello@wispa.app</p>
+                                    <p class="mt-2">info@wispa.app</p>
                                 </div>
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <p class="font-black text-slate-950">تلفن</p>
-                                    <p class="mt-2">۰۲۱-۸۸۸۸۸۸۸۸</p>
+                                    <p class="mt-2">09336337953</p>
                                 </div>
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <p class="font-black text-slate-950">ساعت پاسخ‌گویی</p>
@@ -78,36 +78,6 @@
                             </div>
                         </div>
 
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
-                            <p class="text-sm font-black text-slate-950">فرم درخواست مشاوره</p>
-                            <p class="mt-3 text-sm leading-8 text-slate-600">
-                                این نسخه فعلاً به‌صورت بروشوری طراحی شده است. برای ارتباط سریع، از اطلاعات تماس استفاده کنید یا در مرحله بعدی
-                                فرم واقعی را به آن متصل کنیم.
-                            </p>
-
-                            <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                    <p class="text-xs font-black tracking-[0.22em] text-slate-500">۱</p>
-                                    <p class="mt-2 text-sm font-black text-slate-950">اندازه تیم و تعداد کاربران</p>
-                                    <p class="mt-2 text-sm leading-7 text-slate-600">به ما بگویید در چه مقیاسی کار می‌کنید.</p>
-                                </div>
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                    <p class="text-xs font-black tracking-[0.22em] text-slate-500">۲</p>
-                                    <p class="mt-2 text-sm font-black text-slate-950">نوع نیاز</p>
-                                    <p class="mt-2 text-sm leading-7 text-slate-600">دمو، انتخاب پلن یا قیمت‌گذاری سازمانی.</p>
-                                </div>
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                    <p class="text-xs font-black tracking-[0.22em] text-slate-500">۳</p>
-                                    <p class="mt-2 text-sm font-black text-slate-950">سناریوی کاری</p>
-                                    <p class="mt-2 text-sm leading-7 text-slate-600">چالش فعلی شما در شبکه یا عملیات چیست؟</p>
-                                </div>
-                                <div class="rounded-2xl border border-slate-900 bg-slate-900 p-4 text-white">
-                                    <p class="text-xs font-black tracking-[0.22em] text-slate-400">۴</p>
-                                    <p class="mt-2 text-sm font-black">گام بعدی</p>
-                                    <p class="mt-2 text-sm leading-7 text-slate-300">ما مناسب‌ترین مسیر همکاری را پیشنهاد می‌کنیم.</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>

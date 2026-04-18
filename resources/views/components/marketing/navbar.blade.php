@@ -4,8 +4,7 @@
 
 @php
     $navItems = [
-        ['key' => 'overview', 'label' => 'معرفی', 'href' => $current === 'home' ? '#overview' : route('home') . '#overview'],
-        ['key' => 'capabilities', 'label' => 'قابلیت‌ها', 'href' => $current === 'home' ? '#capabilities' : route('home') . '#capabilities'],
+        ['key' => 'home', 'label' => 'خانه', 'href' => route('home')],
         ['key' => 'pricing', 'label' => 'تعرفه‌ها', 'href' => route('pricing')],
         ['key' => 'about', 'label' => 'درباره ما', 'href' => route('about-us')],
         ['key' => 'contact', 'label' => 'تماس با ما', 'href' => route('contact-us')],
@@ -39,7 +38,7 @@
                 @endforeach
             </nav>
 
-            <div class="flex items-center gap-3">
+            {{-- <div class="flex items-center gap-3">
                 <a
                     href="{{ route('auth.login') }}"
                     class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
@@ -52,7 +51,7 @@
                 >
                     شروع استفاده
                 </a>
-            </div>
+            </div> --}}
         </div>
 
         <nav class="mt-4 flex flex-wrap gap-2 lg:hidden">

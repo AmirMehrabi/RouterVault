@@ -59,20 +59,6 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-3 sm:flex-row">
-                            <a
-                                href="{{ route('auth.register') }}"
-                                class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-black text-white transition hover:bg-slate-800"
-                            >
-                                ساخت حساب و شروع
-                            </a>
-                            <a
-                                href="{{ route('auth.login') }}"
-                                class="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-6 py-3.5 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-                            >
-                                ورود به پنل
-                            </a>
-                        </div>
 
                         <div class="grid gap-4 md:grid-cols-3">
                             <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -486,16 +472,10 @@
 
                             <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
                                 <a
-                                    href="{{ route('auth.register') }}"
+                                    href="{{ route('contact-us') }}"
                                     class="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 transition hover:bg-slate-100"
                                 >
-                                    شروع استفاده از ویسپا
-                                </a>
-                                <a
-                                    href="{{ route('auth.login') }}"
-                                    class="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-6 py-3.5 text-sm font-black text-white transition hover:bg-slate-800"
-                                >
-                                    ورود به حساب
+                                   تماس با ما
                                 </a>
                             </div>
                         </div>

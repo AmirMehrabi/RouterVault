@@ -38,12 +38,6 @@
                         >
                             درخواست مشاوره
                         </a>
-                        <a
-                            href="{{ route('auth.register') }}"
-                            class="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-                        >
-                            ساخت حساب
-                        </a>
                     </div>
                 </div>
             </div>
