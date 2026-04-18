@@ -306,8 +306,9 @@
     </section>
 </div>
 
+@push('scripts')
 <script>
-    function networkDashboard(payload) {
+    window.networkDashboard = function (payload) {
         return {
             chartData: {
                 capacityBySite: (payload.charts.capacityBySite || []).map((item) => ({
@@ -458,6 +459,7 @@
                 });
             },
         };
-    }
+    };
 </script>
+@endpush
 @endsection
