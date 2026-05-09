@@ -15,6 +15,12 @@
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">{{ $label }}</p><p class="mt-2 break-all text-lg font-semibold">{{ $value }}</p></div>
         @endforeach
     </div>
+    @if($backup->status === 'failed' && $backup->error_message)
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
+            <h2 class="mb-2 text-lg font-semibold text-red-900">Backup Error</h2>
+            <pre class="whitespace-pre-wrap break-words text-sm text-red-800">{{ $backup->error_message }}</pre>
+        </div>
+    @endif
     <div>
         <h2 class="mb-3 text-lg font-semibold text-gray-900">Diff</h2>
         @include('backups._diff', ['hunks' => $backup->diff?->hunks ?? []])

@@ -6,6 +6,7 @@ use App\Models\BackupRun;
 use App\Models\BackupSchedule;
 use App\Models\Router;
 use App\Models\RouterBackup;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Ssh\Ssh;
@@ -105,11 +106,26 @@ class RouterBackupService
         }
 
         $config = $router->routerOsConfig();
+
+        Log::info('Router backup export started.', [
+            'router_id' => $router->id,
+            'tenant_id' => $router->tenant_id,
+            'router_name' => $router->name,
+            'host' => $config['host'],
+            'ssh_port' => $config['ssh_port'],
+            'ssh_auth_method' => $router->ssh_auth_method ?: 'private_key',
+            'ssh_timeout' => $config['ssh_timeout'],
+            'username_present' => filled($config['user'] ?? null),
+            'password_present' => filled($config['pass'] ?? null),
+            'private_key_present' => filled($config['ssh_private_key'] ?? null),
+        ]);
+
         $ssh = Ssh::create($config['user'], $config['host'], $config['ssh_port'])
+            ->removeBash()
             ->disableStrictHostKeyChecking()
             ->setTimeout($config['ssh_timeout']);
 
-        if (($config['ssh_auth_method'] ?? 'private_key') === 'password') {
+        if (($router->ssh_auth_method ?: 'private_key') === 'password') {
             $ssh->usePassword($config['pass']);
         } else {
             $ssh->usePrivateKey($config['ssh_private_key']);
@@ -118,8 +134,28 @@ class RouterBackupService
         $process = $ssh->execute('/export show-sensitive');
 
         if (! $process->isSuccessful()) {
+            Log::warning('Router backup export failed.', [
+                'router_id' => $router->id,
+                'tenant_id' => $router->tenant_id,
+                'router_name' => $router->name,
+                'host' => $config['host'],
+                'ssh_port' => $config['ssh_port'],
+                'exit_code' => $process->getExitCode(),
+                'error_output' => trim($process->getErrorOutput()),
+                'standard_output' => Str::of(trim($process->getOutput()))->limit(1000)->toString(),
+            ]);
+
             throw new \RuntimeException($process->getErrorOutput() ?: 'RouterOS export command failed.');
         }
+
+        Log::info('Router backup export completed.', [
+            'router_id' => $router->id,
+            'tenant_id' => $router->tenant_id,
+            'router_name' => $router->name,
+            'host' => $config['host'],
+            'ssh_port' => $config['ssh_port'],
+            'output_bytes' => strlen($process->getOutput()),
+        ]);
 
         return $process->getOutput();
     }

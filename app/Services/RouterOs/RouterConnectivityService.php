@@ -21,6 +21,14 @@ class RouterConnectivityService
             'api_config' => $this->safeRouterOsConfig($router),
         ]);
 
+        $diagnosticWarnings = $this->diagnosticWarnings($router);
+
+        if ($diagnosticWarnings !== []) {
+            Log::warning('Router connectivity check has configuration warnings before API connection.', $context + [
+                'warnings' => $diagnosticWarnings,
+            ]);
+        }
+
         try {
             Log::debug('Router connectivity creating RouterOS API client.', $context);
             $client = $this->clientFactory->make($router);
@@ -109,7 +117,7 @@ class RouterConnectivityService
             'api_port' => (int) ($router->api_port ?: 8728),
             'use_ssl' => (bool) $router->use_ssl,
             'legacy_login' => (bool) $router->legacy_login,
-            'timeout' => (int) ($router->timeout ?: 5),
+            'database_timeout' => $router->timeout,
             'username_present' => filled($router->resolvedApiUsername()),
             'password_present' => filled($router->resolvedApiPassword()),
             'credential_source' => $router->password_manager_credential_id ? 'password_manager' : 'router_columns',
@@ -128,7 +136,45 @@ class RouterConnectivityService
         $config['user_present'] = filled($config['user'] ?? null);
         unset($config['user']);
 
+        $config['ssh_private_key_present'] = filled($config['ssh_private_key'] ?? null);
+        unset($config['ssh_private_key']);
+
         return $config;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function diagnosticWarnings(Router $router): array
+    {
+        $warnings = [];
+        $config = $router->routerOsConfig();
+
+        if (blank($router->ip_address)) {
+            $warnings[] = 'Router IP address is missing.';
+        }
+
+        if (blank($router->resolvedApiUsername())) {
+            $warnings[] = 'RouterOS API username is missing.';
+        }
+
+        if (blank($router->resolvedApiPassword())) {
+            $warnings[] = 'RouterOS API password is missing.';
+        }
+
+        if ((bool) $router->use_ssl && (int) ($router->api_port ?: 8728) === 8728) {
+            $warnings[] = 'SSL is enabled but the API port is 8728, which is commonly the non-SSL RouterOS API port.';
+        }
+
+        if (! (bool) $router->use_ssl && (int) ($router->api_port ?: 8728) === 8729) {
+            $warnings[] = 'SSL is disabled but the API port is 8729, which is commonly the SSL RouterOS API port.';
+        }
+
+        if ($router->timeout !== null && (int) $router->timeout !== (int) ($config['timeout'] ?? 0)) {
+            $warnings[] = 'Router timeout column does not match the RouterOS API client timeout currently being used.';
+        }
+
+        return $warnings;
     }
 
     protected function durationMs(float $startedAt): int

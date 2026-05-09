@@ -120,6 +120,8 @@ class Router extends Model
      */
     public function routerOsConfig(): array
     {
+        $timeout = (int) ($this->timeout ?: 10);
+
         return [
             'host' => $this->ip_address,
             'user' => $this->resolvedApiUsername(),
@@ -127,12 +129,11 @@ class Router extends Model
             'port' => (int) ($this->api_port ?: 8728),
             'ssl' => (bool) $this->use_ssl,
             'legacy' => (bool) $this->legacy_login,
-            'timeout' => 5,
-            'socket_timeout' => 8,
+            'timeout' => $timeout,
+            'socket_timeout' => max($timeout, 10),
             'attempts' => 1,
             'delay' => 1,
             'ssh_port' => (int) ($this->ssh_port ?: 22),
-            'ssh_auth_method' => $this->ssh_auth_method ?: 'private_key',
             'ssh_private_key' => $this->ssh_private_key ?: '~/.ssh/id_rsa',
             'ssh_timeout' => (int) ($this->ssh_timeout ?: 30),
         ];
