@@ -47,7 +47,8 @@ class RouterBackupService
                 throw new \RuntimeException('RouterOS export returned empty output.');
             }
 
-            $checksum = hash('sha256', $export);
+            $normalizedExport = $this->diffService->normalizeForComparison($export."\n");
+            $checksum = hash('sha256', $normalizedExport);
             $previous = RouterBackup::query()
                 ->where('tenant_id', $tenantId)
                 ->where('router_id', $router->id)

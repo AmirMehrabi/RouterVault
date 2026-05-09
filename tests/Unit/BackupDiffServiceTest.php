@@ -20,4 +20,29 @@ class BackupDiffServiceTest extends TestCase
         $this->assertStringNotContainsString('-line three', $diff['unified_diff']);
         $this->assertStringNotContainsString('+line three', $diff['unified_diff']);
     }
+
+    public function test_diff_ignores_routeros_export_timestamp_header(): void
+    {
+        $old = "# 2026-05-01 15:46:35 by RouterOS 7.20.6\n/system identity set name=core\n";
+        $new = "# 2026-05-01 15:46:01 by RouterOS 7.20.6\n/system identity set name=core\n";
+
+        $diff = (new BackupDiffService)->diff($old, $new);
+
+        $this->assertSame(0, $diff['added']);
+        $this->assertSame(0, $diff['removed']);
+        $this->assertSame('', $diff['unified_diff']);
+        $this->assertSame([], $diff['hunks']);
+    }
+
+    public function test_normalized_comparison_content_excludes_routeros_export_timestamp_header(): void
+    {
+        $service = new BackupDiffService;
+        $old = "# 2026-05-01 15:46:35 by RouterOS 7.20.6\n/system identity set name=core\n";
+        $new = "# 2026-05-01 15:46:01 by RouterOS 7.20.6\n/system identity set name=core\n";
+
+        $this->assertSame(
+            hash('sha256', $service->normalizeForComparison($old)),
+            hash('sha256', $service->normalizeForComparison($new))
+        );
+    }
 }

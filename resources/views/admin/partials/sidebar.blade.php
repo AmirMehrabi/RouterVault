@@ -19,7 +19,7 @@
 
     <!-- Network Section Header -->
     <li class="pt-4">
-        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Network</div>
+        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Network Management</div>
     </li>
     <!-- Sites -->
     <li>
@@ -56,34 +56,10 @@
         </a>
     </li>
 
-    <li>
-        <a href="{{ route('backups.index') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'backups.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0 0l-4-4m4 4l4-4"></path>
-            </svg>
-            <span>Backups</span>
-        </a>
-    </li>
 
-    <li>
-        <a href="{{ route('schedules.index') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'schedules.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
-            </svg>
-            <span>Schedules</span>
-        </a>
-    </li>
-
-    <li>
-        <a href="{{ route('diff-alerts.index') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'diff-alerts.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"></path>
-            </svg>
-            <span>Diff Alerts</span>
-        </a>
+    <!-- Wireless Clients Section Header -->
+    <li class="pt-4">
+        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Wireless Clients</div>
     </li>
 
     <li>
@@ -95,6 +71,43 @@
             <span>Wireless Clients</span>
         </a>
     </li>
+
+
+    <li class="pt-4">
+        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Backup Management</div>
+    </li>
+
+
+    <li>
+        <a href="{{ route('schedules.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'schedules.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+            </svg>
+            <span>Schedules</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('backups.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'backups.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 4v12m0 0l-4-4m4 4l4-4"></path>
+            </svg>
+            <span>Backups</span>
+        </a>
+    </li>
+
+
+    <li>
+        <a href="{{ route('diff-alerts.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium {{ str_starts_with($currentRoute, 'diff-alerts.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"></path>
+            </svg>
+            <span>Diff Alerts</span>
+        </a>
+    </li>
+
 
 
 
@@ -143,9 +156,9 @@
     </li> --}}
 
     <!-- Reports Section -->
-    <li class="pt-4">
+    {{-- <li class="pt-4">
         <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Reports</div>
-    </li>
+    </li> --}}
 
     {{-- <!-- Usage Reports -->
     <li>

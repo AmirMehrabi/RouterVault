@@ -9,6 +9,9 @@ class BackupDiffService
      */
     public function diff(string $oldContent, string $newContent, int $context = 3): array
     {
+        $oldContent = $this->normalizeForComparison($oldContent);
+        $newContent = $this->normalizeForComparison($newContent);
+
         $oldLines = $this->splitLines($oldContent);
         $newLines = $this->splitLines($newContent);
         $operations = $this->operations($oldLines, $newLines);
@@ -43,6 +46,17 @@ class BackupDiffService
         ];
     }
 
+    public function normalizeForComparison(string $content): string
+    {
+        $lines = $this->splitLines($content);
+
+        if ($lines !== [] && $this->isRouterOsExportHeader($lines[0])) {
+            array_shift($lines);
+        }
+
+        return $lines === [] ? '' : implode("\n", $lines)."\n";
+    }
+
     /**
      * @return array<int, string>
      */
@@ -55,6 +69,11 @@ class BackupDiffService
         }
 
         return explode("\n", rtrim($content, "\n"));
+    }
+
+    protected function isRouterOsExportHeader(string $line): bool
+    {
+        return preg_match('/^#\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+by\s+RouterOS\s+/i', $line) === 1;
     }
 
     /**
