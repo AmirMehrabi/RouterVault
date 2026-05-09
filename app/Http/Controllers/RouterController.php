@@ -216,6 +216,11 @@ class RouterController extends Controller
             $validated['tenant_id'] = auth()->user()->tenant_id;
         }
 
+        $validated['use_ssl'] = (bool) ($validated['use_ssl'] ?? false);
+        $validated['legacy_login'] = (bool) ($validated['legacy_login'] ?? false);
+        $validated['ssh_auth_method'] = $validated['ssh_auth_method'] ?? 'private_key';
+        $validated['ssh_timeout'] = $validated['ssh_timeout'] ?? 30;
+
         $credentialSource = $validated['credential_source'] ?? null;
         unset($validated['credential_source']);
 

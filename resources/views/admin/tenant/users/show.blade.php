@@ -19,7 +19,7 @@
     </a>
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900"><x-user.display-name :user="$user" icon-class="w-5 h-5 text-sky-500" /></h1>
             <p class="text-gray-600 mt-1">{{ $user->email }}</p>
         </div>
         <div class="flex items-center gap-2">
@@ -39,7 +39,7 @@
             <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4">
                 {{ strtoupper(substr($user->name, 0, 2)) }}
             </div>
-            <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
+            <h2 class="text-xl font-bold text-gray-900"><x-user.display-name :user="$user" icon-class="w-5 h-5 text-sky-500" /></h2>
             <p class="text-gray-500">{{ $user->email }}</p>
 
             <div class="mt-4 space-y-2">
@@ -138,6 +138,8 @@
         @endif
     </div>
 </div>
+
+@include('profile-new', ['user' => $user])
 
 <!-- Role Permissions -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

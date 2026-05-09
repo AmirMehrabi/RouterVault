@@ -89,7 +89,9 @@
                                 {{ strtoupper(substr($user->name, 0, 2)) }}
                             </div>
                             <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                <div class="text-sm font-medium text-gray-900">
+                                    <x-user.display-name :user="$user" />
+                                </div>
                                 <div class="text-sm text-gray-500">{{ $user->email }}</div>
                                 @if($user->id === auth()->id())
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">

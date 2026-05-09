@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\UserRegisteredForBadges;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterTenantRequest;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -47,6 +49,7 @@ class TenantRegistrationController extends Controller
                 'tenant_id' => $tenant->id,
                 'name' => $request->owner_name,
                 'email' => $request->email,
+                'phone' => $request->phone,
                 'password' => Hash::make($request->password),
                 'role' => 'owner',
                 'status' => 'active',
@@ -62,11 +65,14 @@ class TenantRegistrationController extends Controller
             DB::commit();
 
             auth()->login($user);
+            UserRegisteredForBadges::dispatch($user, [
+                'event' => 'user_registered',
+            ]);
 
             return redirect()->route('dashboard')
                 ->with('success', 'Welcome to SkyBase Cloud! Your account has been created with a 14-day trial.');
 
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             DB::rollBack();
             \Log::error('Registration database error: '.$e->getMessage());
 

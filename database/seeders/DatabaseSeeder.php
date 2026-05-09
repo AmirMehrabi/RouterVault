@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
 
         // Call other seeders
         $this->call([
+            BadgeSeeder::class,
             IpPoolSeeder::class,
         ]);
     }

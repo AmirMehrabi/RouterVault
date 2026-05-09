@@ -68,6 +68,26 @@ class Tenant extends Model
         return $this->hasMany(AccessPoint::class);
     }
 
+    public function backupSchedules(): HasMany
+    {
+        return $this->hasMany(BackupSchedule::class);
+    }
+
+    public function routerBackups(): HasMany
+    {
+        return $this->hasMany(RouterBackup::class);
+    }
+
+    public function diffAlerts(): HasMany
+    {
+        return $this->hasMany(DiffAlert::class);
+    }
+
+    public function diffAlertSetting(): HasMany
+    {
+        return $this->hasMany(DiffAlertSetting::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

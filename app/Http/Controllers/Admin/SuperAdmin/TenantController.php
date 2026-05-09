@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class TenantController extends Controller
 
     public function show(Tenant $tenant): View
     {
-        $tenant->load(['plan', 'users', 'settings', 'roles']);
+        $tenant->load(['plan', 'users.badges', 'settings', 'roles']);
         $userCount = $tenant->users()->count();
         $customerCount = $tenant->customers()->count();
         $routerCount = $tenant->routers()->count();
@@ -32,7 +33,7 @@ class TenantController extends Controller
 
     public function edit(Tenant $tenant): View
     {
-        $plans = \App\Models\Plan::active()->ordered()->get();
+        $plans = Plan::active()->ordered()->get();
 
         return view('admin.super-admin.tenants.edit', compact('tenant', 'plans'));
     }

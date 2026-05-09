@@ -6,6 +6,7 @@ use Database\Factories\RouterFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Router extends Model
@@ -24,12 +25,20 @@ class Router extends Model
         'vendor',
         'ip_address',
         'api_port',
+        'use_ssl',
+        'legacy_login',
         'api_username',
         'api_password',
         'ssh_port',
+        'ssh_auth_method',
+        'ssh_private_key',
+        'ssh_timeout',
         'location',
         'site',
         'status',
+        'last_checked_at',
+        'last_connected_at',
+        'last_error',
         'version',
         'uptime',
         'cpu_usage',
@@ -49,6 +58,10 @@ class Router extends Model
         return [
             'enable_monitoring' => 'boolean',
             'enable_provisioning' => 'boolean',
+            'use_ssl' => 'boolean',
+            'legacy_login' => 'boolean',
+            'last_checked_at' => 'datetime',
+            'last_connected_at' => 'datetime',
         ];
     }
 
@@ -77,6 +90,21 @@ class Router extends Model
         return $this->hasMany(WirelessClient::class);
     }
 
+    public function backups(): HasMany
+    {
+        return $this->hasMany(RouterBackup::class);
+    }
+
+    public function backupSchedules(): BelongsToMany
+    {
+        return $this->belongsToMany(BackupSchedule::class)->withTimestamps();
+    }
+
+    public function diffAlerts(): HasMany
+    {
+        return $this->hasMany(DiffAlert::class);
+    }
+
     public function resolvedApiUsername(): ?string
     {
         return $this->passwordManagerCredential?->username ?? $this->api_username;
@@ -85,6 +113,29 @@ class Router extends Model
     public function resolvedApiPassword(): ?string
     {
         return $this->passwordManagerCredential?->password ?? $this->api_password;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function routerOsConfig(): array
+    {
+        return [
+            'host' => $this->ip_address,
+            'user' => $this->resolvedApiUsername(),
+            'pass' => $this->resolvedApiPassword() ?? '',
+            'port' => (int) ($this->api_port ?: 8728),
+            'ssl' => (bool) $this->use_ssl,
+            'legacy' => (bool) $this->legacy_login,
+            'timeout' => 5,
+            'socket_timeout' => 8,
+            'attempts' => 1,
+            'delay' => 1,
+            'ssh_port' => (int) ($this->ssh_port ?: 22),
+            'ssh_auth_method' => $this->ssh_auth_method ?: 'private_key',
+            'ssh_private_key' => $this->ssh_private_key ?: '~/.ssh/id_rsa',
+            'ssh_timeout' => (int) ($this->ssh_timeout ?: 30),
+        ];
     }
 
     public function scopeFilter($query, array $filters)

@@ -49,6 +49,12 @@
                 <x-ui.input.text type="text" label="IP Address" name="ip_address" :required="true" :value="old('ip_address', $router->ip_address)" :error="$errors->first('ip_address')" />
                 <x-ui.input.text type="number" label="API Port" name="api_port" :value="old('api_port', $router->api_port)" :error="$errors->first('api_port')" hint="Default: 8728" />
                 <x-ui.input.text type="number" label="SSH Port" name="ssh_port" :value="old('ssh_port', $router->ssh_port)" :error="$errors->first('ssh_port')" hint="Default: 22" />
+                <div class="flex items-center pt-6">
+                    <x-ui.input.checkbox label="Use SSL for RouterOS API" name="use_ssl" :checked="old('use_ssl', $router->use_ssl)" :error="$errors->first('use_ssl')" />
+                </div>
+                <div class="flex items-center pt-6">
+                    <x-ui.input.checkbox label="Use legacy RouterOS login" name="legacy_login" :checked="old('legacy_login', $router->legacy_login)" :error="$errors->first('legacy_login')" />
+                </div>
             </div>
         </div>
 
@@ -88,6 +94,11 @@
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Advanced Settings</h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <x-ui.input.text type="number" label="Timeout (seconds)" name="timeout" :value="old('timeout', $router->timeout ?? 30)" :error="$errors->first('timeout')" hint="Connection timeout in seconds" />
+                <x-ui.input.select label="SSH Auth Method" name="ssh_auth_method" :options="['private_key' => 'Private Key', 'password' => 'Password']" :value="old('ssh_auth_method', $router->ssh_auth_method ?? 'private_key')" :error="$errors->first('ssh_auth_method')" />
+                <x-ui.input.text type="number" label="SSH Timeout" name="ssh_timeout" :value="old('ssh_timeout', $router->ssh_timeout ?? 30)" :error="$errors->first('ssh_timeout')" />
+                <div class="md:col-span-2 lg:col-span-3">
+                    <x-ui.input.textarea label="SSH Private Key Path" name="ssh_private_key" :value="old('ssh_private_key', $router->ssh_private_key)" :error="$errors->first('ssh_private_key')" hint="Defaults to ~/.ssh/id_rsa when blank." />
+                </div>
                 <div class="flex items-center pt-6">
                     <x-ui.input.checkbox label="Enable Monitoring" name="enable_monitoring" :checked="old('enable_monitoring', $router->enable_monitoring ?? true)" :error="$errors->first('enable_monitoring')" />
                 </div>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Tenant\StoreUserRequest;
+use App\Http\Requests\Admin\Tenant\UpdateUserRequest;
 use App\Models\ActivityLog;
 use App\Models\Role;
 use App\Models\User;
@@ -16,10 +18,13 @@ class UserController extends Controller
     public function index(): View
     {
         $users = User::where('tenant_id', tenant_id())
-            ->with('tenant')
+            ->with(['tenant', 'badges'])
             ->when(request('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $query->where(function ($searchQuery) use ($search): void {
+                    $searchQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
             })
             ->when(request('role'), function ($query, $role) {
                 $query->where('role', $role);
@@ -59,21 +64,15 @@ class UserController extends Controller
         return view('admin.tenant.users.create', compact('roles', 'availableRoles'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,billing,support,noc'],
-            'status' => ['required', 'in:active,inactive'],
-            'send_invite' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'tenant_id' => tenant_id(),
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'status' => $validated['status'],
@@ -100,7 +99,7 @@ class UserController extends Controller
     {
         $this->authorizeUserAccess($user);
 
-        $user->load('tenant');
+        $user->load(['tenant', 'badges']);
 
         $recentActivity = ActivityLog::where('user_id', $user->id)
             ->where('tenant_id', tenant_id())
@@ -125,23 +124,18 @@ class UserController extends Controller
         return view('admin.tenant.users.edit', compact('user', 'roles'));
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $this->authorizeUserAccess($user);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'role' => ['required', 'in:admin,billing,support,noc'],
-            'status' => ['required', 'in:active,inactive'],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        ]);
+        $validated = $request->validated();
 
-        $oldValues = $user->only('name', 'email', 'role', 'status');
+        $oldValues = $user->only('name', 'email', 'phone', 'role', 'status');
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
             'role' => $validated['role'],
             'status' => $validated['status'],
         ];
@@ -152,7 +146,7 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        $newValues = $user->only('name', 'email', 'role', 'status');
+        $newValues = $user->only('name', 'email', 'phone', 'role', 'status');
 
         // Log activity
         ActivityLog::create([

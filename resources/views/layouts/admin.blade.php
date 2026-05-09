@@ -232,6 +232,9 @@
                         
                         <!-- User Dropdown Menu -->
                         <div id="user-menu" class="hidden absolute {{ $isRtl ? 'left-0' : 'right-0' }} mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <div class="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
+                                <x-user.display-name :user="$user" />
+                            </div>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
                             <div class="border-t border-gray-200 my-1"></div>

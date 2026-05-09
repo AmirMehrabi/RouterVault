@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:check-access-point-status')->everyMinute()->withoutOverlapping();
 Schedule::command('app:refresh-wireless-client-management')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('routers:check-connectivity')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('backups:run-due')->everyMinute()->withoutOverlapping();

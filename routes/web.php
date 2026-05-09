@@ -5,12 +5,15 @@ use App\Http\Controllers\Admin\SuperAdmin\TenantController as SuperAdminTenantCo
 use App\Http\Controllers\Admin\Tenant\UserController;
 use App\Http\Controllers\Auth\TenantLoginController;
 use App\Http\Controllers\Auth\TenantRegistrationController;
+use App\Http\Controllers\BackupScheduleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiffAlertController;
 use App\Http\Controllers\IpamController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PasswordManagerController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\RouterBackupController;
 use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SiteController;
@@ -131,6 +134,34 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/{router}/interfaces', [RouterController::class, 'interfaces'])->name('interfaces');
         Route::get('/{router}/ip-pools', [RouterController::class, 'ipPools'])->name('ip-pools');
         Route::get('/{router}/logs', [RouterController::class, 'logs'])->name('logs');
+    });
+
+    Route::prefix('schedules')->name('schedules.')->group(function () {
+        Route::get('/', [BackupScheduleController::class, 'index'])->name('index');
+        Route::get('/create', [BackupScheduleController::class, 'create'])->name('create');
+        Route::post('/', [BackupScheduleController::class, 'store'])->name('store');
+        Route::get('/{schedule}', [BackupScheduleController::class, 'show'])->name('show');
+        Route::get('/{schedule}/edit', [BackupScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{schedule}', [BackupScheduleController::class, 'update'])->name('update');
+        Route::delete('/{schedule}', [BackupScheduleController::class, 'destroy'])->name('destroy');
+        Route::post('/{schedule}/run', [BackupScheduleController::class, 'run'])->name('run');
+        Route::post('/{schedule}/toggle', [BackupScheduleController::class, 'toggle'])->name('toggle');
+    });
+
+    Route::prefix('backups')->name('backups.')->group(function () {
+        Route::get('/', [RouterBackupController::class, 'index'])->name('index');
+        Route::get('/compare', [RouterBackupController::class, 'compare'])->name('compare');
+        Route::get('/{backup}', [RouterBackupController::class, 'show'])->name('show');
+        Route::get('/{backup}/download', [RouterBackupController::class, 'download'])->name('download');
+    });
+
+    Route::prefix('diff-alerts')->name('diff-alerts.')->group(function () {
+        Route::get('/', [DiffAlertController::class, 'index'])->name('index');
+        Route::get('/settings', [DiffAlertController::class, 'settings'])->name('settings');
+        Route::put('/settings', [DiffAlertController::class, 'updateSettings'])->name('settings.update');
+        Route::get('/{alert}', [DiffAlertController::class, 'show'])->name('show');
+        Route::post('/{alert}/status', [DiffAlertController::class, 'status'])->name('status');
+        Route::post('/{alert}/notes', [DiffAlertController::class, 'note'])->name('notes.store');
     });
 
     Route::prefix('password-manager')->name('password-manager.')->group(function () {

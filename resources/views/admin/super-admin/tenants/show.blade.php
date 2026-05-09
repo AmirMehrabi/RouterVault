@@ -219,7 +219,9 @@
                             {{ strtoupper(substr($user->name, 0, 2)) }}
                         </div>
                         <div class="ml-3">
-                            <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                            <div class="text-sm font-medium text-gray-900">
+                                <x-user.display-name :user="$user" />
+                            </div>
                             <div class="text-sm text-gray-500">{{ $user->email }}</div>
                         </div>
                     </div>

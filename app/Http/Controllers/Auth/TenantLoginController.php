@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\UserLoggedInForBadges;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\TenantLoginRequest;
 use App\Models\User;
@@ -55,7 +56,10 @@ class TenantLoginController extends Controller
 
         $request->session()->regenerate();
 
-        $user->update(['last_login_at' => now()]);
+        $user->refresh();
+        UserLoggedInForBadges::dispatch($user, [
+            'event' => 'user_logged_in',
+        ]);
 
         return redirect()->intended(route('dashboard'));
     }
