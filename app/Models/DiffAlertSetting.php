@@ -16,6 +16,9 @@ class DiffAlertSetting extends Model
         'ignore_blank_lines',
         'ignored_sections',
         'ignored_keywords',
+        'telegram_chat_id',
+        'telegram_bot_token',
+        'email_recipients',
     ];
 
     protected function casts(): array
@@ -25,6 +28,7 @@ class DiffAlertSetting extends Model
             'ignore_blank_lines' => 'boolean',
             'ignored_sections' => 'array',
             'ignored_keywords' => 'array',
+            'email_recipients' => 'array',
         ];
     }
 

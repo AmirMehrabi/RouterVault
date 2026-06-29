@@ -6,6 +6,7 @@ use App\Http\Requests\Router\StoreRouterRequest;
 use App\Http\Requests\Router\UpdateRouterRequest;
 use App\Models\PasswordManagerCredential;
 use App\Models\Router;
+use App\Services\Backups\RouterPushScriptGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -194,6 +195,20 @@ class RouterController extends Controller
     public function logs(Router $router): View
     {
         return view('routers.logs', compact('router'));
+    }
+
+    public function pushScript(Router $router, RouterPushScriptGenerator $generator): View
+    {
+        $this->authorizeTenantAccess($router);
+
+        $scriptData = $generator->generateForDisplay($router);
+
+        return view('routers.push-script', [
+            'router' => $router,
+            'script' => $scriptData['script'],
+            'token' => $scriptData['token'],
+            'uploadUrl' => $scriptData['upload_url'],
+        ]);
     }
 
     /**

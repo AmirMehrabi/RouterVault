@@ -1,490 +1,386 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta
         name="description"
-        content="ویسپا یک پلتفرم فارسی برای مدیریت عملیات ISP و شبکه‌های MikroTik است؛ از مانیتورینگ روتر و اکسس‌پوینت تا مدیریت مشترک، سرویس و اجرای عملیات روزمره."
+        content="WISPA automatically backs up MikroTik router configurations, keeps every version, and makes configuration changes easy to compare."
     >
-    <title>ویسپا | پلتفرم عملیات ISP و مدیریت شبکه MikroTik</title>
+    <title>WISPA | MikroTik Configuration Backups and Version History</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('assets/fonts.css') }}">
-    <style>
-        body {
-            font-family: Pelak, "Segoe UI", sans-serif;
-        }
-    </style>
 </head>
-<body class="bg-slate-100 text-slate-900 antialiased">
-    <div class="min-h-screen" x-data="{ activeStory: 'noc', activeFaq: 0 }">
-        <x-marketing.navbar current="home" />
+<body class="bg-white font-sans text-slate-950 antialiased">
+    <div class="min-h-screen">
+        <x-marketing.wispa-navbar />
 
         <main>
-            <section id="overview" class="border-b border-slate-200 bg-white">
-                <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:px-8 lg:py-20">
-                    <div class="space-y-8">
-                        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600">
-                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            پنل فارسی مدیریت عملیات شبکه و مشترکین برای ISPها
+            <section class="relative overflow-hidden border-b border-slate-200 bg-white">
+                <img
+                    src="{{ asset('assets/Images/hero.png') }}"
+                    alt=""
+                    class="absolute inset-0 hidden h-full w-full object-cover object-center lg:block"
+                    aria-hidden="true"
+                >
+                <div class="relative mx-auto max-w-7xl px-4 pb-16 pt-32 sm:px-6 sm:pt-36 lg:flex lg:min-h-[800px] lg:items-center lg:px-8 lg:py-24">
+                    <div class="relative z-10 max-w-2xl lg:w-[52%]">
+                        <h1 class="max-w-3xl text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[3.5rem]">
+                            Router config backups, with version history you can actually understand.
+                        </h1>
+                        <p class="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                            WISPA automatically backs up your MikroTik router configurations, keeps a clean history of every version, and makes it easy to compare changes before they become outages.
+                        </p>
+                        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                            <a
+                                href="{{ route('auth.register') }}"
+                                class="inline-flex items-center justify-center rounded-xl bg-wispa-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-wispa-700 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-2"
+                            >
+                                Start Backing Up Routers
+                            </a>
+                            <a
+                                href="#how-it-works"
+                                class="inline-flex items-center justify-center rounded-xl border border-wispa-300 bg-white px-6 py-3.5 text-sm font-semibold text-wispa-700 transition hover:border-wispa-400 hover:bg-wispa-50 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-2"
+                            >
+                                See How It Works
+                            </a>
                         </div>
-
-                        <div class="space-y-5">
-                            <h1 class="max-w-3xl text-2xl font-black leading-tight text-slate-950  xl:text-3xl">
-                                همه چیزهایی که برای اداره یک شبکه MikroTik لازم دارید، در یک تجربه واحد و قابل‌فهم
-                            </h1>
-                            <p class="max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                                ویسپا برای تیم‌هایی ساخته شده که می‌خواهند از وضعیت شبکه، عملکرد اکسس‌پوینت‌ها، کیفیت مشترکین،
-                                فعال‌سازی سرویس‌ها و عملیات روزانه، یک تصویر روشن و قابل اقدام داشته باشند؛ بدون پراکندگی ابزار،
-                                بدون حدس، و بدون اتکای دائمی به Winbox.
-                            </p>
-                        </div>
-
-                        <div class="grid gap-4 sm:grid-cols-3">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                                <p class="text-xs font-bold tracking-[0.22em] text-slate-500">NOC</p>
-                                <p class="mt-3 text-2xl font-black text-slate-950">مانیتورینگ زنده</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-600">روتر، سایت، AP و کیفیت سرویس مشترک در یک نمای واحد.</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                                <p class="text-xs font-bold tracking-[0.22em] text-slate-500">OPS</p>
-                                <p class="mt-3 text-2xl font-black text-slate-950">اقدام سریع</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-600">تمدید، قطع، وصل، تغییر پلن و مدیریت دسترسی بدون کار دستی تکراری.</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-900 bg-slate-900 p-5 text-white">
-                                <p class="text-xs font-bold tracking-[0.22em] text-slate-300">CX</p>
-                                <p class="mt-3 text-2xl font-black">تجربه حرفه‌ای</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-300">طراحی شده برای تیم فروش، پشتیبانی و عملیات در کنار هم.</p>
-                            </div>
-                        </div>
-
-
-                        <div class="grid gap-4 md:grid-cols-3">
-                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                                <p class="text-sm font-bold text-slate-900">برای چه کسی؟</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-600">ISPهای محلی، تیم‌های NOC، پشتیبانی فنی و اپراتورهای چندسایته.</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                                <p class="text-sm font-bold text-slate-900">مسئله اصلی</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-600">پراکنده بودن داده‌های شبکه، مشترک و عملیات در چند ابزار متفاوت.</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                                <p class="text-sm font-bold text-slate-900">نتیجه</p>
-                                <p class="mt-2 text-sm leading-7 text-slate-600">تصمیم سریع‌تر، اجرای منظم‌تر و زمان کمتر برای پیگیری‌های تکراری.</p>
-                            </div>
-                        </div>
+                        <p class="mt-7 text-sm text-slate-500">
+                            Built for ISPs, network admins, and MikroTik consultants.
+                        </p>
                     </div>
 
-                    <div class="relative">
-                        <div class="absolute inset-x-10 top-8 h-24 rounded-full bg-slate-200 blur-3xl"></div>
-                        <div class="relative rounded-[2rem] border border-slate-300 bg-slate-200 p-4 shadow-2xl shadow-slate-300/60">
-                            <div class="rounded-[1.6rem] border border-slate-800 bg-slate-950 p-5 text-white">
-                                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                                    <div>
-                                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-500">WISPA MONITOR</p>
-                                        <p class="mt-2 text-xl font-black">نمای عملیاتی شبکه</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
-                                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                                        ۱۲ سایت پایدار
-                                    </div>
-                                </div>
-
-                                <div class="mt-5 grid gap-4 xl:grid-cols-1">
-                                    <div class="space-y-4">
-                                        <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                                            <div class="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <p class="text-xs font-semibold tracking-[0.24em] text-slate-500">Dashboard Snapshot</p>
-                                                    <p class="mt-2 text-lg font-black">Device Operations Dashboard</p>
-                                                    <p class="mt-2 text-sm text-slate-400">وضعیت لحظه‌ای بار سایت‌ها، سلامت APها و رویدادهای اخیر شبکه</p>
-                                                </div>
-                                                <div class="grid gap-2 text-left text-xs">
-                                                    <span class="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-cyan-300">۱۸۴۳ کاربر فعال</span>
-                                                    <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300">۳ ناحیه پرمصرف</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-4 grid gap-3 sm:grid-cols-4">
-                                                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                    <p class="text-xs text-slate-500">روتر آنلاین</p>
-                                                    <p class="mt-2 text-2xl font-black">24</p>
-                                                </div>
-                                                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                    <p class="text-xs text-slate-500">AP پایدار</p>
-                                                    <p class="mt-2 text-2xl font-black">57</p>
-                                                </div>
-                                                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                    <p class="text-xs text-slate-500">هشدار باز</p>
-                                                    <p class="mt-2 text-2xl font-black">7</p>
-                                                </div>
-                                                <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                    <p class="text-xs text-slate-500">دستور امروز</p>
-                                                    <p class="mt-2 text-2xl font-black">96</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                                            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                                                <p class="text-xs font-semibold tracking-[0.24em] text-slate-500">Access Point View</p>
-                                                <p class="mt-2 text-lg font-black">Tower-AP-03</p>
-                                                <div class="mt-4 space-y-3 text-sm">
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-slate-400">Connected Clients</span>
-                                                        <span class="font-bold text-white">43</span>
-                                                    </div>
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-slate-400">Signal Quality</span>
-                                                        <span class="font-bold text-white">89%</span>
-                                                    </div>
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-slate-400">CPU / Memory</span>
-                                                        <span class="font-bold text-white">31% / 58%</span>
-                                                    </div>
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-slate-400">Channel Utilization</span>
-                                                        <span class="font-bold text-white">67%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                                                <div class="flex items-center justify-between">
-                                                    <div>
-                                                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-500">Operations Queue</p>
-                                                        <p class="mt-2 text-lg font-black">آنچه باید همین حالا انجام شود</p>
-                                                    </div>
-                                                    <span class="rounded-full border border-slate-700 px-2.5 py-1 text-xs font-bold text-slate-300">Real-time</span>
-                                                </div>
-                                                <div class="mt-4 space-y-3">
-                                                    <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                        <p class="text-sm font-bold text-white">دو AP با فشار بالا</p>
-                                                        <p class="mt-1 text-xs leading-6 text-slate-400">جابجایی بار یا بازبینی فرکانس برای حفظ کیفیت سرویس</p>
-                                                    </div>
-                                                    <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                        <p class="text-sm font-bold text-white">سه مشترک با سیگنال ضعیف</p>
-                                                        <p class="mt-1 text-xs leading-6 text-slate-400">بررسی سریع از روی سایت، AP و کیفیت لینک قبل از تماس پشتیبانی</p>
-                                                    </div>
-                                                    <div class="rounded-2xl border border-slate-800 bg-slate-950 p-3">
-                                                        <p class="text-sm font-bold text-white">یک تمدید گروهی امروز</p>
-                                                        <p class="mt-1 text-xs leading-6 text-slate-400">اعمال پلن و تمدید اشتراک از همان پنل مدیریتی</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- <div class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-500">Why It Matters</p>
-                                        <div class="mt-4 space-y-4">
-                                            <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                                                <p class="text-sm font-bold text-white">هر داده، قابل اقدام است</p>
-                                                <p class="mt-2 text-xs leading-6 text-slate-400">از دیدن وضعیت تا اجرای عملیات، مسیر تصمیم‌گیری قطع نمی‌شود.</p>
-                                            </div>
-                                            <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                                                <p class="text-sm font-bold text-white">برای چند نقش، یک تجربه مشترک</p>
-                                                <p class="mt-2 text-xs leading-6 text-slate-400">مدیر، پشتیبان و اپراتور همه از یک زبان و یک صفحه استفاده می‌کنند.</p>
-                                            </div>
-                                            <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                                                <p class="text-sm font-bold text-white">تمرکز روی شبکه‌های واقعی</p>
-                                                <p class="mt-2 text-xs leading-6 text-slate-400">طراحی‌شده بر اساس سناریوهای واقعی ISP و صفحات مدیریتی خود سامانه.</p>
-                                            </div>
-                                        </div>
-                                    </div> --}}
-                                </div>
-                            </div>
-
-                            <div class="mx-auto mt-4 h-4 w-40 rounded-full bg-slate-400"></div>
-                        </div>
+                    <div class="relative mt-8 min-h-[300px] sm:min-h-[430px] lg:hidden">
+                        <img
+                            src="{{ asset('assets/Images/hero.png') }}"
+                            alt="Abstract layered router configuration versions with highlighted additions and removals"
+                            class="absolute left-1/2 top-1/2 w-[145%] max-w-none -translate-x-1/2 -translate-y-1/2 [mask-image:radial-gradient(ellipse_at_center,black_68%,transparent_100%)] sm:w-[125%]"
+                        >
                     </div>
                 </div>
             </section>
 
-            <section class="border-b border-slate-200 bg-slate-100">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <div class="grid gap-px overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-200 md:grid-cols-4">
-                        <div class="bg-white p-6">
-                            <p class="text-xs font-bold tracking-[0.22em] text-slate-500">ONE PLACE</p>
-                            <p class="mt-3 text-2xl font-black text-slate-950">روتر، سایت، AP، مشترک و سرویس</p>
-                        </div>
-                        <div class="bg-white p-6">
-                            <p class="text-xs font-bold tracking-[0.22em] text-slate-500">ONE FLOW</p>
-                            <p class="mt-3 text-2xl font-black text-slate-950">از مشاهده تا اجرا، بدون جابجایی ابزار</p>
-                        </div>
-                        <div class="bg-white p-6">
-                            <p class="text-xs font-bold tracking-[0.22em] text-slate-500">ONE LANGUAGE</p>
-                            <p class="mt-3 text-2xl font-black text-slate-950">رابط فارسی و ساختار مناسب تیم‌های عملیاتی</p>
-                        </div>
-                        <div class="bg-slate-900 p-6 text-white">
-                            <p class="text-xs font-bold tracking-[0.22em] text-slate-400">OUTCOME</p>
-                            <p class="mt-3 text-2xl font-black">زمان کمتر برای پیگیری، تصویر واضح‌تر برای تصمیم‌گیری</p>
-                        </div>
+            <section class="border-b border-slate-200 bg-white py-16 sm:py-20">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="mx-auto max-w-3xl text-center">
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            Router changes are easy to make. Harder to remember.
+                        </h2>
+                        <p class="mt-5 text-base leading-8 text-slate-600">
+                            Most teams still rely on manual exports, scattered files, chat messages, or memory. That works until it doesn’t. WISPA gives every router a clean configuration history, so your team can see what changed, when it changed, and what the previous version looked like.
+                        </p>
+                    </div>
+
+                    <div class="mt-12 grid divide-y divide-slate-200 border-y border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+                        @foreach (['What changed?', 'Who touched this router?', 'Do we have the old config?', 'Can we roll back safely?'] as $question)
+                            <div class="flex items-center gap-4 px-4 py-6 lg:px-6">
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-wispa-200 text-wispa-600">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                        <path stroke-linecap="round" d="M9.8 9a2.3 2.3 0 0 1 4.4 1c0 1.7-2.2 1.8-2.2 3.4"></path>
+                                        <path stroke-linecap="round" d="M12 17h.01"></path>
+                                    </svg>
+                                </span>
+                                <p class="text-sm font-semibold text-slate-800">{{ $question }}</p>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </section>
 
-            <section id="capabilities" class="border-b border-slate-200 bg-white">
-                <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="max-w-3xl">
-                        <p class="text-sm font-black text-slate-600">آنچه ویسپا را به ابزار روزمره تیم شما تبدیل می‌کند</p>
-                        {{-- <h2 class="mt-4 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
-                            این صفحه فقط درباره امکانات نیست؛ درباره سرعت فهم، سرعت اقدام و اطمینان در اداره شبکه است
-                        </h2> --}}
+            <section id="features" class="scroll-mt-24 border-b border-slate-200 bg-slate-50 py-20 sm:py-24">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="mx-auto max-w-3xl text-center">
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            A simple workflow for safer router changes.
+                        </h2>
                     </div>
 
-                    <div class="mt-10 grid gap-5 lg:grid-cols-3">
-                        <article class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-7 shadow-sm">
-                            <p class="text-xs font-black tracking-[0.22em] text-slate-500">01 / مانیتورینگ شبکه</p>
-                            <h3 class="mt-4 text-2xl font-black text-slate-950">تصویر زنده از وضعیت واقعی</h3>
-                            <p class="mt-4 text-sm leading-8 text-slate-600">
-                                تیم شما می‌تواند به جای جست‌وجوی پراکنده در چند محیط، وضعیت روترها، سایت‌ها، اکسس‌پوینت‌ها و شاخص‌های سلامت را
-                                در یک صفحه منسجم ببیند.
-                            </p>
-                            <ul class="mt-6 space-y-3 text-sm leading-7 text-slate-700">
-                                <li>وضعیت آنلاین/آفلاین و شاخص‌های مصرف منابع</li>
-                                <li>فشار بار روی APها و کیفیت سرویس مشترکین</li>
-                                <li>نمای خلاصه برای تشخیص سریع اولویت‌ها</li>
-                            </ul>
-                        </article>
-
-                        <article class="rounded-[1.75rem] border border-slate-900 bg-slate-900 p-7 text-white shadow-sm">
-                            <p class="text-xs font-black tracking-[0.22em] text-slate-400">02 / مدیریت مشترک و سرویس</p>
-                            <h3 class="mt-4 text-2xl font-black">فروش، تمدید و تغییر سرویس بدون اصطکاک</h3>
-                            <p class="mt-4 text-sm leading-8 text-slate-300">
-                                وقتی اطلاعات مشتری، وضعیت سرویس و داده‌های شبکه در کنار هم قرار بگیرند، تیم فروش و پشتیبانی تصمیم‌های دقیق‌تری
-                                می‌گیرند و پاسخ سریع‌تری به مشتری می‌دهند.
-                            </p>
-                            <ul class="mt-6 space-y-3 text-sm leading-7 text-slate-300">
-                                <li>جریان روشن برای ایجاد، تمدید، تعلیق و فعال‌سازی</li>
-                                <li>هماهنگی بین سرویس، دسترسی و وضعیت تجهیز</li>
-                                <li>کاهش خطاهای دستی در عملیات تکراری روزانه</li>
-                            </ul>
-                        </article>
-
-                        <article class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-7 shadow-sm">
-                            <p class="text-xs font-black tracking-[0.22em] text-slate-500">03 / عملیات فنی</p>
-                            <h3 class="mt-4 text-2xl font-black text-slate-950">اقدام مستقیم از داخل پنل</h3>
-                            <p class="mt-4 text-sm leading-8 text-slate-600">
-                                ویسپا فقط یک داشبورد برای تماشا نیست؛ محیطی است که تیم شما از داخل آن، کارهای روزمره مدیریت شبکه را به شکل کنترل‌شده
-                                و قابل پیگیری انجام می‌دهد.
-                            </p>
-                            <ul class="mt-6 space-y-3 text-sm leading-7 text-slate-700">
-                                <li>مدیریت سناریوهای تکرارشونده برای تیم عملیات</li>
-                                <li>ثبت و پیگیری بهتر رویدادها و اقدامات</li>
-                                <li>کاهش وابستگی به ابزارهای پراکنده برای کارهای ساده</li>
-                            </ul>
-                        </article>
-                    </div>
-                </div>
-            </section>
-
-            <section id="experience" class="border-b border-slate-200 bg-slate-100">
-                <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="grid gap-8 xl:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
-                            <p class="text-sm font-black text-slate-600">تجربه‌ای که کاربر را نگه می‌دارد</p>
-                            <h2 class="mt-4 text-3xl font-black text-slate-950">هر بخش طوری چیده شده که بازدیدکننده سریع‌تر بفهمد و بیشتر بماند</h2>
-                            <p class="mt-4 text-sm leading-8 text-slate-600">
-                                به جای شلوغی بصری، ویسپا با بلوک‌های روشن، داده‌های آشنا و داستان‌های کاربردی نشان می‌دهد در هر نقش چه ارزشی ایجاد می‌کند.
-                            </p>
-
-                            <div class="mt-6 space-y-3">
-                                <button
-                                    type="button"
-                                    @click="activeStory = 'noc'"
-                                    :class="activeStory === 'noc' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'"
-                                    class="flex w-full items-start justify-between rounded-2xl border p-4 text-right transition"
-                                >
-                                    <span>
-                                        <span class="block text-sm font-black">برای تیم NOC</span>
-                                        <span class="mt-1 block text-sm leading-7">در چند ثانیه می‌فهمد کدام سایت ناپایدار است و کجا باید اقدام شود.</span>
-                                    </span>
-                                    <span class="text-xs font-bold">01</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    @click="activeStory = 'support'"
-                                    :class="activeStory === 'support' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'"
-                                    class="flex w-full items-start justify-between rounded-2xl border p-4 text-right transition"
-                                >
-                                    <span>
-                                        <span class="block text-sm font-black">برای پشتیبانی</span>
-                                        <span class="mt-1 block text-sm leading-7">از روی وضعیت سرویس و AP، سریع‌تر ریشه مشکل مشتری را پیدا می‌کند.</span>
-                                    </span>
-                                    <span class="text-xs font-bold">02</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    @click="activeStory = 'sales'"
-                                    :class="activeStory === 'sales' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'"
-                                    class="flex w-full items-start justify-between rounded-2xl border p-4 text-right transition"
-                                >
-                                    <span>
-                                        <span class="block text-sm font-black">برای فروش و مدیریت</span>
-                                        <span class="mt-1 block text-sm leading-7">درک می‌کند چه سرویس‌هایی فعال هستند و کجا فرصت توسعه وجود دارد.</span>
-                                    </span>
-                                    <span class="text-xs font-bold">03</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
-                            <div x-show="activeStory === 'noc'" x-transition.opacity.duration.200ms>
-                                <p class="text-xs font-black tracking-[0.22em] text-slate-500">SCENARIO / NOC</p>
-                                <h3 class="mt-3 text-2xl font-black text-slate-950">وقتی فشار شبکه بالا می‌رود، اولویت‌ها فوراً معلوم‌اند</h3>
-                                <p class="mt-4 text-sm leading-8 text-slate-600">
-                                    تیم NOC از روی داشبورد می‌بیند کدام سایت‌ها شلوغ‌تر شده‌اند، کدام APها به آستانه فشار رسیده‌اند و چه هشدارهایی نیاز به اقدام دارند.
-                                </p>
-                                <div class="mt-6 grid gap-4 md:grid-cols-3">
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-xs text-slate-500">سایت‌های پایدار</p>
-                                        <p class="mt-2 text-3xl font-black text-slate-950">12</p>
-                                    </div>
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-xs text-slate-500">AP پرریسک</p>
-                                        <p class="mt-2 text-3xl font-black text-slate-950">3</p>
-                                    </div>
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-xs text-slate-500">اقدام فوری</p>
-                                        <p class="mt-2 text-3xl font-black text-slate-950">7</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div x-show="activeStory === 'support'" x-transition.opacity.duration.200ms>
-                                <p class="text-xs font-black tracking-[0.22em] text-slate-500">SCENARIO / SUPPORT</p>
-                                <h3 class="mt-3 text-2xl font-black text-slate-950">پشتیبان فقط یک تیکت نمی‌بیند؛ زمینه واقعی مشکل را می‌فهمد</h3>
-                                <p class="mt-4 text-sm leading-8 text-slate-600">
-                                    وقتی کیفیت سیگنال، AP متصل، وضعیت سرویس و آخرین وضعیت ارتباط در یک دید قرار بگیرد، زمان تشخیص و زمان پاسخ‌گویی کمتر می‌شود.
-                                </p>
-                                <div class="mt-6 space-y-3">
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-sm font-black text-slate-950">مشترک: 912xxxx</p>
-                                        <p class="mt-2 text-sm leading-7 text-slate-600">سیگنال ضعیف، AP مقصد شلوغ، سرویس فعال و قابل تمدید</p>
-                                    </div>
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-sm font-black text-slate-950">اقدام پیشنهادی</p>
-                                        <p class="mt-2 text-sm leading-7 text-slate-600">بررسی فشار AP، بازبینی تنظیم فرکانس و اطلاع‌رسانی دقیق‌تر به مشتری</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div x-show="activeStory === 'sales'" x-transition.opacity.duration.200ms>
-                                <p class="text-xs font-black tracking-[0.22em] text-slate-500">SCENARIO / MANAGEMENT</p>
-                                <h3 class="mt-3 text-2xl font-black text-slate-950">مدیریت، فقط گزارش نمی‌خواهد؛ دید روشن برای رشد می‌خواهد</h3>
-                                <p class="mt-4 text-sm leading-8 text-slate-600">
-                                    از روی تمرکز مشترکین، توزیع فشار شبکه و روند عملیات، تصمیم‌های توسعه، فروش و ظرفیت‌گذاری با اطمینان بیشتری گرفته می‌شود.
-                                </p>
-                                <div class="mt-6 grid gap-4 md:grid-cols-2">
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-xs text-slate-500">تمدیدهای امروز</p>
-                                        <p class="mt-2 text-3xl font-black text-slate-950">28</p>
-                                    </div>
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <p class="text-xs text-slate-500">فرصت توسعه سایت</p>
-                                        <p class="mt-2 text-3xl font-black text-slate-950">2</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="audience" class="border-b border-slate-200 bg-white">
-                <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="grid gap-5 lg:grid-cols-4">
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
-                            <p class="text-sm font-black text-slate-950">ISPهای در حال رشد</p>
-                            <p class="mt-3 text-sm leading-8 text-slate-600">برای تیم‌هایی که می‌خواهند رشد تعداد مشترکین باعث آشفتگی عملیاتی نشود.</p>
-                        </div>
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
-                            <p class="text-sm font-black text-slate-950">تیم‌های چندنقشی</p>
-                            <p class="mt-3 text-sm leading-8 text-slate-600">وقتی پشتیبانی، عملیات و فروش باید روی یک داده مشترک تصمیم بگیرند.</p>
-                        </div>
-                        <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
-                            <p class="text-sm font-black text-slate-950">اپراتورهای چندسایته</p>
-                            <p class="mt-3 text-sm leading-8 text-slate-600">برای شبکه‌هایی که دیدن سلامت هر سایت و AP باید سریع و قابل اتکا باشد.</p>
-                        </div>
-                        <div class="rounded-[1.75rem] border border-slate-900 bg-slate-900 p-6 text-white">
-                            <p class="text-sm font-black">کسانی که زمان مهم است</p>
-                            <p class="mt-3 text-sm leading-8 text-slate-300">اگر هر دقیقه تأخیر در تشخیص یا اجرای عملیات هزینه دارد، ویسپا برای شما ساخته شده است.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="faq" class="border-b border-slate-200 bg-slate-100">
-                <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="text-center">
-                        <p class="text-sm font-black text-slate-600">سوالات متداول</p>
-                        <h2 class="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">سوال‌هایی که یک مشتری بالقوه پیش از ثبت‌نام می‌پرسد</h2>
-                    </div>
-
-                    <div class="mt-10 space-y-4">
-                        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <button type="button" @click="activeFaq = activeFaq === 0 ? -1 : 0" class="flex w-full items-center justify-between gap-4 px-5 py-5 text-right">
-                                <span class="text-base font-black text-slate-950">ویسپا دقیقاً چه مسئله‌ای را حل می‌کند؟</span>
-                                <span class="text-slate-400" x-text="activeFaq === 0 ? '−' : '+'"></span>
-                            </button>
-                            <div x-show="activeFaq === 0" x-transition.opacity.duration.200ms class="px-5 pb-5 text-sm leading-8 text-slate-600">
-                                پراکندگی بین دیدن وضعیت شبکه، مدیریت مشترک و اجرای عملیات روزانه را از بین می‌برد و همه این‌ها را در یک تجربه منظم و فارسی کنار هم می‌آورد.
-                            </div>
-                        </div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <button type="button" @click="activeFaq = activeFaq === 1 ? -1 : 1" class="flex w-full items-center justify-between gap-4 px-5 py-5 text-right">
-                                <span class="text-base font-black text-slate-950">این سیستم فقط برای مانیتورینگ است؟</span>
-                                <span class="text-slate-400" x-text="activeFaq === 1 ? '−' : '+'"></span>
-                            </button>
-                            <div x-show="activeFaq === 1" x-transition.opacity.duration.200ms class="px-5 pb-5 text-sm leading-8 text-slate-600">
-                                خیر. ویسپا علاوه بر مانیتورینگ، برای مدیریت سرویس، پیگیری وضعیت مشترکین و اجرای جریان‌های عملیاتی روزمره هم طراحی شده است.
-                            </div>
-                        </div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <button type="button" @click="activeFaq = activeFaq === 2 ? -1 : 2" class="flex w-full items-center justify-between gap-4 px-5 py-5 text-right">
-                                <span class="text-base font-black text-slate-950">برای چه نوع تیمی مناسب‌تر است؟</span>
-                                <span class="text-slate-400" x-text="activeFaq === 2 ? '−' : '+'"></span>
-                            </button>
-                            <div x-show="activeFaq === 2" x-transition.opacity.duration.200ms class="px-5 pb-5 text-sm leading-8 text-slate-600">
-                                برای ISPها و تیم‌هایی که فروش، پشتیبانی و عملیات‌شان باید به یک تصویر مشترک از وضعیت سرویس و شبکه دسترسی داشته باشند.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-white">
-                <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div class="rounded-[2rem] border border-slate-200 bg-slate-900 px-6 py-10 text-white shadow-xl shadow-slate-300/50 sm:px-10">
-                        <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+                    <div class="mt-12 overflow-hidden rounded-xl border border-slate-200 border-t-2 border-t-wispa-500 bg-white">
+                        <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:p-10">
                             <div>
-                                <p class="text-sm font-black text-slate-300">اگر قرار است مخاطب فقط یک چیز از ویسپا به خاطر بسپارد</p>
-                                <h2 class="mt-4 text-3xl font-black leading-tight sm:text-4xl">
-                                    ویسپا جایی است که عملیات شبکه، مدیریت مشترک و تصمیم‌های روزمره ISP به یک صفحه قابل اتکا تبدیل می‌شوند
-                                </h2>
+                                <span class="flex h-11 w-11 items-center justify-center rounded-xl border border-wispa-200 text-wispa-600">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2"></path>
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                    </svg>
+                                </span>
+                                <h3 class="mt-5 text-2xl font-bold text-slate-950">Version History</h3>
+                                <p class="mt-3 max-w-sm text-sm leading-7 text-slate-600">
+                                    Every backup becomes part of a readable timeline. Go back and inspect previous versions anytime.
+                                </p>
                             </div>
+                            <div class="relative space-y-3 border-l border-slate-200 pl-7">
+                                @foreach ([true, false, false, false] as $active)
+                                            <div class="relative rounded-lg border bg-white p-4 {{ $active ? 'border-wispa-400' : 'border-slate-200' }}">
+                                        <span class="absolute -left-[2.15rem] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 {{ $active ? 'border-wispa-600 bg-wispa-600' : 'border-slate-300 bg-white' }}"></span>
+                                        <div class="flex items-center justify-between gap-6">
+                                            <div class="flex flex-1 gap-3">
+                                                <span class="h-2 w-20 rounded-full bg-slate-200"></span>
+                                                <span class="h-2 w-32 rounded-full bg-slate-100"></span>
+                                            </div>
+                                            <span class="h-2 w-12 rounded-full bg-slate-100"></span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                                <a
-                                    href="{{ route('contact-us') }}"
-                                    class="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 transition hover:bg-slate-100"
-                                >
-                                   تماس با ما
-                                </a>
-                            </div>
+                    <div class="mt-8 grid divide-y divide-slate-200 border-y border-slate-200 bg-white lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+                        @php
+                            $features = [
+                                ['title' => 'Automatic Backups', 'copy' => 'WISPA regularly pulls and stores router configuration backups, so your team does not depend on manual exports.', 'type' => 'backup'],
+                                ['title' => 'Visual Diffs', 'copy' => 'Compare two versions and quickly see what was added, removed, or changed.', 'type' => 'diff'],
+                                ['title' => 'Built for Router Teams', 'copy' => 'Designed for ISPs, NOC teams, and MikroTik consultants who manage many routers.', 'type' => 'team'],
+                            ];
+                        @endphp
+                        @foreach ($features as $feature)
+                            <article class="group relative px-1 py-8 sm:px-6 lg:px-8">
+                                <span class="absolute left-0 top-0 h-0.5 w-12 bg-wispa-500 transition-all duration-300 group-hover:w-20 lg:left-8"></span>
+                                <p class="text-xs font-semibold tracking-[0.16em] text-wispa-600">0{{ $loop->iteration }}</p>
+                                <h3 class="mt-4 text-lg font-bold text-slate-950">{{ $feature['title'] }}</h3>
+                                <p class="mt-2 min-h-20 text-sm leading-7 text-slate-600">{{ $feature['copy'] }}</p>
+                                <div class="mt-6 flex h-14 items-center gap-2" aria-hidden="true">
+                                    @if ($feature['type'] === 'backup')
+                                        @foreach (range(1, 6) as $index)
+                                            <span class="h-2 w-2 rounded-full {{ $index < 5 ? 'bg-wispa-400' : ($index === 5 ? 'bg-cyan-400' : 'bg-emerald-400') }}"></span>
+                                            @if ($index < 6)
+                                                <span class="h-px flex-1 bg-slate-200"></span>
+                                            @endif
+                                        @endforeach
+                                    @elseif ($feature['type'] === 'diff')
+                                        <div class="w-1/2 space-y-2 border-l-2 border-rose-300 bg-rose-50 p-3">
+                                            <span class="block h-2 w-4/5 rounded-full bg-rose-200"></span>
+                                            <span class="block h-2 w-3/5 rounded-full bg-rose-300"></span>
+                                        </div>
+                                        <div class="w-1/2 space-y-2 border-l-2 border-emerald-300 bg-emerald-50 p-3">
+                                            <span class="block h-2 w-3/5 rounded-full bg-emerald-300"></span>
+                                            <span class="block h-2 w-4/5 rounded-full bg-emerald-200"></span>
+                                        </div>
+                                    @else
+                                        <span class="h-8 w-8 rounded-full bg-wispa-100"></span>
+                                        <span class="h-11 w-11 rounded-full bg-wispa-500"></span>
+                                        <span class="h-8 w-8 rounded-full bg-wispa-100"></span>
+                                    @endif
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <section id="how-it-works" class="scroll-mt-24 border-b border-slate-200 bg-white py-20 sm:py-24">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="mx-auto max-w-3xl text-center">
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            From router to history, automatically.
+                        </h2>
+                    </div>
+
+                    <div class="relative mt-14 grid gap-10 lg:grid-cols-3 lg:gap-12">
+                        <div class="absolute left-[17%] right-[17%] top-6 hidden border-t border-dashed border-wispa-300 lg:block"></div>
+                        @php
+                            $steps = [
+                                ['title' => 'Connect your routers', 'copy' => 'Add your MikroTik routers to WISPA with the required access details.'],
+                                ['title' => 'WISPA backs them up', 'copy' => 'Backups run automatically on schedule, keeping a clean record of configuration changes.'],
+                                ['title' => 'Compare any version', 'copy' => 'Open the history, choose two versions, and see the difference clearly.'],
+                            ];
+                        @endphp
+                        @foreach ($steps as $index => $step)
+                            <article class="relative text-center">
+                                <span class="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-wispa-200 bg-white text-sm font-bold text-wispa-600 shadow-sm">
+                                    {{ $index + 1 }}
+                                </span>
+                                <h3 class="mt-6 text-xl font-bold text-slate-950">{{ $step['title'] }}</h3>
+                                <p class="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-600">{{ $step['copy'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <section class="border-b border-slate-200 bg-slate-50 py-20 sm:py-24">
+                <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[0.72fr_1.28fr] lg:px-8">
+                    <div>
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            See the change, not just the backup file.
+                        </h2>
+                        <p class="mt-5 text-lg leading-8 text-slate-600">
+                            A backup is useful.<br>
+                            <span class="font-semibold text-slate-950">A readable diff is better.</span>
+                        </p>
+                        <p class="mt-4 text-sm leading-7 text-slate-600">
+                            WISPA helps you understand what changed between two router configuration versions without digging through long export files manually.
+                        </p>
+                        <ul class="mt-8 space-y-4">
+                            @foreach (['See added and removed lines', 'Compare any two versions', 'Review changes after maintenance work', 'Investigate unexpected router behavior', 'Keep a cleaner audit trail for your team'] as $item)
+                                <li class="flex gap-3 text-sm font-medium text-slate-700">
+                                    <svg class="mt-0.5 h-5 w-5 shrink-0 text-wispa-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.5 12 2.2 2.2 4.8-5"></path>
+                                    </svg>
+                                    {{ $item }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <div class="overflow-hidden rounded-xl border border-slate-200 border-t-2 border-t-wispa-500 bg-white">
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                            <div class="px-5 py-4 text-sm font-semibold text-rose-500">Older version</div>
+                            <div class="px-5 py-4 text-sm font-semibold text-emerald-600">Newer version</div>
+                        </div>
+                        <div class="grid grid-cols-2 divide-x divide-slate-200 p-3 sm:p-5">
+                            @foreach (['removed', 'added'] as $side)
+                                <div class="space-y-3 px-2 sm:px-4">
+                                    @foreach (range(1, 11) as $line)
+                                        @php
+                                            $highlighted = in_array($line, [4, 5, 8], true);
+                                        @endphp
+                                        <div @class([
+                                            'flex items-center gap-2 rounded-md px-2 py-1.5',
+                                            'bg-rose-50' => $side === 'removed' && $highlighted,
+                                            'bg-emerald-50' => $side === 'added' && $highlighted,
+                                        ])>
+                                            <span @class([
+                                                'text-xs font-semibold',
+                                                'text-rose-400' => $side === 'removed' && $highlighted,
+                                                'text-emerald-500' => $side === 'added' && $highlighted,
+                                                'text-transparent' => ! $highlighted,
+                                            ])>{{ $side === 'removed' ? '−' : '+' }}</span>
+                                            <span @class([
+                                                'h-2 rounded-full',
+                                                $line % 3 === 0 ? 'w-2/3' : ($line % 2 === 0 ? 'w-4/5' : 'w-1/2'),
+                                                'bg-rose-200' => $side === 'removed' && $highlighted,
+                                                'bg-emerald-200' => $side === 'added' && $highlighted,
+                                                'bg-slate-100' => ! $highlighted,
+                                            ])></span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="use-cases" class="scroll-mt-24 border-b border-slate-200 bg-white py-20 sm:py-24">
+                <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+                    <div>
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            Made for real router work.
+                        </h2>
+                        <p class="mt-5 max-w-md text-base leading-8 text-slate-600">
+                            Practical configuration history for the moments when your team needs a reliable answer quickly.
+                        </p>
+                    </div>
+                    <div class="divide-y divide-slate-200 border-y border-slate-200">
+                        @php
+                            $useCases = [
+                                ['title' => 'After maintenance', 'copy' => 'Check exactly what changed after planned router work.'],
+                                ['title' => 'Before troubleshooting', 'copy' => 'Look at recent configuration changes before debugging a customer or network issue.'],
+                                ['title' => 'For consultants', 'copy' => 'Keep backup history for multiple clients without managing folders and manual exports.'],
+                                ['title' => 'For small ISPs', 'copy' => 'Bring order to router configuration management without buying a heavy enterprise system.'],
+                            ];
+                        @endphp
+                        @foreach ($useCases as $useCase)
+                            <article class="grid gap-2 py-6 sm:grid-cols-[0.42fr_0.58fr] sm:gap-8">
+                                <h3 class="font-bold text-slate-950">{{ $useCase['title'] }}</h3>
+                                <p class="text-sm leading-7 text-slate-600">{{ $useCase['copy'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <section class="border-b border-slate-200 bg-slate-50 py-20">
+                <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+                    <div>
+                        <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                            Not another complex NOC dashboard.
+                        </h2>
+                        <p class="mt-5 max-w-2xl text-base leading-8 text-slate-600">
+                            WISPA is intentionally focused. It does not try to replace your monitoring stack, billing system, or documentation platform.
+                        </p>
+                        <p class="mt-4 text-sm font-semibold text-slate-600">It does one job well:</p>
+                        <p class="mt-2 max-w-2xl text-xl font-bold leading-8 text-wispa-700">
+                            Keep MikroTik router configurations backed up, versioned, and easy to compare.
+                        </p>
+                    </div>
+                    <div class="flex items-center" aria-hidden="true">
+                        @foreach (range(1, 6) as $index)
+                            <span class="h-3 w-3 rounded-full {{ $index === 6 ? 'bg-emerald-400' : 'bg-wispa-500' }}"></span>
+                            @if ($index < 6)
+                                <span class="h-px flex-1 border-t border-dashed border-wispa-200"></span>
+                            @endif
+                        @endforeach
+                        <span class="ml-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200 bg-white text-emerald-500 shadow-sm">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m7 12 3 3 7-7"></path>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pricing" class="scroll-mt-24 border-b border-slate-200 bg-white py-20 sm:py-24">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
+                        <div>
+                            <h2 class="text-3xl font-bold tracking-[-0.03em] text-slate-950 sm:text-4xl">
+                                Simple pricing for small teams and growing ISPs.
+                            </h2>
+                            <p class="mt-5 max-w-lg text-base leading-8 text-slate-600">
+                                Start small, add routers as you grow, and keep your configuration history organized from day one.
+                            </p>
+                        </div>
+                        <div class="grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-x sm:divide-slate-200">
+                            @php
+                                $plans = [
+                                    ['name' => 'Starter', 'copy' => 'For consultants and small teams managing a few routers.'],
+                                    ['name' => 'ISP', 'copy' => 'For small and medium ISPs that need automatic backups across many routers.'],
+                                    ['name' => 'Custom', 'copy' => 'For larger teams, special deployment needs, or managed service providers.'],
+                                ];
+                            @endphp
+                            @foreach ($plans as $plan)
+                                <article class="relative border-t-2 p-6 text-left {{ $plan['name'] === 'ISP' ? 'border-t-wispa-500 bg-wispa-50/40' : 'border-t-transparent' }}">
+                                    <h3 class="text-xl font-bold {{ $plan['name'] === 'ISP' ? 'text-wispa-600' : 'text-slate-950' }}">{{ $plan['name'] }}</h3>
+                                    <p class="mt-4 text-sm leading-7 text-slate-600">{{ $plan['copy'] }}</p>
+                                </article>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="mt-16 grid items-center gap-8 rounded-xl border border-wispa-200 border-l-4 border-l-wispa-500 bg-wispa-50/60 p-7 sm:p-10 lg:grid-cols-[1fr_auto]">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-[-0.02em] text-slate-950 sm:text-3xl">
+                                Stop guessing what changed on your routers.
+                            </h2>
+                            <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                                Let WISPA keep a clean backup history for every router, so your team can work with more confidence.
+                            </p>
+                        </div>
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <a
+                                href="{{ route('auth.register') }}"
+                                class="inline-flex items-center justify-center rounded-xl bg-wispa-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-wispa-700 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-2"
+                            >
+                                Start Backing Up Routers
+                            </a>
+                            <a
+                                href="{{ route('contact-us') }}"
+                                class="inline-flex items-center justify-center rounded-xl border border-wispa-300 bg-white px-6 py-3.5 text-sm font-semibold text-wispa-700 transition hover:bg-wispa-50 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-2"
+                            >
+                                Contact Us
+                            </a>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
 
-        <x-marketing.footer />
+        <x-marketing.wispa-footer />
     </div>
 </body>
 </html>

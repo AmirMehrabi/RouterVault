@@ -5,10 +5,14 @@ namespace App\Services\Backups;
 use App\Models\DiffAlert;
 use App\Models\DiffAlertSetting;
 use App\Models\RouterBackupDiff;
+use App\Models\Tenant;
+use App\Services\Saas\AlertNotificationService;
 use Illuminate\Support\Str;
 
 class DiffAlertService
 {
+    public function __construct(protected AlertNotificationService $notificationService) {}
+
     public function createForDiff(RouterBackupDiff $diff): ?DiffAlert
     {
         $diff->loadMissing('backup.router', 'previousBackup');
@@ -31,7 +35,7 @@ class DiffAlertService
         $severity = $this->severity($sections, $changedLines);
         $summary = "{$backup->router->name} configuration changed: {$diff->added_lines} added, {$diff->removed_lines} removed";
 
-        return DiffAlert::query()->create([
+        $alert = DiffAlert::query()->create([
             'tenant_id' => $tenantId,
             'router_id' => $backup->router_id,
             'router_backup_id' => $backup->id,
@@ -45,6 +49,13 @@ class DiffAlertService
             'added_lines' => $diff->added_lines,
             'removed_lines' => $diff->removed_lines,
         ]);
+
+        $tenant = Tenant::find($tenantId);
+        if ($tenant) {
+            $this->notificationService->send($alert, $tenant);
+        }
+
+        return $alert;
     }
 
     /**

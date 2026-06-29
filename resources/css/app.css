@@ -6,4 +6,12 @@
 @source '../**/*.js';
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-wispa-50: #eff6ff;
+    --color-wispa-100: #dbeafe;
+    --color-wispa-200: #bfdbfe;
+    --color-wispa-300: #93c5fd;
+    --color-wispa-400: #60a5fa;
+    --color-wispa-500: #2563eb;
+    --color-wispa-600: #1e40af;
+    --color-wispa-700: #1e3a8a;
 }

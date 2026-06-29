@@ -69,8 +69,8 @@ class TenantRegistrationController extends Controller
                 'event' => 'user_registered',
             ]);
 
-            return redirect()->route('dashboard')
-                ->with('success', 'Welcome to SkyBase Cloud! Your account has been created with a 14-day trial.');
+            return redirect()->route('onboarding.index')
+                ->with('success', 'Welcome to SkyBase Cloud! Let\'s set up your account.');
 
         } catch (QueryException $e) {
             DB::rollBack();

@@ -39,6 +39,12 @@ class Plan extends Model
         'available_from',
         'available_to',
         'notes',
+        'max_routers',
+        'backup_retention_days',
+        'alert_channels',
+        'max_users',
+        'is_saas_plan',
+        'is_extra_router',
     ];
 
     protected function casts(): array
@@ -46,10 +52,13 @@ class Plan extends Model
         return [
             'unlimited' => 'boolean',
             'contract_required' => 'boolean',
+            'is_saas_plan' => 'boolean',
+            'is_extra_router' => 'boolean',
             'price' => 'decimal:2',
             'setup_fee' => 'decimal:2',
             'available_from' => 'date',
             'available_to' => 'date',
+            'alert_channels' => 'array',
         ];
     }
 
@@ -99,5 +108,15 @@ class Plan extends Model
             ->where('plan_id', $this->id)
             ->where('status', 'active')
             ->count();
+    }
+
+    public function scopeSaasPlans($query)
+    {
+        return $query->where('is_saas_plan', true)->where('is_extra_router', false)->where('status', 'active');
+    }
+
+    public function scopeExtraRouterPlan($query)
+    {
+        return $query->where('is_extra_router', true)->where('is_saas_plan', true)->where('status', 'active');
     }
 }

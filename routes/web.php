@@ -6,10 +6,13 @@ use App\Http\Controllers\Admin\Tenant\UserController;
 use App\Http\Controllers\Auth\TenantLoginController;
 use App\Http\Controllers\Auth\TenantRegistrationController;
 use App\Http\Controllers\BackupScheduleController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiffAlertController;
+use App\Http\Controllers\DummyPaymentController;
 use App\Http\Controllers\IpamController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PasswordManagerController;
 use App\Http\Controllers\PlanController;
@@ -46,6 +49,17 @@ Route::middleware(['guest'])->prefix('auth')->name('auth.')->group(function () {
 
 // Logout route (authenticated only)
 Route::post('/auth/logout', [TenantLoginController::class, 'logout'])->name('auth.logout')->middleware('auth');
+
+// Onboarding Routes
+Route::middleware(['auth', 'initialize_tenancy'])->prefix('onboarding')->name('onboarding.')->group(function () {
+    Route::get('/', [OnboardingController::class, 'index'])->name('index');
+    Route::get('/step/{step}', [OnboardingController::class, 'step'])->name('step');
+    Route::post('/plan', [OnboardingController::class, 'selectPlan'])->name('plan');
+    Route::post('/payment', [OnboardingController::class, 'processPayment'])->name('payment');
+    Route::post('/router', [OnboardingController::class, 'addRouter'])->name('router');
+    Route::post('/backup', [OnboardingController::class, 'configureBackup'])->name('backup');
+    Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
+});
 
 // Protected Routes (Require Authentication & Tenancy)
 Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(function () {
@@ -128,6 +142,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/{router}/edit', [RouterController::class, 'edit'])->name('edit');
         Route::put('/{router}', [RouterController::class, 'update'])->name('update');
         Route::delete('/{router}', [RouterController::class, 'destroy'])->name('destroy');
+        Route::get('/{router}/push-script', [RouterController::class, 'pushScript'])->name('push-script');
         Route::get('/{router}/sessions', [RouterController::class, 'sessions'])->name('sessions');
         Route::get('/{router}/queues', [RouterController::class, 'queues'])->name('queues');
         Route::get('/{router}/profiles', [RouterController::class, 'profiles'])->name('profiles');
@@ -253,6 +268,17 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
             Route::get('/', fn () => view('billing.payments.index'))->name('index');
             Route::get('/{payment}', fn ($payment) => view('billing.payments.show', compact('payment')))->name('show');
         });
+
+        // SaaS Payment Routes
+        Route::get('/payment/{payment}', [DummyPaymentController::class, 'show'])->name('payment');
+        Route::patch('/payment/{payment}/process', [DummyPaymentController::class, 'process'])->name('payment.process');
+        Route::get('/payment/{payment}/confirmation', [DummyPaymentController::class, 'confirmation'])->name('payment.confirmation');
+
+        // SaaS Subscription Routes
+        Route::get('/subscription', [BillingController::class, 'subscription'])->name('subscription');
+        Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
+        Route::post('/upgrade', [BillingController::class, 'upgrade'])->name('upgrade');
+        Route::post('/cancel', [BillingController::class, 'cancel'])->name('cancel');
 
         Route::get('/credits', fn () => view('billing.credits'))->name('credits');
         Route::get('/reports', fn () => view('billing.reports'))->name('reports');

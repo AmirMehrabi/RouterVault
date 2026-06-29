@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BackupUploadController;
 use App\Http\Controllers\IpamController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Backup upload endpoint (token-based auth, no Laravel auth required)
+Route::post('/v1/backups/upload', [BackupUploadController::class, 'upload'])
+    ->middleware('throttle:10,1');
 
 Route::middleware('auth')->group(function () {
     // IPAM API Routes
