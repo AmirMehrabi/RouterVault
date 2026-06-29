@@ -5,7 +5,7 @@
 >
     <div class="mx-auto flex h-20 max-w-7xl items-center justify-between gap-8 px-5 sm:px-8 lg:px-12 xl:px-16">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center">
-            <img src="{{ asset('assets/Images/Logos/wispaconcept4_symbol_black.svg') }}" alt="WISPA" class="h-14 w-auto">
+            <img src="{{ asset('assets/Images/Logos/wispaconcept4_symbol_black.svg') }}" alt="WISPA" class="h-9 w-auto">
         </a>
 
         <nav class="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex" aria-label="Primary navigation">
