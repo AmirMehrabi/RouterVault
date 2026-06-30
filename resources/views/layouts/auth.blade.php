@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'SkyBase Cloud') - ISP Management Platform</title>
+    <title>@yield('title', 'RouterVault') - ISP Management Platform</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
                 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -16,13 +17,10 @@
         <div class="max-w-md w-full space-y-8">
             <!-- Logo -->
             <div class="text-center">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-3">
-                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-cloud text-white text-xl"></i>
-                    </div>
-                    <span class="text-2xl font-bold text-gray-900">ویسپا</span>
+                <a href="{{ route('home') }}" class="inline-flex items-center">
+                    <x-brand-logo class="h-14" />
                 </a>
-                <p class="mt-2 text-gray-600 text-sm">مدیریت شبکه‌ی MikroTik</p>
+                <p class="mt-2 text-gray-600 text-sm">Manage your MikroTik Routers</p>
             </div>
 
             <!-- Flash Messages -->

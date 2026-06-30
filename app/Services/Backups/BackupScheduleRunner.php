@@ -11,15 +11,40 @@ class BackupScheduleRunner
 
     public function run(BackupSchedule $schedule, string $trigger = 'scheduled'): BackupRun
     {
-        $routers = $schedule->routers()->get();
-        $run = BackupRun::query()->create([
+        return $this->process($this->prepare($schedule, $trigger));
+    }
+
+    public function prepare(BackupSchedule $schedule, string $trigger = 'manual'): BackupRun
+    {
+        return BackupRun::query()->create([
             'tenant_id' => $schedule->tenant_id,
             'backup_schedule_id' => $schedule->id,
             'trigger' => $trigger,
+            'status' => 'queued',
+        ]);
+    }
+
+    public function process(BackupRun $run): BackupRun
+    {
+        $run->loadMissing('schedule');
+        $schedule = $run->schedule;
+
+        if ($schedule === null || $schedule->tenant_id !== $run->tenant_id) {
+            throw new \RuntimeException('Backup run schedule does not belong to the same tenant.');
+        }
+
+        $routers = $schedule->routers()
+            ->where('routers.tenant_id', $run->tenant_id)
+            ->get();
+        $run->forceFill([
             'status' => 'running',
             'total_routers' => $routers->count(),
+            'successful_backups' => 0,
+            'failed_backups' => 0,
             'started_at' => now(),
-        ]);
+            'finished_at' => null,
+            'error_summary' => null,
+        ])->save();
 
         $failedMessages = [];
 

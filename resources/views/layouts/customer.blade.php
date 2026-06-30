@@ -12,7 +12,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>@yield('title', 'Customer Dashboard') - {{ config('app.name', 'SkyBill') }}</title>
+        <title>@yield('title', 'Customer Dashboard') - {{ config('app.name', 'RouterVault') }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
 
         <!-- Fonts removed - using system fonts -->
 
@@ -81,8 +82,9 @@
         <div class="h-full flex flex-col">
             <!-- Logo -->
             <div class="h-[60px] flex items-center px-6 border-b border-blue-700">
-                <a href="{{ route('customer.dashboard') }}" class="text-xl font-semibold text-white">
-                    {{ config('app.name', 'SkyBill') }}
+                <a href="{{ route('customer.dashboard') }}" class="flex items-center gap-2 text-xl font-semibold text-white">
+                    <x-brand-logo variant="symbol" tone="white" class="h-9" />
+                    <span>RouterVault</span>
                 </a>
             </div>
             
@@ -107,8 +109,8 @@
                 
                 <!-- Logo (Mobile) -->
                 <div class="lg:hidden">
-                    <a href="{{ route('customer.dashboard') }}" class="text-lg font-semibold text-gray-900">
-                        {{ config('app.name', 'SkyBill') }}
+                    <a href="{{ route('customer.dashboard') }}" class="block">
+                        <x-brand-logo class="h-7" />
                     </a>
                 </div>
                 
@@ -486,6 +488,5 @@
     </style>
 </body>
 </html>
-
 
 

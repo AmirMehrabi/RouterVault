@@ -6,9 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta
         name="description"
-        content="درباره ویسپا؛ پلتفرمی فارسی برای مدیریت عملیات ISP، مانیتورینگ شبکه MikroTik و هماهنگی تیم‌های فروش، پشتیبانی و عملیات."
+        content="درباره RouterVault؛ پلتفرمی فارسی برای مدیریت عملیات ISP، مانیتورینگ شبکه MikroTik و هماهنگی تیم‌های فروش، پشتیبانی و عملیات."
     >
-    <title>درباره ما | ویسپا</title>
+    <title>درباره ما | RouterVault</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('assets/fonts.css') }}">
     <style>
@@ -25,9 +26,9 @@
             <section class="border-b border-slate-200 bg-white">
                 <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
                     <div class="mx-auto max-w-4xl text-center">
-                        <p class="text-sm font-black text-slate-600">درباره ویسپا</p>
+                        <p class="text-sm font-black text-slate-600">درباره RouterVault</p>
                         <h1 class="mt-4 text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
-                            ویسپا برای این ساخته شده که اداره یک ISP، روشن‌تر، منظم‌تر و قابل‌اتکاتر شود
+                            RouterVault برای این ساخته شده که اداره یک ISP، روشن‌تر، منظم‌تر و قابل‌اتکاتر شود
                         </h1>
                         <p class="mt-6 text-base leading-8 text-slate-600 sm:text-lg">
                             ما به این فکر کرده‌ایم که تیم‌های ISP برای انجام کار روزمره‌شان به چه چیزی نیاز دارند: دید سریع، داده قابل اقدام
@@ -49,7 +50,7 @@
                         <article class="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
                             <p class="text-sm font-black text-slate-950">مسئله‌ای که حل می‌کنیم</p>
                             <p class="mt-4 text-sm leading-8 text-slate-600">
-                                پراکندگی بین مانیتورینگ شبکه، مدیریت مشترک و عملیات تکراری باعث کندی، خطا و فرسایش تیم می‌شود. ویسپا این فاصله را کم می‌کند.
+                                پراکندگی بین مانیتورینگ شبکه، مدیریت مشترک و عملیات تکراری باعث کندی، خطا و فرسایش تیم می‌شود. RouterVault این فاصله را کم می‌کند.
                             </p>
                         </article>
                         <article class="rounded-[1.75rem] border border-slate-900 bg-slate-900 p-7 text-white shadow-sm">
@@ -66,9 +67,9 @@
                 <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
                     <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                         <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-7">
-                            <p class="text-sm font-black text-slate-950">ویسپا چه نوع محصولی است؟</p>
+                            <p class="text-sm font-black text-slate-950">RouterVault چه نوع محصولی است؟</p>
                             <div class="mt-6 space-y-4 text-sm leading-8 text-slate-600">
-                                <p>ویسپا یک پلتفرم عملیاتی برای مدیریت شبکه‌های MikroTik و جریان‌های روزمره ISP است.</p>
+                                <p>RouterVault یک پلتفرم عملیاتی برای مدیریت شبکه‌های MikroTik و جریان‌های روزمره ISP است.</p>
                                 <p>هدف ما این است که تیم شما برای دیدن وضعیت، فهمیدن مسئله و انجام عملیات، مسیر ساده‌تری داشته باشد.</p>
                                 <p>به همین دلیل طراحی محصول، لحن محتوا و ساختار صفحه‌ها به‌جای نمایش صرف داده، روی فهم و اقدام تمرکز دارد.</p>
                             </div>
@@ -77,7 +78,7 @@
                         <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-7">
                             <p class="text-sm font-black text-slate-950">برای آینده چه می‌خواهیم؟</p>
                             <div class="mt-6 space-y-4 text-sm leading-8 text-slate-600">
-                                <p>می‌خواهیم ویسپا به تجربه‌ای تبدیل شود که تیم‌های ISP هر روز با اطمینان به آن رجوع کنند.</p>
+                                <p>می‌خواهیم RouterVault به تجربه‌ای تبدیل شود که تیم‌های ISP هر روز با اطمینان به آن رجوع کنند.</p>
                                 <p>هر صفحه، هر سناریو و هر قابلیت باید به کاهش اصطکاک عملیاتی و افزایش وضوح تصمیم‌گیری کمک کند.</p>
                                 <p>اگر شما هم چنین نگاهی دارید، خوشحال می‌شویم درباره مسیر همکاری صحبت کنیم.</p>
                             </div>

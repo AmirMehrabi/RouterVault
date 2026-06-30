@@ -40,7 +40,7 @@ class AccessPointFactory extends Factory
             'api_username' => 'admin',
             'api_password' => fake()->password(12, 18),
             'mac_address' => fake()->unique()->macAddress(),
-            'ssid' => fake()->randomElement(['SkyBase-Clients', 'Tower-Backhaul', 'Guest-WiFi', 'Campus-5G']),
+            'ssid' => fake()->randomElement(['RouterVault-Clients', 'Tower-Backhaul', 'Guest-WiFi', 'Campus-5G']),
             'band' => fake()->randomElement(['2.4GHz', '5GHz', 'dual']),
             'channel' => (string) fake()->randomElement([1, 6, 11, 36, 44, 149]),
             'frequency' => fake()->randomElement([2412, 2437, 2462, 5180, 5220, 5745]),

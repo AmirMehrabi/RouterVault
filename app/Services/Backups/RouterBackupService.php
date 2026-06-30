@@ -28,16 +28,35 @@ class RouterBackupService
 
     public function create(Router $router, ?BackupSchedule $schedule = null, ?BackupRun $run = null): RouterBackup
     {
-        $tenantId = $router->tenant_id;
         $backup = RouterBackup::query()->create([
-            'tenant_id' => $tenantId,
+            'tenant_id' => $router->tenant_id,
             'router_id' => $router->id,
             'backup_schedule_id' => $schedule?->id,
             'backup_run_id' => $run?->id,
-            'status' => 'running',
+            'status' => 'pending',
             'disk' => 'local',
-            'started_at' => now(),
         ]);
+
+        return $this->process($backup);
+    }
+
+    public function process(RouterBackup $backup): RouterBackup
+    {
+        $backup->loadMissing(['router.passwordManagerCredential', 'schedule']);
+        $router = $backup->router;
+        $schedule = $backup->schedule;
+
+        if ($router === null || $router->tenant_id !== $backup->tenant_id || ($schedule !== null && $schedule->tenant_id !== $backup->tenant_id)) {
+            throw new \RuntimeException('Backup relationships do not belong to the same tenant.');
+        }
+
+        $tenantId = $backup->tenant_id;
+        $backup->forceFill([
+            'status' => 'running',
+            'started_at' => now(),
+            'finished_at' => null,
+            'error_message' => null,
+        ])->save();
 
         try {
             $export = $this->export($router);

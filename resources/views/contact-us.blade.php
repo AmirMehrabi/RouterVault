@@ -6,9 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta
         name="description"
-        content="تماس با تیم ویسپا برای دریافت مشاوره، دمو، بررسی پلن مناسب یا قیمت‌گذاری سازمانی."
+        content="تماس با تیم RouterVault برای دریافت مشاوره، دمو، بررسی پلن مناسب یا قیمت‌گذاری سازمانی."
     >
-    <title>تماس با ما | ویسپا</title>
+    <title>تماس با ما | RouterVault</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('assets/fonts.css') }}">
     <style>
@@ -28,7 +29,7 @@
                         <div>
                             <p class="text-sm font-black text-slate-600">تماس با ما</p>
                             <h1 class="mt-4 text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
-                                اگر می‌خواهید ویسپا را برای کسب‌وکار خود ارزیابی کنید، اینجا شروع کنید
+                                اگر می‌خواهید RouterVault را برای کسب‌وکار خود ارزیابی کنید، اینجا شروع کنید
                             </h1>
                             <p class="mt-6 text-base leading-8 text-slate-600 sm:text-lg">
                                 چه برای انتخاب پلن مناسب، چه برای درخواست دمو یا بررسی قیمت‌گذاری سازمانی، تیم ما آماده است درباره ساختار
@@ -49,7 +50,7 @@
                                 </div>
                                 <div class="rounded-2xl border border-slate-700 bg-slate-800 p-4">
                                     <p class="text-sm font-black">آشنایی با تجربه محصول</p>
-                                    <p class="mt-2 text-sm leading-7 text-slate-300">برای درک بهتر اینکه ویسپا در عمل چه مسئله‌ای را حل می‌کند</p>
+                                    <p class="mt-2 text-sm leading-7 text-slate-300">برای درک بهتر اینکه RouterVault در عمل چه مسئله‌ای را حل می‌کند</p>
                                 </div>
                             </div>
                         </div>
@@ -65,7 +66,7 @@
                             <div class="mt-6 space-y-5 text-sm leading-8 text-slate-600">
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <p class="font-black text-slate-950">ایمیل</p>
-                                    <p class="mt-2">info@wispa.app</p>
+                                    <p class="mt-2">info@routervault.app</p>
                                 </div>
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                     <p class="font-black text-slate-950">تلفن</p>

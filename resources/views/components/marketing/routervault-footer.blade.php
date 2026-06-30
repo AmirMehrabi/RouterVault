@@ -1,8 +1,9 @@
 <footer class="border-t border-slate-700 bg-slate-950 text-white">
     <div class="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_auto] md:items-end lg:px-12 xl:px-16">
         <div>
-            <a href="{{ route('home') }}" class="inline-flex items-center">
-                <img src="{{ asset('assets/Images/Logos/wispaconcept4_horizontal_color.svg') }}" alt="WISPA" class="h-9 w-auto brightness-0 invert">
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-2">
+                <x-brand-logo variant="symbol" tone="white" class="h-10" />
+                <span class="text-xl font-bold">RouterVault</span>
             </a>
             <p class="mt-4 max-w-sm text-sm leading-6 text-slate-400">Automatic MikroTik backups, version history, and config comparison for network administrators.</p>
         </div>
@@ -13,7 +14,7 @@
                 <a href="#pricing" class="transition hover:text-white">Pricing</a>
                 <a href="#faq" class="transition hover:text-white">FAQ</a>
             </nav>
-            <p class="mt-5 text-sm text-slate-500 md:text-right">© {{ now()->year }} WISPA. All rights reserved.</p>
+            <p class="mt-5 text-sm text-slate-500 md:text-right">© {{ now()->year }} RouterVault. All rights reserved.</p>
         </div>
     </div>
 </footer>

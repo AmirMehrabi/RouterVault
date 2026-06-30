@@ -21,7 +21,7 @@ class RouterPushScriptGenerator
         $uploadUrl = $baseUrl.'/api/v1/backups/upload';
 
         return <<<'SCRIPT'
-# SkyBase Cloud - Router Backup Push Script
+# RouterVault - Router Backup Push Script
 # Generated for: ROUTER_NAME
 # Run this script on your RouterOS device to enable automatic config backups
 #
@@ -32,7 +32,7 @@ class RouterPushScriptGenerator
 #
 # The script will:
 #   - Export your configuration (secrets hidden by default)
-#   - Upload it to SkyBase Cloud via HTTPS
+#   - Upload it to RouterVault via HTTPS
 #   - Store a versioned backup for diff comparison
 
 # Step 1: Create the backup file
@@ -54,7 +54,7 @@ class RouterPushScriptGenerator
             as-value; \
         /file remove skybase-backup.rsc; \
     " \
-    comment="SkyBase Cloud automatic backup" \
+    comment="RouterVault automatic backup" \
     disabled=no
 
 SCRIPT;
@@ -87,7 +87,7 @@ SCRIPT;
         $safeUploadUrl = addslashes($uploadUrl);
 
         return <<<SCRIPT
-# SkyBase Cloud - Router Backup Push Script
+# RouterVault - Router Backup Push Script
 # Router: {$router->name}
 # Generated: {now()->format('Y-m-d H:i:s')}
 
@@ -104,7 +104,7 @@ SCRIPT;
             as-value;
         /file remove skybase-export.rsc;
     }" \\
-    comment="SkyBase Cloud automatic daily backup" \\
+    comment="RouterVault automatic daily backup" \\
     disabled=no
 
 # Run first backup immediately

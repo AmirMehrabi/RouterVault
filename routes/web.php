@@ -166,6 +166,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
     Route::prefix('backups')->name('backups.')->group(function () {
         Route::get('/', [RouterBackupController::class, 'index'])->name('index');
         Route::get('/compare', [RouterBackupController::class, 'compare'])->name('compare');
+        Route::post('/{backup}/retry', [RouterBackupController::class, 'retry'])->name('retry');
         Route::get('/{backup}', [RouterBackupController::class, 'show'])->name('show');
         Route::get('/{backup}/download', [RouterBackupController::class, 'download'])->name('download');
     });

@@ -43,7 +43,7 @@ class WirelessClientTrackingTest extends TestCase
             'router_id' => $router->id,
             'site_id' => $site->id,
             'name' => 'AP-OLD',
-            'ssid' => 'SkyBase-Clients',
+            'ssid' => 'RouterVault-Clients',
             'band' => '5GHz',
         ]);
 
@@ -52,7 +52,7 @@ class WirelessClientTrackingTest extends TestCase
             'router_id' => $router->id,
             'site_id' => $site->id,
             'name' => 'AP-NEW',
-            'ssid' => 'SkyBase-Clients',
+            'ssid' => 'RouterVault-Clients',
             'band' => '5GHz',
         ]);
 
@@ -73,7 +73,7 @@ class WirelessClientTrackingTest extends TestCase
             'reason' => null,
             'collected_at' => now()->toIso8601String(),
             'resource' => ['board-name' => 'cAP ax', 'version' => '7.18'],
-            'wireless' => ['ssid' => 'SkyBase-Clients', 'band' => '5GHz', 'frequency' => 5180],
+            'wireless' => ['ssid' => 'RouterVault-Clients', 'band' => '5GHz', 'frequency' => 5180],
             'clients' => [
                 [
                     'mac-address' => 'AA:BB:CC:DD:EE:FF',
@@ -93,7 +93,7 @@ class WirelessClientTrackingTest extends TestCase
                 'board_name' => 'cAP ax',
                 'firmware_version' => '7.18',
                 'connected_clients_count' => 1,
-                'ssid' => 'SkyBase-Clients',
+                'ssid' => 'RouterVault-Clients',
                 'band' => '5GHz',
                 'frequency' => 5180,
                 'tx_power' => 20,

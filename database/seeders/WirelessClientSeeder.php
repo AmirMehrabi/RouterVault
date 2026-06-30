@@ -25,7 +25,7 @@ class WirelessClientSeeder extends Seeder
         $tenantId = $accessPoint->tenant_id;
         $routerId = $accessPoint->router_id;
         $siteId = $accessPoint->site_id;
-        $ssid = $accessPoint->ssid ?: 'SkyBase-Clients';
+        $ssid = $accessPoint->ssid ?: 'RouterVault-Clients';
         $band = $accessPoint->band ?: '5GHz';
 
         $clients = [

@@ -6,9 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta
         name="description"
-        content="تعرفه‌های ویسپا برای ISPها؛ از پلن پایه تا پلن سازمانی برای مدیریت عملیات شبکه و مشترکین."
+        content="تعرفه‌های RouterVault برای ISPها؛ از پلن پایه تا پلن سازمانی برای مدیریت عملیات شبکه و مشترکین."
     >
-    <title>تعرفه‌های ویسپا | پلن‌های WISPA</title>
+    <title>تعرفه‌های RouterVault | پلن‌های RouterVault</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('assets/fonts.css') }}">
     <style>
@@ -25,12 +26,12 @@
             <section class="border-b border-slate-200 bg-white">
                 <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
                     <div class="mx-auto max-w-3xl text-center">
-                        <p class="text-sm font-black text-slate-600">تعرفه‌های ویسپا</p>
+                        <p class="text-sm font-black text-slate-600">تعرفه‌های RouterVault</p>
                         <h1 class="mt-4 text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
                             پلنی را انتخاب کنید که با اندازه تیم و تعداد مشترکین شما هماهنگ است
                         </h1>
                         <p class="mt-6 text-base leading-8 text-slate-600 sm:text-lg">
-                            قیمت‌گذاری ویسپا ساده است: تعداد کاربر مشخص، دسترسی روشن و مسیر ارتقا بدون ابهام. اگر نیاز شما از محدوده‌های
+                            قیمت‌گذاری RouterVault ساده است: تعداد کاربر مشخص، دسترسی روشن و مسیر ارتقا بدون ابهام. اگر نیاز شما از محدوده‌های
                             استاندارد بالاتر است، پلن سازمانی برایتان آماده است.
                         </p>
                     </div>

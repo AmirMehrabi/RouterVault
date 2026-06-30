@@ -4,18 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Discover the powerful features of SkyBase, the modern ISP management platform designed for WISPs and fiber providers. Automate billing, manage subscribers, integrate with MikroTik, and scale your network operations.">
+    <meta name="description" content="Discover the powerful features of RouterVault, the modern ISP management platform designed for WISPs and fiber providers. Automate billing, manage subscribers, integrate with MikroTik, and scale your network operations.">
     <meta name="keywords" content="ISP management features, WISP software features, MikroTik billing, subscriber management, automated billing, network provisioning">
-    <meta name="author" content="SkyBase Cloud">
+    <meta name="author" content="RouterVault">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="SkyBase Features | ISP Management Platform">
-    <meta property="og:description" content="Discover the powerful features of SkyBase, the modern ISP management platform designed for WISPs and fiber providers.">
+    <meta property="og:title" content="RouterVault Features | ISP Management Platform">
+    <meta property="og:description" content="Discover the powerful features of RouterVault, the modern ISP management platform designed for WISPs and fiber providers.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url('/features') }}">
     <meta property="og:image" content="{{ asset('images/og-image.png') }}">
 
-    <title>SkyBase Features | ISP Management Platform</title>
+    <title>RouterVault Features | ISP Management Platform</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +41,9 @@
             <div class="flex items-center justify-between h-20">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <a href="{{ url('/') }}" class="text-3xl font-bold text-gray-900">SkyBase Cloud</a>
+                    <a href="{{ url('/') }}">
+                        <x-brand-logo class="h-12" />
+                    </a>
                 </div>
 
                 <!-- Center Links (Desktop) -->
@@ -68,7 +71,7 @@
                     Everything You Need to Run Your ISP
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 leading-relaxed">
-                    SkyBase combines billing, CRM, network automation, and customer management into a single powerful platform designed for modern ISPs.
+                    RouterVault combines billing, CRM, network automation, and customer management into a single powerful platform designed for modern ISPs.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <a href="{{ route('auth.register') }}" class="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 rounded-2xl hover:bg-blue-700 transition-colors">
@@ -88,7 +91,7 @@
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">A Complete ISP Management Platform</h2>
                 <p class="text-xl text-gray-600 leading-relaxed">
-                    Running an ISP requires many tools: billing systems, network provisioning, monitoring, support, and customer management. SkyBase brings all of these capabilities together in one modern platform so operators can manage their entire network from a single interface.
+                    Running an ISP requires many tools: billing systems, network provisioning, monitoring, support, and customer management. RouterVault brings all of these capabilities together in one modern platform so operators can manage their entire network from a single interface.
                 </p>
             </div>
         </div>
@@ -107,7 +110,7 @@
                         </div>
                         <h3 class="text-3xl font-bold text-gray-900 mb-4">Subscriber Management</h3>
                         <p class="text-lg text-gray-600 mb-6">
-                            Manage all your subscribers, services, and accounts from a centralized dashboard. SkyBase gives you complete visibility into customer information, service plans, usage, and billing history.
+                            Manage all your subscribers, services, and accounts from a centralized dashboard. RouterVault gives you complete visibility into customer information, service plans, usage, and billing history.
                         </p>
                         <ul class="space-y-3">
                             <li class="flex items-start gap-3">
@@ -180,7 +183,7 @@
                         </div>
                         <h3 class="text-3xl font-bold text-gray-900 mb-4">Automated Billing</h3>
                         <p class="text-lg text-gray-600 mb-6">
-                            Automate your entire billing workflow. SkyBase generates invoices, processes payments, and handles service suspension or activation automatically based on billing status.
+                            Automate your entire billing workflow. RouterVault generates invoices, processes payments, and handles service suspension or activation automatically based on billing status.
                         </p>
                         <ul class="space-y-3">
                             <li class="flex items-start gap-3">
@@ -233,7 +236,7 @@
                         </div>
                         <h3 class="text-3xl font-bold text-gray-900 mb-4">MikroTik Integration</h3>
                         <p class="text-lg text-gray-600 mb-6">
-                            SkyBase integrates directly with MikroTik infrastructure to simplify provisioning and subscriber authentication for WISPs.
+                            RouterVault integrates directly with MikroTik infrastructure to simplify provisioning and subscriber authentication for WISPs.
                         </p>
                         <ul class="space-y-3">
                             <li class="flex items-start gap-3">
@@ -306,7 +309,7 @@
                         </div>
                         <h3 class="text-3xl font-bold text-gray-900 mb-4">Network Provisioning</h3>
                         <p class="text-lg text-gray-600 mb-6">
-                            Automate service provisioning and configuration across your network devices. SkyBase ensures new subscribers can be activated quickly without manual configuration.
+                            Automate service provisioning and configuration across your network devices. RouterVault ensures new subscribers can be activated quickly without manual configuration.
                         </p>
                         <ul class="space-y-3">
                             <li class="flex items-start gap-3">
@@ -486,7 +489,7 @@
                         </div>
                         <h3 class="text-3xl font-bold text-gray-900 mb-4">Automation & Workflows</h3>
                         <p class="text-lg text-gray-600 mb-6">
-                            Reduce manual work with automation. SkyBase automatically handles account activation, suspension, billing events, and service changes.
+                            Reduce manual work with automation. RouterVault automatically handles account activation, suspension, billing events, and service changes.
                         </p>
                         <ul class="space-y-3">
                             <li class="flex items-start gap-3">
@@ -606,7 +609,7 @@
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl font-bold text-white mb-6">Built for Modern ISP Infrastructure</h2>
                 <p class="text-xl text-blue-100 mb-12">
-                    SkyBase is designed specifically for WISPs and fiber providers using modern networking equipment and authentication systems.
+                    RouterVault is designed specifically for WISPs and fiber providers using modern networking equipment and authentication systems.
                 </p>
 
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
@@ -636,7 +639,7 @@
             <div class="max-w-3xl mx-auto text-center">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">Start Running Your ISP More Efficiently</h2>
                 <p class="text-xl text-gray-600 mb-8">
-                    SkyBase gives you the tools to manage subscribers, automate billing, and scale your ISP operations with confidence.
+                    RouterVault gives you the tools to manage subscribers, automate billing, and scale your ISP operations with confidence.
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -657,7 +660,7 @@
             <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
                 <!-- Brand -->
                 <div class="col-span-2">
-                    <h3 class="text-white font-bold text-lg mb-4">SkyBase Cloud</h3>
+                    <h3 class="text-white font-bold text-lg mb-4">RouterVault</h3>
                     <p class="text-lg">Cloud-based ISP management platform for MikroTik networks.</p>
                 </div>
 
@@ -698,11 +701,11 @@
             <div class="pt-8 border-t border-gray-800">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="text-lg">
-                        <a href="mailto:support@skybase.cloud" class="hover:text-white">support@skybase.cloud</a>
+                        <a href="mailto:support@routervault.app" class="hover:text-white">support@routervault.app</a>
                         <span class="mx-2">·</span>
-                        <a href="https://skybase.cloud" class="hover:text-white">skybase.cloud</a>
+                        <a href="https://routervault.app" class="hover:text-white">routervault.app</a>
                     </div>
-                    <p class="text-lg">© 2026 SkyBase Cloud. All rights reserved.</p>
+                    <p class="text-lg">© 2026 RouterVault. All rights reserved.</p>
                 </div>
             </div>
         </div>

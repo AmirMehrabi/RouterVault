@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Setup Complete - SkyBase Cloud</title>
+    <title>Setup Complete - RouterVault</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-100 text-slate-900 antialiased">
@@ -15,7 +15,7 @@
             </div>
 
             <h1 class="text-3xl font-bold text-slate-900">Setup Complete!</h1>
-            <p class="mt-3 text-slate-600">Your account is ready. Welcome to SkyBase Cloud.</p>
+            <p class="mt-3 text-slate-600">Your account is ready. Welcome to RouterVault.</p>
 
             <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-left">
                 <h3 class="font-semibold text-slate-900 mb-3">What's next?</h3>

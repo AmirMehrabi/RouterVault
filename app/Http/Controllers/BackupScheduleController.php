@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BackupSchedule\StoreBackupScheduleRequest;
 use App\Http\Requests\BackupSchedule\UpdateBackupScheduleRequest;
+use App\Jobs\ProcessBackupScheduleRun;
+use App\Models\BackupRun;
 use App\Models\BackupSchedule;
 use App\Models\Router;
 use App\Services\Backups\BackupScheduleRunner;
@@ -74,9 +76,20 @@ class BackupScheduleController extends Controller
     public function run(BackupSchedule $schedule, BackupScheduleRunner $runner): RedirectResponse
     {
         $this->authorizeTenant($schedule->tenant_id);
-        $runner->run($schedule, 'manual');
 
-        return redirect()->route('schedules.show', $schedule)->with('success', 'Backup schedule run completed.');
+        $alreadyQueued = BackupRun::query()
+            ->where('backup_schedule_id', $schedule->id)
+            ->whereIn('status', ['queued', 'running'])
+            ->exists();
+
+        if ($alreadyQueued) {
+            return back()->with('error', 'This backup schedule already has a queued or running execution.');
+        }
+
+        $run = $runner->prepare($schedule);
+        ProcessBackupScheduleRun::dispatch($run->id);
+
+        return back()->with('success', 'Backup schedule run queued.');
     }
 
     public function toggle(BackupSchedule $schedule): RedirectResponse

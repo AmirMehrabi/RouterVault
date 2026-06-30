@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Router extends Model
 {
@@ -93,6 +94,11 @@ class Router extends Model
     public function backups(): HasMany
     {
         return $this->hasMany(RouterBackup::class);
+    }
+
+    public function latestBackup(): HasOne
+    {
+        return $this->hasOne(RouterBackup::class)->latestOfMany();
     }
 
     public function backupSchedules(): BelongsToMany

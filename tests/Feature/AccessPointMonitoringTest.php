@@ -52,7 +52,7 @@ class AccessPointMonitoringTest extends TestCase
                 'reason' => null,
                 'collected_at' => now()->toIso8601String(),
                 'resource' => ['version' => '7.18'],
-                'wireless' => ['ssid' => 'SkyBase-Clients'],
+                'wireless' => ['ssid' => 'RouterVault-Clients'],
                 'clients' => [['mac-address' => 'AA:BB:CC:DD:EE:FF']],
                 'metrics' => [
                     'board_name' => 'RBcAPGi-5acD2nD',
@@ -70,7 +70,7 @@ class AccessPointMonitoringTest extends TestCase
                     'firmware_version' => '7.18',
                     'architecture_name' => 'arm64',
                     'platform' => 'MikroTik',
-                    'ssid' => 'SkyBase-Clients',
+                    'ssid' => 'RouterVault-Clients',
                     'band' => '5GHz',
                     'channel' => '36',
                     'frequency' => 5180,

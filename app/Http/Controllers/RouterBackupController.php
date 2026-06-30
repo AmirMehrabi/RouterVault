@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessRouterBackup;
 use App\Models\RouterBackup;
 use App\Services\Backups\BackupDiffService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -44,6 +46,33 @@ class RouterBackupController extends Controller
         abort_unless($backup->status === 'success' && $backup->path && Storage::disk($backup->disk)->exists($backup->path), 404);
 
         return Storage::disk($backup->disk)->download($backup->path, "router-backup-{$backup->id}.rsc");
+    }
+
+    public function retry(RouterBackup $backup): RedirectResponse
+    {
+        $this->authorizeTenant($backup->tenant_id);
+        abort_unless($backup->status === 'failed', 422);
+
+        $alreadyQueued = RouterBackup::query()
+            ->where('router_id', $backup->router_id)
+            ->whereIn('status', ['pending', 'running'])
+            ->exists();
+
+        if ($alreadyQueued) {
+            return back()->with('error', 'This router already has a queued or running backup.');
+        }
+
+        $retry = RouterBackup::query()->create([
+            'tenant_id' => $backup->tenant_id,
+            'router_id' => $backup->router_id,
+            'backup_schedule_id' => $backup->backup_schedule_id,
+            'status' => 'pending',
+            'disk' => 'local',
+        ]);
+
+        ProcessRouterBackup::dispatch($retry->id);
+
+        return back()->with('success', 'Router backup retry queued.');
     }
 
     public function compare(Request $request, BackupDiffService $diffService): View

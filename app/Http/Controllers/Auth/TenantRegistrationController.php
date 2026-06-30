@@ -70,7 +70,7 @@ class TenantRegistrationController extends Controller
             ]);
 
             return redirect()->route('onboarding.index')
-                ->with('success', 'Welcome to SkyBase Cloud! Let\'s set up your account.');
+                ->with('success', 'Welcome to RouterVault! Let\'s set up your account.');
 
         } catch (QueryException $e) {
             DB::rollBack();

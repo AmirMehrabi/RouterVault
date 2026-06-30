@@ -1,465 +1,177 @@
 @extends('layouts.admin')
 
-@section('title', 'Network Dashboard')
+@section('title', 'Backup Operations')
 
 @push('navbar-breadcrumb')
-    <x-ui.breadcrumb :items="[
-        ['label' => 'Dashboard', 'href' => route('dashboard'), 'current' => true],
-    ]" />
-@endpush
-
-@push('styles')
-<style>
-    [x-cloak] { display: none !important; }
-</style>
+    <x-ui.breadcrumb :items="[['label' => 'Dashboard', 'href' => route('dashboard'), 'current' => true]]" />
 @endpush
 
 @section('content')
 @php
-    $hero = $dashboard['highlights']['hero'];
-    $overview = $dashboard['overview'];
-    $charts = $dashboard['charts'];
-    $tables = $dashboard['tables'];
+    $stats = $backupDashboard['stats'];
+    $exceptions = $backupDashboard['exceptions'];
+    $attention = $backupDashboard['attention'];
+    $coverage = $backupDashboard['coverage'];
+    $coverageRate = $coverage['total'] > 0 ? round(($coverage['covered'] / $coverage['total']) * 100, 1) : 0;
 @endphp
 
-<div class="space-y-6 pb-10" x-data="networkDashboard(@js($dashboard))" x-cloak>
-    <section class="overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-2xl shadow-slate-300/40">
-        <div class="relative isolate px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.35),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(251,191,36,0.25),_transparent_30%)]"></div>
-            <div class="relative grid gap-6 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-300">Tenant operations dashboard</p>
-                    <h1 class="mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">{{ $hero['title'] }}</h1>
-                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{{ $hero['subtitle'] }}</p>
-                </div>
-                <div class="grid gap-3 sm:grid-cols-2">
-                    @foreach ($hero['items'] as $item)
-                        <div class="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{{ $item['label'] }}</p>
-                            <p class="mt-3 text-lg font-semibold text-white">{{ $item['value'] }}</p>
-                            <p class="mt-2 text-sm leading-6 text-slate-300">{{ $item['detail'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+<div class="mx-auto max-w-[1500px] space-y-5 pb-10">
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{{ session('error') }}</div>
+    @endif
+
+    <header class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-950">Backup Operations</h1>
+            <p class="mt-2 text-sm leading-6 text-slate-500">Urgent backup failures and configuration changes appear first so you can triage what matters.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 lg:shrink-0 lg:flex-nowrap">
+            <a href="{{ route('backups.index') }}" class="inline-flex h-10 items-center gap-2 rounded-lg border border-blue-600 bg-white px-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+                View backups
+            </a>
+            <a href="{{ route('schedules.create') }}" class="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" /></svg>
+                New schedule
+            </a>
+            <a href="{{ route('backups.compare') }}" class="inline-flex h-10 items-center px-3 text-sm font-semibold text-blue-700 transition hover:text-blue-900">Compare backups</a>
+        </div>
+    </header>
+
+    <section class="overflow-hidden rounded-xl border border-rose-300 bg-white" aria-labelledby="exceptions-heading">
+        <h2 id="exceptions-heading" class="sr-only">Operational exceptions</h2>
+        <div class="grid divide-y divide-rose-100 border-l-4 border-rose-500 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <a href="{{ route('backups.index') }}" class="group flex items-center gap-4 px-5 py-4 transition hover:bg-rose-50/70">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.7L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.7a2 2 0 00-3.4 0z" /></svg></span>
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-3"><strong class="text-3xl font-bold text-rose-600">{{ $exceptions['failed_backups'] }}</strong><span class="text-sm font-semibold text-slate-900">Backup failures</span></span>
+                    <span class="mt-0.5 block text-xs text-slate-500">Latest backup attempt needs inspection</span>
+                </span>
+                <svg class="h-4 w-4 text-rose-500 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </a>
+            <a href="{{ route('schedules.index') }}" class="group flex items-center gap-4 px-5 py-4 transition hover:bg-amber-50/70">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-3"><strong class="text-3xl font-bold text-amber-600">{{ $exceptions['schedule_issues'] }}</strong><span class="text-sm font-semibold text-slate-900">Overdue / paused coverage</span></span>
+                    <span class="mt-0.5 block text-xs text-slate-500">Schedules not currently meeting policy</span>
+                </span>
+                <svg class="h-4 w-4 text-amber-500 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </a>
+            <a href="{{ route('diff-alerts.index') }}" class="group flex items-center gap-4 px-5 py-4 transition hover:bg-rose-50/70">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2a2 2 0 01-.6 1.4L4 17h11zm0 0v1a3 3 0 01-6 0v-1" /></svg></span>
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-3"><strong class="text-3xl font-bold text-rose-600">{{ $exceptions['high_severity_diffs'] }}</strong><span class="text-sm font-semibold text-slate-900">Unread high-severity diffs</span></span>
+                    <span class="mt-0.5 block text-xs text-slate-500">Configuration changes waiting for review</span>
+                </span>
+                <svg class="h-4 w-4 text-rose-500 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </a>
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        @foreach ($overview['stats'] as $stat)
-            <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">{{ $stat['label'] }}</p>
-                        <p class="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{{ number_format($stat['value']) }}</p>
-                    </div>
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $stat['tone'] === 'sky' ? 'bg-sky-100 text-sky-700' : ($stat['tone'] === 'emerald' ? 'bg-emerald-100 text-emerald-700' : ($stat['tone'] === 'amber' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')) }}">
-                        {{ $stat['meta'] }}
-                    </span>
-                </div>
-                <p class="mt-4 text-sm text-slate-500">{{ $stat['detail'] }}</p>
-            </article>
-        @endforeach
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Backup health summary">
+        <div class="border-l-2 border-emerald-500 px-4 py-1"><p class="text-xs font-semibold text-slate-600">Backup success rate (24h)</p><p class="mt-2 text-3xl font-bold tracking-tight text-emerald-600">{{ $stats['success_rate'] === null ? '—' : $stats['success_rate'].'%' }}</p><p class="mt-1 text-xs text-slate-500">{{ $stats['successful_backups'] }} successful / {{ $stats['completed_backups'] }} completed</p></div>
+        <div class="border-l-2 border-blue-500 px-4 py-1"><p class="text-xs font-semibold text-slate-600">Routers with active schedules</p><p class="mt-2 text-3xl font-bold tracking-tight text-blue-700">{{ $stats['covered_routers'] }}</p><p class="mt-1 text-xs text-slate-500">of {{ $stats['total_routers'] }} total routers</p></div>
+        <div class="border-l-2 border-blue-500 px-4 py-1"><p class="text-xs font-semibold text-slate-600">Configuration changes (7d)</p><p class="mt-2 text-3xl font-bold tracking-tight text-blue-700">{{ $stats['configuration_changes'] }}</p><p class="mt-1 text-xs text-slate-500">Compared with previous successful backups</p></div>
+        <div class="border-l-2 border-rose-500 px-4 py-1"><p class="text-xs font-semibold text-slate-600">Unread diff alerts</p><p class="mt-2 text-3xl font-bold tracking-tight text-rose-600">{{ $stats['unread_alerts'] }}</p><p class="mt-1 text-xs text-slate-500">{{ $stats['high_unread_alerts'] }} high severity</p></div>
     </section>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">Capacity</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Connected clients by site</h2>
-                    <p class="mt-1 text-sm text-slate-500">Compare active clients against currently observed capacity across your busiest sites.</p>
-                </div>
-                <a href="{{ route('sites.index') }}" class="text-sm font-medium text-sky-700 hover:text-sky-800">View sites</a>
-            </div>
-            <div class="mt-6 overflow-x-auto pb-2">
-                <div class="min-w-[640px] sm:min-w-0">
-                    <div class="flex h-72 items-end gap-3 sm:gap-4" x-ref="capacityChart"></div>
-                </div>
-            </div>
-        </article>
-
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">RF mix</p>
-                <h2 class="mt-2 text-xl font-semibold text-slate-950">Access point band distribution</h2>
-                <p class="mt-1 text-sm text-slate-500">See how your AP fleet is spread across 2.4GHz, 5GHz, and other radio bands.</p>
-            </div>
-            <div class="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-                <div class="mx-auto flex h-52 w-52 items-center justify-center" x-ref="bandChart"></div>
-                <div class="space-y-3">
-                    <template x-for="item in chartData.bandDistribution" :key="item.label">
-                        <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                            <div class="flex items-center gap-3">
-                                <span class="h-3 w-3 rounded-full" :style="`background:${item.color}`"></span>
-                                <span class="text-sm font-medium text-slate-700" x-text="item.label"></span>
-                            </div>
-                            <span class="text-sm font-semibold text-slate-950" x-text="item.value"></span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </article>
-    </section>
-
-    <section class="grid grid-cols-1 gap-6 2xl:grid-cols-3">
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Infra load</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Router CPU vs memory</h2>
-                </div>
-                <a href="{{ route('routers.index') }}" class="text-sm font-medium text-amber-700 hover:text-amber-800">All routers</a>
-            </div>
-            <div class="mt-6 overflow-x-auto pb-2">
-                <div class="min-w-[560px] sm:min-w-0">
-                    <div class="flex h-72 items-end gap-4" x-ref="routerLoadChart"></div>
-                </div>
-            </div>
-        </article>
-
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-rose-600">Client quality</p>
-                <h2 class="mt-2 text-xl font-semibold text-slate-950">Signal quality buckets</h2>
-            </div>
-            <div class="mt-6 space-y-4" x-ref="signalBuckets"></div>
-        </article>
-
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">Health strip</p>
-                <h2 class="mt-2 text-xl font-semibold text-slate-950">Average health indicators</h2>
-            </div>
-            <div class="mt-6 space-y-4">
-                @foreach ($overview['health'] as $item)
-                    <div>
-                        <div class="mb-2 flex items-center justify-between text-sm">
-                            <span class="font-medium text-slate-700">{{ $item['label'] }}</span>
-                            <span class="font-semibold text-slate-950">{{ $item['value'] }}{{ $item['suffix'] }}</span>
-                        </div>
-                        <div class="h-2.5 overflow-hidden rounded-full bg-slate-100">
-                            <div class="h-full rounded-full {{ $item['tone'] === 'emerald' ? 'bg-emerald-500' : ($item['tone'] === 'amber' ? 'bg-amber-500' : 'bg-rose-500') }}" style="width: {{ min(100, max(0, $item['value'])) }}%"></div>
-                        </div>
-                    </div>
-                @endforeach
-                <div class="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                    These indicators are built from stored model metrics, so the dashboard stays fast and works well on mobile without waiting for live polling.
-                </div>
-            </div>
-        </article>
-    </section>
-
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Operations</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Connectivity and management state</h2>
-                </div>
-                <a href="{{ route('wireless-clients.index') }}" class="text-sm font-medium text-cyan-700 hover:text-cyan-800">Wireless clients</a>
-            </div>
-            <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                <template x-for="item in chartData.managementStatuses" :key="item.label">
-                    <div class="rounded-2xl border border-slate-200 p-4">
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-sm font-medium text-slate-600" x-text="item.label"></span>
-                            <span class="text-lg font-semibold text-slate-950" x-text="item.value"></span>
-                        </div>
-                        <div class="mt-4 h-2 rounded-full bg-slate-100">
-                            <div class="h-full rounded-full" :style="`width:${item.percent}%; background:${item.color}`"></div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </article>
-
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-600">Radio leaders</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Top access points by client count</h2>
-                </div>
-                <a href="{{ route('access-points.index') }}" class="text-sm font-medium text-violet-700 hover:text-violet-800">All APs</a>
-            </div>
-            <div class="mt-6 space-y-3">
-                @forelse ($tables['topAccessPoints'] as $accessPoint)
-                    <a href="{{ $accessPoint['href'] }}" class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-violet-200 hover:bg-violet-50/50">
-                        <div class="min-w-0">
-                            <p class="truncate text-sm font-semibold text-slate-900">{{ $accessPoint['name'] }}</p>
-                            <p class="truncate text-xs text-slate-500">{{ $accessPoint['site'] }} · {{ $accessPoint['router'] }} · {{ $accessPoint['band'] }}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-lg font-semibold text-slate-950">{{ $accessPoint['clients'] }}</p>
-                            <p class="text-xs text-slate-500">{{ $accessPoint['quality'] }}% quality</p>
-                        </div>
-                    </a>
-                @empty
-                    <p class="rounded-2xl bg-slate-50 px-4 py-5 text-sm text-slate-500">No access point data available yet.</p>
-                @endforelse
-            </div>
-        </article>
-    </section>
-
-    <section class="grid grid-cols-1 gap-6 2xl:grid-cols-[1fr_1fr_1.1fr]">
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Top routers</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Session-heavy routers</h2>
-                </div>
-                <a href="{{ route('routers.index') }}" class="text-sm font-medium text-slate-700 hover:text-slate-900">View list</a>
-            </div>
-            <div class="mt-6 space-y-3">
-                @forelse ($tables['topRouters'] as $router)
-                    <a href="{{ $router['href'] }}" class="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-sky-200 hover:bg-sky-50/50">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900">{{ $router['name'] }}</p>
-                                <p class="truncate text-xs text-slate-500">{{ $router['site'] }}</p>
-                            </div>
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $router['status'] === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ ucfirst($router['status']) }}</span>
-                        </div>
-                        <div class="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-500">
-                            <div>
-                                <p>Sessions</p>
-                                <p class="mt-1 text-sm font-semibold text-slate-900">{{ $router['sessions'] }}</p>
-                            </div>
-                            <div>
-                                <p>CPU</p>
-                                <p class="mt-1 text-sm font-semibold text-slate-900">{{ $router['cpu'] }}%</p>
-                            </div>
-                            <div>
-                                <p>Memory</p>
-                                <p class="mt-1 text-sm font-semibold text-slate-900">{{ $router['memory'] }}%</p>
-                            </div>
-                        </div>
-                    </a>
-                @empty
-                    <p class="rounded-2xl bg-slate-50 px-4 py-5 text-sm text-slate-500">No routers found for this tenant.</p>
-                @endforelse
-            </div>
-        </article>
-
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Attention queue</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Wireless clients needing follow-up</h2>
-                </div>
-            </div>
-            <div class="mt-6 space-y-3">
-                @forelse ($tables['attentionClients'] as $client)
-                    <a href="{{ $client['href'] }}" class="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-rose-200 hover:bg-rose-50/40">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900">{{ $client['name'] }}</p>
-                                <p class="truncate text-xs text-slate-500">{{ $client['site'] }} · {{ $client['access_point'] }}</p>
-                            </div>
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $client['status'] === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ ucfirst($client['status']) }}</span>
-                        </div>
-                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Signal: {{ $client['signal'] ?? 'n/a' }} dBm</span>
-                            @if ($client['management_status'])
-                                <span class="rounded-full {{ $client['management_status'] === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }} px-2.5 py-1">Mgmt: {{ ucfirst($client['management_status']) }}</span>
-                            @endif
-                            @if ($client['last_seen'])
-                                <span class="rounded-full bg-slate-100 px-2.5 py-1">Seen {{ $client['last_seen'] }}</span>
+    <section class="grid gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(300px,0.9fr)]">
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4"><h2 class="text-base font-bold text-slate-950">Needs attention</h2><span class="text-xs font-semibold text-slate-500">{{ $attention->count() }} shown</span></div>
+            <div class="divide-y divide-slate-100">
+                @forelse($attention as $item)
+                    <div class="grid gap-3 px-5 py-3 transition hover:bg-slate-50 md:grid-cols-[minmax(120px,0.7fr)_minmax(150px,1.4fr)_auto_auto] md:items-center">
+                        <div class="flex min-w-0 items-center gap-3"><span class="h-2.5 w-2.5 shrink-0 rounded-full {{ $item['tone'] === 'danger' ? 'bg-rose-500' : ($item['tone'] === 'warning' ? 'bg-amber-500' : 'bg-slate-400') }}"></span><span class="truncate text-sm font-semibold text-blue-700">{{ $item['title'] }}</span></div>
+                        <p class="truncate text-sm text-slate-600" title="{{ $item['summary'] }}">{{ $item['summary'] }}</p>
+                        <div class="flex items-center gap-3"><x-dashboard-status :tone="$item['tone']">{{ $item['status'] }}</x-dashboard-status><span class="whitespace-nowrap text-xs text-slate-500">{{ $item['occurred_at']?->diffForHumans() ?? 'Unknown' }}</span></div>
+                        <div class="flex items-center justify-end gap-3">
+                            @if($item['type'] === 'backup')
+                                <a href="{{ route('backups.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Inspect</a>
+                                <form method="POST" action="{{ route('backups.retry', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Retry</button></form>
+                            @elseif($item['type'] === 'alert')
+                                <a href="{{ route('diff-alerts.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Review</a>
+                                <form method="POST" action="{{ route('diff-alerts.status', $item['model']) }}">@csrf<input type="hidden" name="status" value="acknowledged"><button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Acknowledge</button></form>
+                            @elseif($item['type'] === 'overdue_schedule')
+                                <a href="{{ route('schedules.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
+                                <form method="POST" action="{{ route('schedules.run', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Run now</button></form>
+                            @else
+                                <a href="{{ route('schedules.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
+                                <form method="POST" action="{{ route('schedules.toggle', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Resume</button></form>
                             @endif
                         </div>
-                        @if ($client['message'])
-                            <p class="mt-3 text-xs leading-5 text-slate-500">{{ $client['message'] }}</p>
-                        @endif
-                    </a>
+                    </div>
                 @empty
-                    <p class="rounded-2xl bg-slate-50 px-4 py-5 text-sm text-slate-500">No wireless clients currently need attention.</p>
+                    <div class="px-6 py-12 text-center"><span class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></span><h3 class="mt-3 text-sm font-bold text-slate-900">No backup issues need attention</h3><p class="mt-1 text-sm text-slate-500">Failures, overdue schedules, and unread diffs will appear here.</p></div>
                 @endforelse
             </div>
-        </article>
+        </div>
 
-        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 sm:p-6">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Quick links</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Jump to operational modules</h2>
+        <aside class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-4"><h2 class="text-base font-bold text-slate-950">Backup coverage</h2></div>
+            <dl class="divide-y divide-slate-100 px-5">
+                <div class="flex items-center justify-between gap-4 py-4"><dt class="flex items-center gap-3 text-sm font-medium text-slate-700"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Covered routers</dt><dd class="text-sm font-bold text-slate-900">{{ $coverage['covered'] }} <span class="font-normal text-slate-500">({{ $coverageRate }}%)</span></dd></div>
+                <div class="flex items-center justify-between gap-4 py-4"><dt class="flex items-center gap-3 text-sm font-medium text-slate-700"><span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span>Uncovered routers</dt><dd class="text-sm font-bold text-slate-900">{{ $coverage['uncovered'] }}</dd></div>
+                <div class="flex items-center justify-between gap-4 py-4"><dt class="flex items-center gap-3 text-sm font-medium text-slate-700"><span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>Active schedules</dt><dd class="text-sm font-bold text-slate-900">{{ $coverage['active_schedules'] }}</dd></div>
+                <div class="py-4">
+                    <dt class="text-sm font-medium text-slate-700">Next scheduled run</dt>
+                    @if($coverage['next_schedule'])
+                        <dd class="mt-2 flex items-end justify-between gap-3"><span class="text-sm font-bold text-slate-900">{{ $coverage['next_schedule']->next_run_at->diffForHumans() }}</span><a href="{{ route('schedules.show', $coverage['next_schedule']) }}" class="truncate text-xs font-medium text-blue-700 hover:text-blue-900">{{ $coverage['next_schedule']->name }}</a></dd>
+                    @else
+                        <dd class="mt-2 text-sm text-slate-500">No upcoming run scheduled</dd>
+                    @endif
                 </div>
+            </dl>
+            <div class="border-t border-slate-200 px-5 py-4"><a href="{{ route('schedules.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900">Manage schedules<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a></div>
+        </aside>
+    </section>
+
+    <section class="grid gap-4 xl:grid-cols-2">
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-4"><h2 class="text-base font-bold text-slate-950">Recent backup activity</h2></div>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[540px] table-fixed text-left text-sm">
+                    <thead class="border-b border-slate-200 bg-slate-50/70 text-xs font-semibold text-slate-500"><tr><th class="w-[23%] px-4 py-3">Router</th><th class="w-[16%] px-3 py-3">Result</th><th class="w-[16%] px-3 py-3">Change</th><th class="w-[21%] px-3 py-3">Schedule</th><th class="w-[10%] px-3 py-3">Size</th><th class="w-[14%] px-3 py-3">Completed</th></tr></thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($backupDashboard['recent_backups'] as $backup)
+                            @php($resultTone = $backup->status === 'success' ? 'success' : (in_array($backup->status, ['pending', 'running']) ? 'info' : 'danger'))
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="truncate px-4 py-3"><a href="{{ route('backups.show', $backup) }}" class="font-semibold text-blue-700 hover:text-blue-900">{{ $backup->router?->name ?? 'Unknown' }}</a></td>
+                                <td class="whitespace-nowrap px-3 py-3"><x-dashboard-status :tone="$resultTone">{{ ucfirst($backup->status) }}</x-dashboard-status></td>
+                                <td class="whitespace-nowrap px-3 py-3 text-xs {{ $backup->changed ? 'font-semibold text-amber-700' : 'text-slate-500' }}">{{ $backup->changed === null ? '—' : ($backup->changed ? 'Changed' : 'No changes') }}</td>
+                                <td class="truncate px-3 py-3 text-xs text-slate-600">{{ $backup->schedule?->name ?? 'Manual' }}</td>
+                                <td class="whitespace-nowrap px-3 py-3 text-xs text-slate-600">{{ $backup->size_bytes ? Illuminate\Support\Number::fileSize($backup->size_bytes) : '—' }}</td>
+                                <td class="truncate px-3 py-3 text-xs text-slate-500">{{ ($backup->finished_at ?? $backup->started_at ?? $backup->created_at)?->diffForHumans(short: true) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No backup activity yet. Create a schedule to begin protecting router configurations.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="mt-6 grid gap-3 sm:grid-cols-2">
-                <a href="{{ route('routers.index') }}" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-sky-200 hover:bg-sky-50">
-                    <p class="text-sm font-semibold text-slate-900">Routers</p>
-                    <p class="mt-1 text-sm text-slate-500">Audit sessions, hardware load, and provisioning state.</p>
-                </a>
-                <a href="{{ route('access-points.index') }}" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-violet-200 hover:bg-violet-50">
-                    <p class="text-sm font-semibold text-slate-900">Access points</p>
-                    <p class="mt-1 text-sm text-slate-500">Inspect radio health, clients, and AP live data.</p>
-                </a>
-                <a href="{{ route('wireless-clients.index') }}" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-cyan-200 hover:bg-cyan-50">
-                    <p class="text-sm font-semibold text-slate-900">Wireless clients</p>
-                    <p class="mt-1 text-sm text-slate-500">Track connectivity, signal, and management outcomes.</p>
-                </a>
-                <a href="{{ route('sites.topology') }}" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-amber-200 hover:bg-amber-50">
-                    <p class="text-sm font-semibold text-slate-900">Site topology</p>
-                    <p class="mt-1 text-sm text-slate-500">Review location-level capacity and infrastructure placement.</p>
-                </a>
+            <div class="border-t border-slate-200 px-5 py-3"><a href="{{ route('backups.index') }}" class="text-sm font-semibold text-blue-700 hover:text-blue-900">View all backup activity</a></div>
+        </div>
+
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-4"><h2 class="text-base font-bold text-slate-950">Recent configuration changes</h2></div>
+            <div class="divide-y divide-slate-100">
+                @forelse($backupDashboard['recent_changes'] as $alert)
+                    @php($severityTone = $alert->severity === 'high' ? 'danger' : ($alert->severity === 'medium' ? 'warning' : 'neutral'))
+                    <div class="relative grid gap-2 px-5 py-3 pl-9 transition before:absolute before:bottom-0 before:left-[1.3rem] before:top-0 before:w-px before:bg-slate-200 hover:bg-slate-50 sm:grid-cols-[minmax(120px,0.7fr)_auto_minmax(150px,1.2fr)_auto] sm:items-center">
+                        <span class="absolute left-[1.05rem] top-1/2 z-10 h-2.5 w-2.5 -translate-y-1/2 rounded-full ring-4 ring-white {{ $alert->severity === 'high' ? 'bg-rose-500' : ($alert->severity === 'medium' ? 'bg-amber-500' : 'bg-slate-400') }}"></span>
+                        <div><p class="truncate text-sm font-semibold text-blue-700">{{ $alert->router?->name ?? 'Unknown' }}</p><p class="mt-0.5 text-xs text-slate-500">{{ $alert->created_at?->diffForHumans() }}</p></div>
+                        <x-dashboard-status :tone="$severityTone">{{ ucfirst($alert->severity) }}</x-dashboard-status>
+                        <div class="min-w-0"><p class="text-xs font-semibold text-slate-700">+{{ $alert->added_lines }} / -{{ $alert->removed_lines }}</p><p class="mt-0.5 truncate text-xs text-slate-500">{{ implode(', ', $alert->sections ?? []) ?: 'General configuration' }}</p></div>
+                        <a href="{{ route('diff-alerts.show', $alert) }}" class="whitespace-nowrap text-xs font-semibold text-blue-700 hover:text-blue-900">{{ $alert->status === 'unread' ? 'Review diff' : 'View diff' }}</a>
+                    </div>
+                @empty
+                    <div class="px-6 py-10 text-center text-sm text-slate-500">No configuration changes have been detected yet.</div>
+                @endforelse
             </div>
-        </article>
+            <div class="border-t border-slate-200 px-5 py-3"><a href="{{ route('diff-alerts.index') }}" class="text-sm font-semibold text-blue-700 hover:text-blue-900">View all configuration changes</a></div>
+        </div>
     </section>
 </div>
-
-@push('scripts')
-<script>
-    window.networkDashboard = function (payload) {
-        return {
-            chartData: {
-                capacityBySite: (payload.charts.capacityBySite || []).map((item) => ({
-                    ...item,
-                    percent: item.capacity > 0 ? Math.min(100, Math.round((item.value / item.capacity) * 100)) : 0,
-                })),
-                bandDistribution: (payload.charts.bandDistribution || []).map((item, index) => ({
-                    ...item,
-                    color: ['#0f766e', '#2563eb', '#7c3aed', '#f59e0b'][index % 4],
-                })),
-                routerLoad: payload.charts.routerLoad || [],
-                signalBuckets: (payload.charts.signalBuckets || []).map((item, index) => ({
-                    ...item,
-                    color: ['#16a34a', '#65a30d', '#f59e0b', '#ef4444'][index % 4],
-                })),
-                managementStatuses: (() => {
-                    const items = payload.charts.managementStatuses || [];
-                    const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
-
-                    return items.map((item, index) => ({
-                        ...item,
-                        percent: Math.round((item.value / total) * 100),
-                        color: ['#0ea5e9', '#94a3b8', '#10b981', '#f43f5e'][index % 4],
-                    }));
-                })(),
-            },
-            init() {
-                this.renderCapacityChart();
-                this.renderBandChart();
-                this.renderRouterLoadChart();
-                this.renderSignalBuckets();
-            },
-            renderCapacityChart() {
-                const target = this.$refs.capacityChart;
-                target.innerHTML = '';
-
-                if (!this.chartData.capacityBySite.length) {
-                    target.innerHTML = '<div class="flex h-full w-full items-center justify-center rounded-3xl bg-slate-50 text-sm text-slate-500">No client capacity data available yet.</div>';
-                    return;
-                }
-
-                this.chartData.capacityBySite.forEach((item) => {
-                    const column = document.createElement('div');
-                    column.className = 'flex min-w-[88px] flex-1 flex-col justify-end';
-                    column.innerHTML = `
-                        <div class="flex h-full items-end gap-2">
-                            <div class="flex flex-1 flex-col items-center justify-end gap-2">
-                                <span class="text-xs font-semibold text-slate-700">${item.value}</span>
-                                <div class="w-full rounded-t-[1.25rem] bg-sky-500/90" style="height:${Math.max(item.percent, 10)}%"></div>
-                            </div>
-                            <div class="flex flex-1 flex-col items-center justify-end gap-2">
-                                <span class="text-xs font-semibold text-slate-400">${item.capacity}</span>
-                                <div class="w-full rounded-t-[1.25rem] bg-slate-200" style="height:100%"></div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <p class="truncate text-xs font-semibold text-slate-800">${item.label}</p>
-                            <p class="mt-1 text-[11px] text-slate-500">${item.percent}% active</p>
-                        </div>
-                    `;
-                    target.appendChild(column);
-                });
-            },
-            renderBandChart() {
-                const target = this.$refs.bandChart;
-                target.innerHTML = '';
-
-                if (!this.chartData.bandDistribution.length) {
-                    target.innerHTML = '<div class="flex h-full w-full items-center justify-center rounded-full bg-slate-50 text-sm text-slate-500">No AP band data</div>';
-                    return;
-                }
-
-                const total = this.chartData.bandDistribution.reduce((sum, item) => sum + item.value, 0) || 1;
-                let current = 0;
-                const segments = this.chartData.bandDistribution.map((item) => {
-                    const start = current;
-                    const share = (item.value / total) * 100;
-                    current += share;
-
-                    return `${item.color} ${start}% ${current}%`;
-                });
-
-                target.innerHTML = `
-                    <div class="relative flex h-52 w-52 items-center justify-center rounded-full" style="background:conic-gradient(${segments.join(', ')})">
-                        <div class="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white text-center shadow-inner">
-                            <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Total APs</span>
-                            <span class="mt-2 text-3xl font-semibold text-slate-950">${total}</span>
-                        </div>
-                    </div>
-                `;
-            },
-            renderRouterLoadChart() {
-                const target = this.$refs.routerLoadChart;
-                target.innerHTML = '';
-
-                if (!this.chartData.routerLoad.length) {
-                    target.innerHTML = '<div class="flex h-full w-full items-center justify-center rounded-3xl bg-slate-50 text-sm text-slate-500">No router load metrics available yet.</div>';
-                    return;
-                }
-
-                this.chartData.routerLoad.forEach((item) => {
-                    const column = document.createElement('div');
-                    column.className = 'flex min-w-[90px] flex-1 flex-col justify-end';
-                    column.innerHTML = `
-                        <div class="flex h-full items-end gap-2">
-                            <div class="flex flex-1 flex-col items-center justify-end gap-2">
-                                <span class="text-xs font-semibold text-slate-700">${item.cpu}%</span>
-                                <div class="w-full rounded-t-[1.25rem] bg-amber-500" style="height:${Math.max(item.cpu, 8)}%"></div>
-                            </div>
-                            <div class="flex flex-1 flex-col items-center justify-end gap-2">
-                                <span class="text-xs font-semibold text-slate-500">${item.memory}%</span>
-                                <div class="w-full rounded-t-[1.25rem] bg-slate-400" style="height:${Math.max(item.memory, 8)}%"></div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <p class="truncate text-xs font-semibold text-slate-800">${item.label}</p>
-                            <p class="mt-1 text-[11px] text-slate-500">CPU vs memory</p>
-                        </div>
-                    `;
-                    target.appendChild(column);
-                });
-            },
-            renderSignalBuckets() {
-                const target = this.$refs.signalBuckets;
-                target.innerHTML = '';
-
-                if (!this.chartData.signalBuckets.length) {
-                    target.innerHTML = '<div class="rounded-2xl bg-slate-50 px-4 py-5 text-sm text-slate-500">No signal data available yet.</div>';
-                    return;
-                }
-
-                const total = this.chartData.signalBuckets.reduce((sum, item) => sum + item.value, 0) || 1;
-
-                this.chartData.signalBuckets.forEach((item) => {
-                    const row = document.createElement('div');
-                    const percent = Math.round((item.value / total) * 100);
-                    row.innerHTML = `
-                        <div class="mb-2 flex items-center justify-between text-sm">
-                            <span class="font-medium text-slate-700">${item.label}</span>
-                            <span class="font-semibold text-slate-950">${item.value}</span>
-                        </div>
-                        <div class="h-3 overflow-hidden rounded-full bg-slate-100">
-                            <div class="h-full rounded-full" style="width:${percent}%; background:${item.color}"></div>
-                        </div>
-                        <p class="mt-2 text-xs text-slate-500">${percent}% of clients with recorded signal</p>
-                    `;
-                    target.appendChild(row);
-                });
-            },
-        };
-    };
-</script>
-@endpush
 @endsection

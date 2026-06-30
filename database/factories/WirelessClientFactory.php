@@ -40,7 +40,7 @@ class WirelessClientFactory extends Factory
             'device_uptime' => fake()->optional()->randomElement(['5m12s', '1h02m', '2d03h']),
             'pppoe_username' => fake()->optional()->userName(),
             'comment' => fake()->optional()->sentence(3),
-            'ssid' => $accessPoint?->ssid ?? fake()->randomElement(['SkyBase-Clients', 'Guest-WiFi']),
+            'ssid' => $accessPoint?->ssid ?? fake()->randomElement(['RouterVault-Clients', 'Guest-WiFi']),
             'band' => $accessPoint?->band ?? fake()->randomElement(['2.4GHz', '5GHz']),
             'frequency' => fake()->randomElement([2412, 2437, 2462, 5180, 5220]),
             'signal_strength' => fake()->numberBetween(-80, -45),

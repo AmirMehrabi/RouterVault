@@ -6,35 +6,36 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta
         name="description"
-        content="WISPA automatically backs up MikroTik router configurations, keeps every version, and makes configuration changes easy to compare."
+        content="RouterVault automatically backs up MikroTik router configurations, keeps every version, and makes configuration changes easy to compare."
     >
-    <title>WISPA | MikroTik Configuration Backups and Version History</title>
+    <title>RouterVault | MikroTik Configuration Backups and Version History</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-white font-sans text-slate-950 antialiased">
     <div class="min-h-screen overflow-hidden">
-        <x-marketing.wispa-navbar />
+        <x-marketing.routervault-navbar />
 
         <main>
             <section class="border-b border-slate-300 pt-28 sm:pt-32">
                 <div class="mx-auto grid max-w-7xl lg:grid-cols-[1.08fr_0.92fr]">
                     <div class="flex flex-col justify-center px-5 py-16 sm:px-8 sm:py-20 lg:min-h-[650px] lg:border-r lg:border-slate-300 lg:px-12 xl:px-16">
                         <h1 class="max-w-3xl text-[3.4rem] font-bold leading-[0.92] tracking-[-0.065em] text-slate-950 sm:text-7xl lg:text-[5.8rem]">
-                            One router<br>is fine.<br><span class="text-wispa-600">Fifty is chaos.</span>
+                            One router<br>is fine.<br><span class="text-routervault-600">Fifty is chaos.</span>
                         </h1>
                         <p class="mt-8 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
-                            WISPA keeps every MikroTik config backed up, versioned, and ready to roll back — so 2am emergencies don't become 2am disasters.
+                            RouterVault keeps every MikroTik config backed up, versioned, and ready to roll back — so 2am emergencies don't become 2am disasters.
                         </p>
                         <div class="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
                             <a
                                 href="{{ route('auth.register') }}"
-                                class="inline-flex min-h-13 items-center justify-center bg-wispa-600 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-wispa-700 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-2"
+                                class="inline-flex min-h-13 items-center justify-center bg-routervault-600 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-routervault-700 focus:outline-none focus:ring-2 focus:ring-routervault-600 focus:ring-offset-2"
                             >
                                 Start Free — No Credit Card
                             </a>
                             <a
                                 href="#how-it-works"
-                                class="group inline-flex items-center gap-2 py-3 text-sm font-bold text-wispa-700 focus:outline-none focus:ring-2 focus:ring-wispa-600 focus:ring-offset-4"
+                                class="group inline-flex items-center gap-2 py-3 text-sm font-bold text-routervault-700 focus:outline-none focus:ring-2 focus:ring-routervault-600 focus:ring-offset-4"
                             >
                                 See How It Works
                                 <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -66,7 +67,7 @@
                                         <span class="text-slate-500">user</span><span class="text-white">admin</span>
                                         <span class="text-slate-500">time</span><span class="text-white">02:14:17</span>
                                         <span class="text-slate-500">change</span><span class="text-rose-300">+ firewall rule</span>
-                                        <span class="text-slate-500">backup</span><span class="text-wispa-300">v2025.05.20-021417</span>
+                                        <span class="text-slate-500">backup</span><span class="text-routervault-300">v2025.05.20-021417</span>
                                     </div>
                                 </div>
                             </div>
@@ -93,7 +94,7 @@
                         </div>
                         <div>
                             <p>Someone changed the firewall rules last night. Nobody logged it. Nobody remembers. You're staring at a live production router with no idea what changed or why.</p>
-                            <p class="mt-6 border-l-2 border-wispa-400 pl-5 font-bold text-white">This isn't a technology problem. It's a systems problem.</p>
+                            <p class="mt-6 border-l-2 border-routervault-400 pl-5 font-bold text-white">This isn't a technology problem. It's a systems problem.</p>
                         </div>
                     </div>
                 </div>
@@ -123,7 +124,7 @@
                             <p class="mt-8 border border-rose-300 bg-rose-50 p-5 font-mono text-sm leading-6 text-rose-900">Slow, inconsistent, and one mistake away from an outage.</p>
                         </div>
                         <div class="py-10 lg:pl-12">
-                            <p class="font-mono text-xs font-bold uppercase tracking-[0.18em] text-wispa-600">With WISPA</p>
+                            <p class="font-mono text-xs font-bold uppercase tracking-[0.18em] text-routervault-600">With RouterVault</p>
                             <ul class="mt-8 space-y-0 divide-y divide-slate-200 border-y border-slate-200">
                                 @foreach ([
                                     'Automatic backups on a schedule, every time',
@@ -132,11 +133,11 @@
                                     'Roll back any version in seconds',
                                 ] as $item)
                                     <li class="flex gap-4 py-5 font-semibold text-slate-900">
-                                        <span class="font-mono text-wispa-600">✓</span><span>{{ $item }}</span>
+                                        <span class="font-mono text-routervault-600">✓</span><span>{{ $item }}</span>
                                     </li>
                                 @endforeach
                             </ul>
-                            <p class="mt-8 border border-wispa-300 bg-wispa-50 p-5 font-mono text-sm leading-6 text-wispa-900">Always current. Always accountable. Always recoverable.</p>
+                            <p class="mt-8 border border-routervault-300 bg-routervault-50 p-5 font-mono text-sm leading-6 text-routervault-900">Always current. Always accountable. Always recoverable.</p>
                         </div>
                     </div>
                 </div>
@@ -145,15 +146,15 @@
             <section id="how-it-works" class="scroll-mt-20 border-b border-slate-300 bg-slate-50 py-20 sm:py-28">
                 <div class="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 xl:px-16">
                     <h2 class="text-4xl font-bold tracking-[-0.045em] sm:text-5xl">Three steps. That's it.</h2>
-                    <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-600">No agents to install. No complex setup. Connect your routers and WISPA handles the rest.</p>
+                    <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-600">No agents to install. No complex setup. Connect your routers and RouterVault handles the rest.</p>
                     <div class="mt-12 grid border-y-2 border-slate-950 md:grid-cols-3">
                         @foreach ([
                             ['01', 'Connect your routers', 'Add your MikroTik routers via API. Takes about 30 seconds per router.'],
-                            ['02', 'WISPA backs them up', 'Backups run automatically on schedule. Every change is captured.'],
+                            ['02', 'RouterVault backs them up', 'Backups run automatically on schedule. Every change is captured.'],
                             ['03', 'Compare and roll back', 'See what changed between versions. Revert in one click when something goes wrong.'],
                         ] as [$number, $title, $description])
                             <article class="py-9 md:px-8 md:first:pl-0 md:last:pr-0 md:not-last:border-r md:not-last:border-slate-300">
-                                <span class="block text-6xl font-bold tracking-[-0.06em] text-wispa-600">{{ $number }}</span>
+                                <span class="block text-6xl font-bold tracking-[-0.06em] text-routervault-600">{{ $number }}</span>
                                 <h3 class="mt-8 max-w-xs text-xl font-bold tracking-tight">{{ $title }}</h3>
                                 <p class="mt-3 max-w-sm text-sm leading-7 text-slate-600">{{ $description }}</p>
                             </article>
@@ -166,7 +167,7 @@
                 <div class="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 xl:px-16">
                     <div class="grid items-end gap-6 lg:grid-cols-[1fr_0.7fr]">
                         <h2 class="max-w-3xl text-4xl font-bold tracking-[-0.045em] sm:text-5xl">See the change, not just the backup.</h2>
-                        <p class="max-w-lg text-base leading-8 text-slate-600 lg:justify-self-end">A backup is useful. <span class="font-bold text-slate-950">A readable diff is better.</span> WISPA shows exactly what changed — line by line.</p>
+                        <p class="max-w-lg text-base leading-8 text-slate-600 lg:justify-self-end">A backup is useful. <span class="font-bold text-slate-950">A readable diff is better.</span> RouterVault shows exactly what changed — line by line.</p>
                     </div>
                     <div class="mt-12 border border-slate-700 bg-slate-950 text-slate-300">
                         <div class="grid grid-cols-2 border-b border-slate-700 font-mono text-[0.65rem] sm:text-xs">
@@ -200,7 +201,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end border-t border-slate-700 p-4 sm:px-6">
-                            <span class="font-mono text-xs font-bold text-wispa-300">2 changes found</span>
+                            <span class="font-mono text-xs font-bold text-routervault-300">2 changes found</span>
                         </div>
                     </div>
                 </div>
@@ -208,7 +209,7 @@
 
             <section id="benefits" class="scroll-mt-20 border-b border-slate-300">
                 <div class="mx-auto grid max-w-7xl lg:grid-cols-[0.6fr_1.4fr]">
-                    <div class="border-b border-slate-300 bg-wispa-600 px-5 py-14 text-white sm:px-8 lg:border-b-0 lg:border-r lg:px-12 lg:py-20 xl:px-16">
+                    <div class="border-b border-slate-300 bg-routervault-600 px-5 py-14 text-white sm:px-8 lg:border-b-0 lg:border-r lg:px-12 lg:py-20 xl:px-16">
                         <h2 class="text-4xl font-bold leading-[1.05] tracking-[-0.045em] sm:text-5xl">Built for network admins. Designed for real life.</h2>
                     </div>
                     <div class="grid sm:grid-cols-2">
@@ -226,7 +227,7 @@
                                 'sm:border-r' => $index % 2 === 0,
                                 'sm:border-b-0' => $index > 3,
                             ])>
-                                <span class="font-mono text-xs font-bold text-wispa-600">0{{ $index + 1 }}</span>
+                                <span class="font-mono text-xs font-bold text-routervault-600">0{{ $index + 1 }}</span>
                                 <h3 class="mt-5 text-lg font-bold">{{ $title }}</h3>
                                 <p class="mt-2 text-sm leading-6 text-slate-600">{{ $description }}</p>
                             </article>
@@ -241,7 +242,7 @@
                         <div>
                             <h2 class="text-4xl font-bold tracking-[-0.045em] sm:text-5xl">Start free. Pay when you're ready.</h2>
                             <p class="mt-5 max-w-md text-lg leading-8 text-slate-600">One router on us. Forever. When you need more, the pricing is simple.</p>
-                            <a href="{{ route('auth.register') }}" class="mt-8 inline-flex bg-wispa-600 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-wispa-700">Create Free Account</a>
+                            <a href="{{ route('auth.register') }}" class="mt-8 inline-flex bg-routervault-600 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-routervault-700">Create Free Account</a>
                         </div>
                         <div class="border-t-2 border-slate-950">
                             @foreach ([
@@ -266,7 +267,7 @@
                     <div class="border-t-2 border-slate-950">
                         @foreach ([
                             ['Is my data secure?', 'Yes. Every tenant is fully isolated. Backups are stored separately and accessed only via API — no open ports, no exposed services.'],
-                            ['Does it work with RouterOS v6 and v7?', 'Yes, both. WISPA connects via the RouterOS API, which is available on all modern versions.'],
+                            ['Does it work with RouterOS v6 and v7?', 'Yes, both. RouterVault connects via the RouterOS API, which is available on all modern versions.'],
                             ['What if I need more than 10 routers?', 'Add extra routers at €2 per router per month. No limits, no tiers to jump between.'],
                             ['Can I self-host?', 'Not yet, but it is on the roadmap. The cloud version is the fastest way to get started.'],
                             ['What happens to my configs if I cancel?', 'You can export all your data at any time. Your configs are yours.'],
@@ -283,18 +284,18 @@
                 </div>
             </section>
 
-            <section class="bg-wispa-600 text-white">
+            <section class="bg-routervault-600 text-white">
                 <div class="mx-auto grid max-w-7xl items-center gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_auto] lg:px-12 xl:px-16">
                     <div>
                         <h2 class="text-4xl font-bold tracking-[-0.045em] sm:text-5xl">Stop hoping nothing breaks.</h2>
-                        <p class="mt-4 text-base text-wispa-100">Start backing up your MikroTik configs for free. No credit card required.</p>
+                        <p class="mt-4 text-base text-routervault-100">Start backing up your MikroTik configs for free. No credit card required.</p>
                     </div>
-                    <a href="{{ route('auth.register') }}" class="inline-flex min-h-13 items-center justify-center bg-white px-7 py-3.5 text-sm font-bold text-wispa-700 transition hover:bg-wispa-50">Create Free Account</a>
+                    <a href="{{ route('auth.register') }}" class="inline-flex min-h-13 items-center justify-center bg-white px-7 py-3.5 text-sm font-bold text-routervault-700 transition hover:bg-routervault-50">Create Free Account</a>
                 </div>
             </section>
         </main>
 
-        <x-marketing.wispa-footer />
+        <x-marketing.routervault-footer />
     </div>
 </body>
 </html>

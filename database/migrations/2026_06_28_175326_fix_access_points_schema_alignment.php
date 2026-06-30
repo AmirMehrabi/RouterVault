@@ -9,34 +9,92 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE access_points RENAME COLUMN frequency_band TO band');
-        DB::statement('ALTER TABLE access_points RENAME COLUMN connected_clients TO connected_clients_count');
-        DB::statement('ALTER TABLE access_points RENAME COLUMN last_status_checked_at TO last_seen_at');
+        if (Schema::hasColumn('access_points', 'frequency_band') && ! Schema::hasColumn('access_points', 'band')) {
+            DB::statement('ALTER TABLE access_points RENAME COLUMN frequency_band TO band');
+        }
 
-        Schema::table('access_points', function (Blueprint $table) {
-            $table->string('board_name')->nullable()->after('model');
-            $table->string('architecture_name')->nullable()->after('firmware_version');
-            $table->string('platform')->nullable()->after('architecture_name');
-            $table->unsignedInteger('frequency')->nullable()->after('channel');
-            $table->string('location')->nullable()->after('tx_power');
-            $table->unsignedInteger('cpu_usage')->default(0)->nullable();
-            $table->unsignedInteger('cpu_count')->nullable();
-            $table->unsignedInteger('cpu_frequency')->nullable();
-            $table->unsignedInteger('memory_usage')->default(0)->nullable();
-            $table->unsignedBigInteger('total_memory')->nullable();
-            $table->unsignedBigInteger('free_memory')->nullable();
-            $table->unsignedBigInteger('total_hdd_space')->nullable();
-            $table->unsignedBigInteger('free_hdd_space')->nullable();
-            $table->unsignedInteger('signal_quality')->default(0);
-            $table->integer('noise_floor')->nullable();
-            $table->unsignedInteger('channel_utilization')->default(0);
-            $table->boolean('enable_monitoring')->default(true);
-            $table->boolean('enable_provisioning')->default(true);
+        if (Schema::hasColumn('access_points', 'connected_clients') && ! Schema::hasColumn('access_points', 'connected_clients_count')) {
+            DB::statement('ALTER TABLE access_points RENAME COLUMN connected_clients TO connected_clients_count');
+        }
+
+        if (Schema::hasColumn('access_points', 'last_status_checked_at') && ! Schema::hasColumn('access_points', 'last_seen_at')) {
+            DB::statement('ALTER TABLE access_points RENAME COLUMN last_status_checked_at TO last_seen_at');
+        }
+
+        $columns = Schema::getColumnListing('access_points');
+
+        Schema::table('access_points', function (Blueprint $table) use ($columns) {
+            if (! in_array('board_name', $columns, true)) {
+                $table->string('board_name')->nullable()->after('model');
+            }
+            if (! in_array('architecture_name', $columns, true)) {
+                $table->string('architecture_name')->nullable()->after('firmware_version');
+            }
+            if (! in_array('platform', $columns, true)) {
+                $table->string('platform')->nullable()->after('architecture_name');
+            }
+            if (! in_array('frequency', $columns, true)) {
+                $table->unsignedInteger('frequency')->nullable()->after('channel');
+            }
+            if (! in_array('location', $columns, true)) {
+                $table->string('location')->nullable()->after('tx_power');
+            }
+            if (! in_array('cpu_usage', $columns, true)) {
+                $table->unsignedInteger('cpu_usage')->default(0)->nullable();
+            }
+            if (! in_array('cpu_count', $columns, true)) {
+                $table->unsignedInteger('cpu_count')->nullable();
+            }
+            if (! in_array('cpu_frequency', $columns, true)) {
+                $table->unsignedInteger('cpu_frequency')->nullable();
+            }
+            if (! in_array('memory_usage', $columns, true)) {
+                $table->unsignedInteger('memory_usage')->default(0)->nullable();
+            }
+            if (! in_array('total_memory', $columns, true)) {
+                $table->unsignedBigInteger('total_memory')->nullable();
+            }
+            if (! in_array('free_memory', $columns, true)) {
+                $table->unsignedBigInteger('free_memory')->nullable();
+            }
+            if (! in_array('total_hdd_space', $columns, true)) {
+                $table->unsignedBigInteger('total_hdd_space')->nullable();
+            }
+            if (! in_array('free_hdd_space', $columns, true)) {
+                $table->unsignedBigInteger('free_hdd_space')->nullable();
+            }
+            if (! in_array('signal_quality', $columns, true)) {
+                $table->unsignedInteger('signal_quality')->default(0);
+            }
+            if (! in_array('noise_floor', $columns, true)) {
+                $table->integer('noise_floor')->nullable();
+            }
+            if (! in_array('channel_utilization', $columns, true)) {
+                $table->unsignedInteger('channel_utilization')->default(0);
+            }
+            if (! in_array('enable_monitoring', $columns, true)) {
+                $table->boolean('enable_monitoring')->default(true);
+            }
+            if (! in_array('enable_provisioning', $columns, true)) {
+                $table->boolean('enable_provisioning')->default(true);
+            }
         });
 
-        Schema::table('access_points', function (Blueprint $table) {
-            $table->dropColumn(['serial_number', 'antenna_type', 'antenna_gain', 'height_meters', 'azimuth', 'coverage_angle', 'max_clients']);
-        });
+        $obsoleteColumns = array_values(array_intersect([
+            'serial_number',
+            'antenna_type',
+            'antenna_gain',
+            'height_meters',
+            'azimuth',
+            'coverage_angle',
+            'max_clients',
+        ], Schema::getColumnListing('access_points')));
+
+        if ($obsoleteColumns !== []) {
+            Schema::table('access_points', function (Blueprint $table) use ($obsoleteColumns) {
+                $table->dropColumn($obsoleteColumns);
+            });
+        }
     }
 
     public function down(): void

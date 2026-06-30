@@ -15,13 +15,7 @@
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-6">
             <a href="{{ route('home') }}" class="flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-900 text-lg font-black text-white">
-                    WI
-                </div>
-                <div>
-                    <p class="text-lg font-black text-slate-950">ویسپا</p>
-                    <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">WISPA ISP OPERATIONS</p>
-                </div>
+                <x-brand-logo class="w-12" />
             </a>
 
             <nav class="hidden items-center gap-7 text-sm font-semibold text-slate-600 lg:flex">

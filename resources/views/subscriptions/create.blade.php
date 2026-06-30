@@ -275,7 +275,7 @@
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-semibold text-gray-900">Router Managed</h4>
-                                    <p class="text-xs text-gray-500 mt-1">Router/NAS handles IP assignment via RADIUS or DHCP. No tracking in SkyBase.</p>
+                                    <p class="text-xs text-gray-500 mt-1">Router/NAS handles IP assignment via RADIUS or DHCP. No tracking in RouterVault.</p>
                                 </div>
                             </div>
                         </div>
@@ -293,7 +293,7 @@
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-semibold text-gray-900">System Managed</h4>
-                                    <p class="text-xs text-gray-500 mt-1">SkyBase tracks and assigns IPs from IP pools. Full inventory management.</p>
+                                    <p class="text-xs text-gray-500 mt-1">RouterVault tracks and assigns IPs from IP pools. Full inventory management.</p>
                                 </div>
                             </div>
                         </div>

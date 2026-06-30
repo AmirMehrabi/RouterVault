@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="اسکای بیس یک پنل فارسی برای مانیتورینگ، پروویژن و مدیریت شبکه های MikroTik است؛ از روتر و اکسس پوینت تا مشترک و سرویس.">
-    <title>اسکای بیس | مانیتورینگ و پروویژن شبکه های MikroTik</title>
+    <meta name="description" content="RouterVault یک پنل فارسی برای مانیتورینگ، پروویژن و مدیریت شبکه های MikroTik است؛ از روتر و اکسس پوینت تا مشترک و سرویس.">
+    <title>RouterVault | مانیتورینگ و پروویژن شبکه های MikroTik</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Images/Logos/routervault_symbol_color.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset("assets/fonts.css") }}">
     <style>
@@ -18,12 +19,8 @@
     <div class="min-h-screen">
         <header class="border-b border-slate-200 bg-white">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-                <div class="flex items-center gap-4">
-                    <div class="flex h-11 w-11 items-center justify-center border border-blue-700 bg-blue-600 text-lg font-bold text-white">WI</div>
-                    <div>
-                        <p class="text-lg font-bold text-slate-900">ویسپا</p>
-                        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Mikrotik Control Plane</p>
-                    </div>
+                <div class="flex items-center">
+                    <x-brand-logo class="w-12" />
                 </div>
 
                 <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">

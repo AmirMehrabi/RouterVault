@@ -78,7 +78,7 @@
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Wireless & Network</h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <x-ui.input.text label="SSID" name="ssid" placeholder="e.g., SkyBase-Clients" :value="old('ssid')" :error="$errors->first('ssid')" />
+                <x-ui.input.text label="SSID" name="ssid" placeholder="e.g., RouterVault-Clients" :value="old('ssid')" :error="$errors->first('ssid')" />
                 <x-ui.input.select label="Band" name="band" :options="['2.4GHz' => '2.4GHz', '5GHz' => '5GHz', '6GHz' => '6GHz', 'dual' => 'Dual Band']" :value="old('band', 'dual')" placeholder="Select band" :required="true" :error="$errors->first('band')" />
                 <x-ui.input.select label="Status" name="status" :options="['online' => 'Online', 'offline' => 'Offline', 'maintenance' => 'Maintenance']" :value="old('status', 'offline')" placeholder="Select status" :error="$errors->first('status')" />
                 <x-ui.input.text label="IP Address" name="ip_address" placeholder="192.168.88.10" :value="old('ip_address')" :error="$errors->first('ip_address')" />

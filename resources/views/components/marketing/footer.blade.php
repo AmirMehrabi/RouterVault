@@ -3,16 +3,10 @@
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
             <div>
                 <div class="flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-900 text-lg font-black text-white">
-                        WI
-                    </div>
-                    <div>
-                        <p class="text-lg font-black text-slate-950">ویسپا</p>
-                        <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">WISPA ISP OPERATIONS</p>
-                    </div>
+                    <x-brand-logo class="h-12" />
                 </div>
                 <p class="mt-5 max-w-xl text-sm leading-8 text-slate-600">
-                    ویسپا پلتفرمی برای مدیریت عملیات ISP و شبکه‌های MikroTik است؛ جایی که مانیتورینگ، مدیریت مشترک و اقدام‌های روزمره
+                    RouterVault پلتفرمی برای مدیریت عملیات ISP و شبکه‌های MikroTik است؛ جایی که مانیتورینگ، مدیریت مشترک و اقدام‌های روزمره
                     در یک تجربه منسجم و فارسی کنار هم قرار می‌گیرند.
                 </p>
             </div>
@@ -44,7 +38,7 @@
         </div>
 
         <div class="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {{ now()->year }} ویسپا. همه حقوق محفوظ است.</p>
+            <p>© {{ now()->year }} RouterVault. همه حقوق محفوظ است.</p>
             <p>طراحی‌شده برای تیم‌های عملیات، پشتیبانی و مدیریت ISP</p>
         </div>
     </div>

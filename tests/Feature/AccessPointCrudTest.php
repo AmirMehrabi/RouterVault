@@ -55,7 +55,7 @@ class AccessPointCrudTest extends TestCase
             'router_id' => $router->id,
             'site_id' => $site->id,
             'location' => 'Tower sector A',
-            'ssid' => 'SkyBase-Clients',
+            'ssid' => 'RouterVault-Clients',
             'band' => 'dual',
             'status' => 'online',
             'ip_address' => '10.0.10.10',
