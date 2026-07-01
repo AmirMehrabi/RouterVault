@@ -181,9 +181,8 @@ class RouterBackupService
     protected function exportViaSsh(Router $router): string
     {
         $config = $router->routerOsConfig();
-        $sshUser = ($config['user'] ?? '').'+etc';
 
-        $ssh = Ssh::create($sshUser, $config['host'], $config['ssh_port'])
+        $ssh = Ssh::create($config['user'], $config['host'], $config['ssh_port'])
             ->removeBash()
             ->disableStrictHostKeyChecking()
             ->enableQuietMode()
