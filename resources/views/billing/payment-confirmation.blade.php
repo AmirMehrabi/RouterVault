@@ -1,45 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Payment Confirmed - RouterVault</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-slate-100 text-slate-900 antialiased">
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-md w-full text-center">
-            <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
+@extends('layouts.admin')
 
-            <h1 class="text-3xl font-bold text-slate-900">Payment Confirmed!</h1>
-            <p class="mt-3 text-slate-600">Your payment has been processed successfully.</p>
+@section('title', 'Payment Confirmed')
 
-            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-left">
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-slate-600">Amount Paid</span>
-                    <span class="font-bold text-slate-900">${{ number_format($payment->amount, 2) }}</span>
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-slate-600">Plan</span>
-                    <span class="font-semibold text-slate-900">{{ $payment->subscription->plan->name }}</span>
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-slate-600">Transaction ID</span>
-                    <span class="text-sm text-slate-500">{{ $payment->transaction_id }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-600">Paid At</span>
-                    <span class="text-sm text-slate-500">{{ $payment->paid_at?->format('M d, Y H:i') }}</span>
-                </div>
-            </div>
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Plan & usage', 'href' => route('billing.subscription')],
+        ['label' => 'Payment confirmed', 'current' => true],
+    ]" />
+@endpush
 
-            <a href="{{ route('dashboard') }}" class="mt-8 inline-block bg-slate-900 text-white py-3 px-8 rounded-xl font-semibold hover:bg-slate-800 transition">
-                Go to Dashboard
-            </a>
-        </div>
+@section('content')
+<div class="mx-auto max-w-xl py-8 text-center">
+    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+        <svg class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" /></svg>
     </div>
-</body>
-</html>
+    <h1 class="mt-6 text-3xl font-bold tracking-tight">Payment confirmed</h1>
+    <p class="mt-3 text-slate-600">Your subscription capacity has been updated successfully.</p>
+
+    <dl class="mt-8 border border-slate-200 bg-white text-left">
+        <div class="flex justify-between gap-4 border-b border-slate-100 px-6 py-4"><dt class="text-slate-500">Amount</dt><dd class="font-bold">€{{ number_format($payment->amount, 2) }}</dd></div>
+        <div class="flex justify-between gap-4 border-b border-slate-100 px-6 py-4"><dt class="text-slate-500">Transaction</dt><dd class="font-mono text-xs text-slate-700">{{ $payment->transaction_id }}</dd></div>
+        <div class="flex justify-between gap-4 px-6 py-4"><dt class="text-slate-500">Paid at</dt><dd class="font-semibold">{{ $payment->paid_at?->format('M j, Y H:i') }}</dd></div>
+    </dl>
+
+    <a href="{{ route('billing.subscription') }}" class="mt-8 inline-flex min-h-12 items-center justify-center bg-blue-600 px-8 text-sm font-bold text-white transition hover:bg-blue-700">Return to Plan & usage</a>
+</div>
+@endsection

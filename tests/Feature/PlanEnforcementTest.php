@@ -27,6 +27,7 @@ class PlanEnforcementTest extends TestCase
         $plan = Plan::create([
             'name' => 'Starter',
             'internal_name' => 'test_starter',
+            'type' => 'saas',
             'price' => 9,
             'max_routers' => 3,
             'backup_retention_days' => 30,
@@ -120,6 +121,7 @@ class PlanEnforcementTest extends TestCase
         $extraPlan = Plan::create([
             'name' => 'Extra Router',
             'internal_name' => 'test_extra',
+            'type' => 'saas',
             'price' => 1,
             'is_saas_plan' => true,
             'is_extra_router' => true,

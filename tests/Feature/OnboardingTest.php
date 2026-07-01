@@ -60,6 +60,8 @@ class OnboardingTest extends TestCase
             'email' => 'test@example.com',
             'status' => 'active',
             'saas_plan_id' => $plan->id,
+            'subscription_status' => 'active',
+            'onboarding_step' => 'router',
         ]);
 
         $this->user = User::create([
@@ -78,11 +80,11 @@ class OnboardingTest extends TestCase
             ->assertRedirect(route('auth.login'));
     }
 
-    public function test_onboarding_index_shows_for_authenticated_user(): void
+    public function test_onboarding_index_resumes_at_the_current_step(): void
     {
         $this->actingAs($this->user)
             ->get(route('onboarding.index'))
-            ->assertOk();
+            ->assertRedirect(route('onboarding.step', 3));
     }
 
     public function test_onboarding_step_1_shows_plans(): void
@@ -126,6 +128,18 @@ class OnboardingTest extends TestCase
 
         $this->tenant->refresh();
         $this->assertEquals('pending', $this->tenant->subscription_status);
+
+        $this->actingAs($this->user)
+            ->get(route('onboarding.step', 2))
+            ->assertOk()
+            ->assertSee('Starter');
+
+        $this->actingAs($this->user)
+            ->post(route('onboarding.payment'))
+            ->assertRedirect(route('onboarding.step', 3));
+
+        $this->assertSame($paidPlan->id, $this->tenant->refresh()->saas_plan_id);
+        $this->assertSame('active', $this->tenant->subscription_status);
     }
 
     public function test_add_router_during_onboarding(): void
@@ -201,10 +215,22 @@ class OnboardingTest extends TestCase
     public function test_complete_onboarding(): void
     {
         $this->actingAs($this->user)
-            ->get(route('onboarding.complete'))
-            ->assertOk();
+            ->post(route('onboarding.router.skip'))
+            ->assertRedirect(route('onboarding.completed'));
 
         $this->tenant->refresh();
         $this->assertTrue($this->tenant->onboarding_completed);
+        $this->assertNotNull($this->tenant->onboarding_completed_at);
+    }
+
+    public function test_backup_step_can_be_skipped_with_a_post_request(): void
+    {
+        $this->tenant->update(['onboarding_step' => 'backups']);
+
+        $this->actingAs($this->user)
+            ->post(route('onboarding.backup.skip'))
+            ->assertRedirect(route('onboarding.completed'));
+
+        $this->assertTrue($this->tenant->refresh()->onboarding_completed);
     }
 }

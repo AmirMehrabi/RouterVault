@@ -16,6 +16,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PasswordManagerController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RouterBackupController;
 use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
@@ -57,15 +58,22 @@ Route::middleware(['auth', 'initialize_tenancy'])->prefix('onboarding')->name('o
     Route::post('/plan', [OnboardingController::class, 'selectPlan'])->name('plan');
     Route::post('/payment', [OnboardingController::class, 'processPayment'])->name('payment');
     Route::post('/router', [OnboardingController::class, 'addRouter'])->name('router');
+    Route::post('/router/skip', [OnboardingController::class, 'skipRouter'])->name('router.skip');
     Route::post('/backup', [OnboardingController::class, 'configureBackup'])->name('backup');
+    Route::post('/backup/skip', [OnboardingController::class, 'skipBackup'])->name('backup.skip');
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
+    Route::get('/completed', [OnboardingController::class, 'completed'])->name('completed');
 });
 
 // Protected Routes (Require Authentication & Tenancy)
-Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(function () {
+Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce_plan'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // Tenant User Management
     Route::prefix('settings/users')->name('admin.tenant.users.')->group(function () {
@@ -279,8 +287,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status'])->group(
         Route::get('/subscription', [BillingController::class, 'subscription'])->name('subscription');
         Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/upgrade', [BillingController::class, 'upgrade'])->name('upgrade');
-        Route::post('/cancel', [BillingController::class, 'cancel'])->name('cancel');
-
+        Route::post('/extra-routers', [BillingController::class, 'purchaseExtraRouters'])->name('extra-routers.store');
         Route::get('/credits', fn () => view('billing.credits'))->name('credits');
         Route::get('/reports', fn () => view('billing.reports'))->name('reports');
     });

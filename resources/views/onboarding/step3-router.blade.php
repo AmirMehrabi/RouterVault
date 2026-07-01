@@ -1,79 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Add Your First Router - RouterVault</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-slate-100 text-slate-900 antialiased">
-    <div class="min-h-screen py-12 px-4">
-        <div class="max-w-2xl mx-auto">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-slate-900">Add Your First Router</h1>
-                <p class="mt-2 text-slate-600">Connect your MikroTik router to start backups</p>
-            </div>
+@extends('layouts.onboarding')
 
-            @if ($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+@section('title', 'Connect your first router')
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <form action="{{ route('onboarding.router') }}" method="POST">
-                    @csrf
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Router Name</label>
-                            <input type="text" name="name" value="{{ old('name') }}" required placeholder="e.g., Core-Router-1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        </div>
+@section('content')
+<div class="mx-auto max-w-2xl">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Connect your first router</h1>
+        <p class="mt-3 text-slate-600">Add a MikroTik router now, or finish setup and do this later.</p>
+    </header>
 
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Router IP Address</label>
-                            <input type="text" name="ip_address" value="{{ old('ip_address') }}" required placeholder="e.g., 192.168.1.1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        </div>
+    <section class="border border-slate-200 bg-white p-6 sm:p-8">
+        <form id="router-form" method="POST" action="{{ route('onboarding.router') }}">
+            @csrf
+            <x-input.text id="name" name="name" label="Router name" placeholder="Branch Office Router" :required="true" autofocus />
+            <x-input.text id="ip_address" name="ip_address" label="IP address" placeholder="192.168.88.1" :required="true" />
+            <x-input.text id="api_username" name="api_username" label="Username" value="admin" :required="true" />
+            <x-input.password id="api_password" name="api_password" label="Password" :required="true" :show-toggle="true" />
+            <x-input.select
+                id="ssh_auth_method"
+                name="ssh_auth_method"
+                label="Authentication method"
+                value="password"
+                :options="['password' => 'Password', 'private_key' => 'Private key']"
+            />
+            <x-input.number id="ssh_port" name="ssh_port" label="SSH port" value="22" min="1" max="65535" help="The default SSH port is 22." />
+        </form>
 
-                        <div class="border-t border-slate-200 pt-4 mt-4">
-                            <h3 class="font-semibold text-slate-900 mb-3">SSH Connection (for backups)</h3>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">SSH Username</label>
-                            <input type="text" name="api_username" value="{{ old('api_username', 'admin') }}" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">SSH Password</label>
-                            <input type="password" name="api_password" value="{{ old('api_password') }}" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Auth Method</label>
-                            <select name="ssh_auth_method" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                                <option value="password" {{ old('ssh_auth_method') === 'password' ? 'selected' : '' }}>Password</option>
-                                <option value="private_key" {{ old('ssh_auth_method', 'private_key') === 'private_key' ? 'selected' : '' }}>Private Key</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">SSH Port</label>
-                            <input type="number" name="ssh_port" value="{{ old('ssh_port', 22) }}" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex gap-4">
-                        <a href="{{ route('onboarding.step', 4) }}" class="flex-1 text-center py-3 px-6 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition">
-                            Skip for now
-                        </a>
-                        <button type="submit" class="flex-1 bg-slate-900 text-white py-3 px-6 rounded-xl font-semibold hover:bg-slate-800 transition">
-                            Add Router
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div class="mt-3 grid gap-3">
+            <button form="router-form" type="submit" class="flex min-h-12 items-center justify-center bg-blue-600 px-6 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                Save and continue
+            </button>
+            <form method="POST" action="{{ route('onboarding.router.skip') }}">
+                @csrf
+                <button type="submit" class="flex min-h-12 w-full items-center justify-center border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:bg-slate-50">
+                    Finish setup without a router
+                </button>
+            </form>
+            <a href="{{ route('onboarding.step', 1) }}" class="mt-2 text-sm font-semibold text-blue-700 hover:text-blue-900">← Back to plans</a>
         </div>
-    </div>
-</body>
-</html>
+    </section>
+</div>
+@endsection

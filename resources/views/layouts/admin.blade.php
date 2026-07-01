@@ -4,6 +4,10 @@
     $isRtl = $direction === 'rtl';
     $isFarsi = $language === 'fa';
     $user = auth()->user();
+    $planContext = request()->attributes->get('plan_context', []);
+    $hasLimitBanner = (bool) data_get($planContext, 'any_limit_reached', false);
+    $routerLimitReached = (bool) data_get($planContext, 'router_limit_reached', false);
+    $teamLimitReached = (bool) data_get($planContext, 'team_limit_reached', false);
 @endphp
 
 <!DOCTYPE html>
@@ -237,8 +241,11 @@
                             <div class="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                                 <x-user.display-name :user="$user" />
                             </div>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                            @if($user?->isAdmin())
+                                <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+                            @endif
+                            <a href="{{ route('billing.subscription') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Plan &amp; usage</a>
                             <div class="border-t border-gray-200 my-1"></div>
                             <form method="POST" action="{{ route('auth.logout') }}">
                                 @csrf
@@ -249,9 +256,34 @@
                 </div>
             </div>
         </header>
+
+        @if($hasLimitBanner)
+            <div class="fixed top-[60px] z-20 flex min-h-16 items-center border-b border-amber-300 bg-amber-50 px-4 py-3 {{ $isRtl ? 'right-0 left-0 lg:right-64' : 'right-0 left-0 lg:left-64' }}" role="status">
+                <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-start gap-3 text-sm text-amber-950">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.3 2.9c.8-1.4 2.8-1.4 3.6 0l6 10.5c.8 1.4-.2 3.1-1.8 3.1H4c-1.6 0-2.6-1.7-1.8-3.1l6.1-10.5ZM10 7a.8.8 0 0 1 .8.8v3.4a.8.8 0 0 1-1.6 0V7.8A.8.8 0 0 1 10 7Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
+                        <p class="font-semibold">
+                            @if($routerLimitReached && $teamLimitReached)
+                                Plan limits reached — {{ data_get($planContext, 'routers.current') }} of {{ data_get($planContext, 'routers.total_allowed') }} routers and {{ data_get($planContext, 'team.current') }} of {{ data_get($planContext, 'team.limit') }} team members in use.
+                            @elseif($routerLimitReached)
+                                Router limit reached — {{ data_get($planContext, 'routers.current') }} of {{ data_get($planContext, 'routers.total_allowed') }} routers in use.
+                            @else
+                                Team member limit reached — {{ data_get($planContext, 'team.current') }} of {{ data_get($planContext, 'team.limit') }} seats in use.
+                            @endif
+                        </p>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-4">
+                        <a href="{{ route('billing.subscription') }}" class="inline-flex min-h-9 items-center justify-center bg-amber-600 px-4 text-xs font-bold text-white transition hover:bg-amber-700">Upgrade plan</a>
+                        @if($routerLimitReached)
+                            <a href="{{ route('billing.subscription') }}#extra-routers" class="text-xs font-bold text-amber-900 underline decoration-amber-500 underline-offset-4">Add extra router</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
         
         <!-- Main Content -->
-        <main class="pt-[75px] s px-6 md:px-12 pb-8">
+        <main class="{{ $hasLimitBanner ? 'pt-[164px] sm:pt-[139px]' : 'pt-[75px]' }} px-6 pb-8 md:px-12">
             @yield('content')
         </main>
     </div>

@@ -2,143 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Billing\PurchaseExtraRoutersRequest;
+use App\Http\Requests\Billing\UpgradePlanRequest;
 use App\Models\Plan;
 use App\Models\TenantSubscription;
-use App\Services\Saas\DummyPaymentService;
 use App\Services\Saas\PlanEnforcementService;
+use App\Services\Saas\SubscriptionService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BillingController extends Controller
 {
-    public function __construct(protected PlanEnforcementService $planEnforcement) {}
+    public function __construct(
+        protected PlanEnforcementService $planEnforcement,
+        protected SubscriptionService $subscriptions,
+    ) {}
 
     public function subscription(): View
     {
         $tenant = auth()->user()->tenant;
         $currentPlan = $tenant->saasPlan;
-        $plans = Plan::saasPlans()->ordered()->get();
-        $usage = $this->planEnforcement->getRouterUsage($tenant);
-        $limits = $this->planEnforcement->getPlanLimits($tenant);
-
-        $subscription = TenantSubscription::where('tenant_id', $tenant->id)
-            ->latest()
-            ->first();
-
-        $payments = $tenant->payments()->latest()->limit(10)->get();
 
         return view('billing.subscription', [
             'tenant' => $tenant,
             'currentPlan' => $currentPlan,
-            'plans' => $plans,
-            'usage' => $usage,
-            'limits' => $limits,
-            'subscription' => $subscription,
-            'payments' => $payments,
+            'plans' => Plan::saasPlans()->orderBy('price')->get(),
+            'extraRouterPlan' => Plan::extraRouterPlan()->first(),
+            'usage' => $this->planEnforcement->getRouterUsage($tenant),
+            'limits' => $this->planEnforcement->getPlanLimits($tenant),
+            'teamUsage' => [
+                'current' => $tenant->users()->count(),
+                'limit' => $tenant->max_users,
+            ],
+            'subscription' => TenantSubscription::query()
+                ->where('tenant_id', $tenant->id)
+                ->where('status', 'active')
+                ->latest()
+                ->first(),
+            'payments' => $tenant->payments()->latest()->limit(20)->get(),
+            'canManageBilling' => auth()->user()->isOwner() || auth()->user()->hasPermission('billing.manage'),
         ]);
     }
 
-    public function subscribe(Request $request, DummyPaymentService $paymentService): RedirectResponse
+    public function subscribe(UpgradePlanRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'plan_id' => ['required', 'exists:plans,id'],
-        ]);
-
-        $plan = Plan::findOrFail($validated['plan_id']);
-        $tenant = auth()->user()->tenant;
-
-        if ($plan->price == 0) {
-            return $this->activateFreePlan($tenant, $plan);
-        }
-
-        $payment = $paymentService->processPayment($tenant, (float) $plan->price, $plan);
-
-        $tenant->update([
-            'saas_plan_id' => $plan->id,
-            'subscription_status' => 'active',
-            'subscription_starts_at' => now(),
-            'subscription_expires_at' => now()->addMonth(),
-            'next_billing_at' => now()->addMonth(),
-        ]);
-
-        return redirect()->route('billing.payment.confirmation', $payment)
-            ->with('success', 'Subscription activated successfully!');
+        return $this->startUpgrade($request);
     }
 
-    public function upgrade(Request $request, DummyPaymentService $paymentService): RedirectResponse
+    public function upgrade(UpgradePlanRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'plan_id' => ['required', 'exists:plans,id'],
-        ]);
-
-        $plan = Plan::findOrFail($validated['plan_id']);
-        $tenant = auth()->user()->tenant;
-
-        if ($plan->price == 0) {
-            return $this->activateFreePlan($tenant, $plan);
-        }
-
-        $payment = $paymentService->processPayment($tenant, (float) $plan->price, $plan);
-
-        $tenant->update([
-            'saas_plan_id' => $plan->id,
-            'subscription_status' => 'active',
-            'subscription_starts_at' => now(),
-            'subscription_expires_at' => now()->addMonth(),
-            'next_billing_at' => now()->addMonth(),
-        ]);
-
-        return redirect()->route('billing.payment.confirmation', $payment)
-            ->with('success', 'Plan upgraded successfully!');
+        return $this->startUpgrade($request);
     }
 
-    public function cancel(Request $request): RedirectResponse
+    public function purchaseExtraRouters(PurchaseExtraRoutersRequest $request): RedirectResponse
     {
-        $tenant = auth()->user()->tenant;
+        $payment = $this->subscriptions->initiateExtraRouterPurchase(
+            $request->user()->tenant,
+            $request->integer('quantity')
+        );
 
-        $subscription = TenantSubscription::where('tenant_id', $tenant->id)
-            ->where('status', 'active')
-            ->latest()
-            ->first();
+        return redirect()->route('billing.payment', $payment);
+    }
 
-        if ($subscription) {
-            $subscription->update([
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-                'cancellation_reason' => $request->input('reason', 'user_cancelled'),
+    protected function startUpgrade(UpgradePlanRequest $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        $plan = Plan::saasPlans()->findOrFail($request->integer('plan_id'));
+        $currentPlan = $tenant->saasPlan;
+
+        if ($currentPlan && $plan->priority <= $currentPlan->priority) {
+            return back()->withErrors([
+                'plan_id' => 'Choose a plan above your current plan.',
             ]);
         }
 
-        $tenant->update([
-            'subscription_status' => 'cancelled',
-        ]);
+        $payment = $this->subscriptions->initiatePlanPurchase($tenant, $plan);
 
-        return redirect()->route('billing.subscription')
-            ->with('success', 'Subscription cancelled successfully.');
-    }
-
-    protected function activateFreePlan($tenant, $plan): RedirectResponse
-    {
-        $tenant->update([
-            'saas_plan_id' => $plan->id,
-            'subscription_status' => 'active',
-            'subscription_starts_at' => now(),
-            'subscription_expires_at' => now()->addYears(100),
-        ]);
-
-        TenantSubscription::create([
-            'tenant_id' => $tenant->id,
-            'plan_id' => $plan->id,
-            'status' => 'active',
-            'amount' => 0,
-            'currency' => 'USD',
-            'billing_cycle' => 'monthly',
-            'current_period_start' => now(),
-            'current_period_end' => now()->addYears(100),
-        ]);
-
-        return redirect()->route('billing.subscription')
-            ->with('success', 'Free plan activated!');
+        return redirect()->route('billing.payment', $payment);
     }
 }

@@ -38,6 +38,11 @@ class Payment extends Model
         return $this->belongsTo(TenantSubscription::class, 'tenant_subscription_id');
     }
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function isCompleted(): bool
     {
         return $this->status === 'completed';

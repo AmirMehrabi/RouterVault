@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OnboardingStep;
 use App\Http\Requests\Onboarding\AddRouterRequest;
+use App\Http\Requests\Onboarding\ConfigureBackupRequest;
+use App\Http\Requests\Onboarding\SelectPlanRequest;
 use App\Models\BackupSchedule;
 use App\Models\BackupToken;
+use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Router;
-use App\Models\TenantSubscription;
-use App\Services\Saas\DummyPaymentService;
+use App\Services\Saas\OnboardingService;
+use App\Services\Saas\SubscriptionService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +20,12 @@ use Illuminate\View\View;
 
 class OnboardingController extends Controller
 {
-    public function index(): View|RedirectResponse
+    public function __construct(
+        protected OnboardingService $onboarding,
+        protected SubscriptionService $subscriptions,
+    ) {}
+
+    public function index(): RedirectResponse
     {
         $tenant = auth()->user()->tenant;
 
@@ -24,9 +33,7 @@ class OnboardingController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return view('onboarding.index', [
-            'tenant' => $tenant,
-        ]);
+        return redirect()->route('onboarding.step', $this->onboarding->currentStep($tenant)->number());
     }
 
     public function step(int $step): View|RedirectResponse
@@ -37,75 +44,80 @@ class OnboardingController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return match ($step) {
-            1 => view('onboarding.step1-plan', [
-                'plans' => Plan::saasPlans()->ordered()->get(),
-                'tenant' => $tenant,
+        $requestedStep = OnboardingStep::fromLegacyStep($step);
+
+        if (! $this->onboarding->canView($tenant, $requestedStep)) {
+            return redirect()->route('onboarding.step', $this->onboarding->currentStep($tenant)->number());
+        }
+
+        $shared = [
+            'tenant' => $tenant,
+            'currentStep' => $requestedStep,
+        ];
+
+        return match ($requestedStep) {
+            OnboardingStep::Plan => view('onboarding.step1-plan', $shared + [
+                'plans' => Plan::saasPlans()->orderBy('price')->get(),
             ]),
-            2 => view('onboarding.step2-payment', [
-                'tenant' => $tenant,
-                'plan' => $tenant->saasPlan,
+            OnboardingStep::Payment => view('onboarding.step2-payment', $shared + [
+                'payment' => $this->pendingOnboardingPayment($tenant->id),
             ]),
-            3 => view('onboarding.step3-router', [
-                'tenant' => $tenant,
+            OnboardingStep::Router => view('onboarding.step3-router', $shared),
+            OnboardingStep::Backups => view('onboarding.step4-backup', $shared + [
+                'routers' => $tenant->routers()->orderBy('name')->get(),
             ]),
-            4 => view('onboarding.step4-backup', [
-                'tenant' => $tenant,
-                'routers' => $tenant->routers()->get(),
-            ]),
-            default => redirect()->route('onboarding.index'),
+            OnboardingStep::Complete => redirect()->route('onboarding.completed'),
         };
     }
 
-    public function selectPlan(Request $request): RedirectResponse
+    public function selectPlan(SelectPlanRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'plan_id' => ['required', 'exists:plans,id'],
-        ]);
+        $plan = Plan::saasPlans()->findOrFail($request->integer('plan_id'));
+        $tenant = $request->user()->tenant;
 
-        $plan = Plan::findOrFail($validated['plan_id']);
-        $tenant = auth()->user()->tenant;
+        if ((float) $plan->price === 0.0) {
+            $this->subscriptions->activateFreePlan($tenant, $plan);
+            $this->onboarding->advanceTo($tenant, OnboardingStep::Router);
 
-        $tenant->update([
-            'saas_plan_id' => $plan->id,
-            'subscription_status' => 'pending',
-        ]);
-
-        if ($plan->price == 0) {
-            return $this->activateFreePlan($tenant, $plan);
+            return redirect()->route('onboarding.step', OnboardingStep::Router->number());
         }
 
-        return redirect()->route('onboarding.step', 2);
+        $this->subscriptions->initiatePlanPurchase($tenant, $plan, 'onboarding');
+        $tenant->update(['subscription_status' => 'pending']);
+        $this->onboarding->advanceTo($tenant, OnboardingStep::Payment);
+
+        return redirect()->route('onboarding.step', OnboardingStep::Payment->number());
     }
 
-    public function processPayment(Request $request, DummyPaymentService $paymentService): RedirectResponse
+    public function processPayment(Request $request): RedirectResponse
     {
-        $tenant = auth()->user()->tenant;
-        $plan = $tenant->saasPlan;
+        $tenant = $request->user()->tenant;
+        $payment = $this->pendingOnboardingPayment($tenant->id);
 
-        if (! $plan || $plan->price == 0) {
-            return redirect()->route('onboarding.step', 1);
+        if (! $payment) {
+            return redirect()->route('onboarding.step', OnboardingStep::Plan->number())
+                ->withErrors(['plan_id' => 'Choose a plan before continuing to payment.']);
         }
 
-        $paymentService->processPayment($tenant, (float) $plan->price, $plan);
+        $this->subscriptions->completePayment($payment);
+        $this->onboarding->advanceTo($tenant, OnboardingStep::Router);
 
-        $tenant->update([
-            'subscription_status' => 'active',
-            'subscription_starts_at' => now(),
-            'subscription_expires_at' => now()->addMonth(),
-            'next_billing_at' => now()->addMonth(),
-        ]);
-
-        return redirect()->route('onboarding.step', 3);
+        return redirect()->route('onboarding.step', OnboardingStep::Router->number())
+            ->with('success', 'Payment confirmed. Your plan is active.');
     }
 
     public function addRouter(AddRouterRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $tenant = auth()->user()->tenant;
+        $tenant = $request->user()->tenant;
+
+        if ($tenant->subscription_status !== 'active' || ! $tenant->saas_plan_id) {
+            return redirect()->route('onboarding.step', OnboardingStep::Plan->number())
+                ->withErrors(['plan_id' => 'Activate a plan before adding a router.']);
+        }
 
         if (! $tenant->canAddRouter()) {
-            return back()->withErrors(['name' => 'Router limit reached. Please upgrade your plan or purchase extra routers.']);
+            return back()->withErrors(['name' => 'Router limit reached. Upgrade your plan or purchase extra router capacity.']);
         }
 
         try {
@@ -115,8 +127,8 @@ class OnboardingController extends Controller
                 'ip_address' => $validated['ip_address'],
                 'api_username' => $validated['api_username'],
                 'api_password' => $validated['api_password'],
-                'ssh_auth_method' => $validated['ssh_auth_method'] ?? 'private_key',
-                'ssh_private_key' => $validated['ssh_private_key'] ?? '~/.ssh/id_rsa',
+                'ssh_auth_method' => $validated['ssh_auth_method'] ?? 'password',
+                'ssh_private_key' => $validated['ssh_private_key'] ?? null,
                 'ssh_port' => $validated['ssh_port'] ?? 22,
                 'status' => 'offline',
             ]);
@@ -127,67 +139,84 @@ class OnboardingController extends Controller
         }
 
         BackupToken::generateForRouter($router);
+        $this->onboarding->advanceTo($tenant, OnboardingStep::Backups);
 
-        return redirect()->route('onboarding.step', 4);
+        return redirect()->route('onboarding.step', OnboardingStep::Backups->number());
     }
 
-    public function configureBackup(Request $request): RedirectResponse
+    public function skipRouter(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'router_ids' => ['required', 'array'],
-            'router_ids.*' => ['exists:routers,id'],
-            'interval_value' => ['required', 'integer', 'min:1'],
-            'interval_unit' => ['required', 'string', 'in:hours,days,weeks'],
-        ]);
+        if ($request->user()->tenant->subscription_status !== 'active') {
+            return redirect()->route('onboarding.step', OnboardingStep::Plan->number())
+                ->withErrors(['plan_id' => 'Activate a plan before finishing setup.']);
+        }
 
-        $tenant = auth()->user()->tenant;
+        $this->onboarding->complete($request->user()->tenant);
 
-        $schedule = BackupSchedule::create([
-            'tenant_id' => $tenant->id,
-            'name' => 'Daily Backup',
-            'is_enabled' => true,
-            'interval_value' => $validated['interval_value'],
-            'interval_unit' => $validated['interval_unit'],
-            'timezone' => $tenant->timezone ?? 'UTC',
-            'retention_count' => $tenant->backup_retention_days,
-            'export_mode' => 'full',
-            'next_run_at' => now(),
-        ]);
+        return redirect()->route('onboarding.completed');
+    }
+
+    public function configureBackup(ConfigureBackupRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $tenant = $request->user()->tenant;
+
+        $schedule = BackupSchedule::updateOrCreate(
+            [
+                'tenant_id' => $tenant->id,
+                'name' => 'Onboarding backup schedule',
+            ],
+            [
+                'is_enabled' => true,
+                'interval_value' => $validated['interval_value'],
+                'interval_unit' => $validated['interval_unit'],
+                'timezone' => $tenant->timezone ?? 'UTC',
+                'retention_count' => $tenant->backup_retention_days,
+                'export_mode' => 'full',
+                'next_run_at' => now(),
+            ]
+        );
 
         $schedule->routers()->sync($validated['router_ids']);
+        $this->onboarding->complete($tenant);
 
-        return redirect()->route('onboarding.complete');
+        return redirect()->route('onboarding.completed');
     }
 
-    public function complete(): View
+    public function skipBackup(Request $request): RedirectResponse
     {
-        $tenant = auth()->user()->tenant;
-        $tenant->update(['onboarding_completed' => true]);
+        $this->onboarding->complete($request->user()->tenant);
+
+        return redirect()->route('onboarding.completed');
+    }
+
+    public function complete(): RedirectResponse
+    {
+        return redirect()->route('onboarding.index');
+    }
+
+    public function completed(Request $request): View|RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+
+        if (! $tenant->onboarding_completed) {
+            return redirect()->route('onboarding.index');
+        }
 
         return view('onboarding.complete', [
             'tenant' => $tenant,
+            'currentStep' => OnboardingStep::Complete,
         ]);
     }
 
-    protected function activateFreePlan($tenant, $plan): RedirectResponse
+    protected function pendingOnboardingPayment(string $tenantId): ?Payment
     {
-        $tenant->update([
-            'subscription_status' => 'active',
-            'subscription_starts_at' => now(),
-            'subscription_expires_at' => now()->addYears(100),
-        ]);
-
-        TenantSubscription::create([
-            'tenant_id' => $tenant->id,
-            'plan_id' => $plan->id,
-            'status' => 'active',
-            'amount' => 0,
-            'currency' => 'USD',
-            'billing_cycle' => 'monthly',
-            'current_period_start' => now(),
-            'current_period_end' => now()->addYears(100),
-        ]);
-
-        return redirect()->route('onboarding.step', 3);
+        return Payment::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'pending')
+            ->where('metadata->source', 'onboarding')
+            ->with('subscription.plan')
+            ->latest()
+            ->first();
     }
 }

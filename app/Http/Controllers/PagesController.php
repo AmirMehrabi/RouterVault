@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Plan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,10 @@ class PagesController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return view('homepage');
+        return view('homepage', [
+            'saasPlans' => Plan::saasPlans()->ordered()->get(),
+            'extraRouterPlan' => Plan::extraRouterPlan()->first(),
+        ]);
     }
 
     public function pricing(Request $request): RedirectResponse|View

@@ -63,4 +63,27 @@ class PlanEnforcementService
             'alert_channels' => $tenant->alert_channels,
         ];
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getPlanContext(Tenant $tenant): array
+    {
+        $routerUsage = $this->getRouterUsage($tenant);
+        $teamCurrent = $tenant->users()->count();
+        $teamLimit = $tenant->max_users;
+
+        return [
+            'plan' => $tenant->saasPlan,
+            'routers' => $routerUsage,
+            'team' => [
+                'current' => $teamCurrent,
+                'limit' => $teamLimit,
+                'reached' => $teamCurrent >= $teamLimit,
+            ],
+            'router_limit_reached' => ! $routerUsage['can_add'],
+            'team_limit_reached' => $teamCurrent >= $teamLimit,
+            'any_limit_reached' => ! $routerUsage['can_add'] || $teamCurrent >= $teamLimit,
+        ];
+    }
 }

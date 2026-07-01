@@ -26,7 +26,11 @@
             @if($required) required @endif
             @if($minlength) minlength="{{ $minlength }}" @endif
             @if($xModel) x-model="{{ $xModel }}" @endif
-            class="px-4 py-3 w-full bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+            @error($name)
+                class="w-full rounded-lg border border-red-500 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-600"
+            @else
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-600"
+            @enderror
         >
 
         @if($showToggle)
@@ -39,4 +43,8 @@
         </button>
         @endif
     </div>
+
+    @error($name)
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
 </div>

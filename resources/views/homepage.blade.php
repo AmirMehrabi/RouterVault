@@ -245,12 +245,17 @@
                             <a href="{{ route('auth.register') }}" class="mt-8 inline-flex bg-routervault-600 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-routervault-700">Create Free Account</a>
                         </div>
                         <div class="border-t-2 border-slate-950">
-                            @foreach ([
-                                ['Free', '1 router, 7-day history', '€0', ''],
-                                ['Starter', '3 routers, 30-day history', '€9', '/mo'],
-                                ['Operator', '10 routers, 180-day history', '€19', '/mo'],
-                                ['Extra routers', 'Simple expansion, per router', '€2', '/router/mo'],
-                            ] as [$name, $detail, $price, $period])
+                            @foreach ($saasPlans->sortBy('price')->map(fn ($plan) => [
+                                $plan->name,
+                                $plan->max_routers.' router'.($plan->max_routers === 1 ? '' : 's').', '.$plan->backup_retention_days.'-day history',
+                                '€'.number_format($plan->price, 0),
+                                (float) $plan->price > 0 ? '/mo' : '',
+                            ])->when($extraRouterPlan, fn ($plans) => $plans->push([
+                                'Extra routers',
+                                'Simple expansion, per router',
+                                '€'.number_format($extraRouterPlan->price, 0),
+                                '/router/mo',
+                            ])) as [$name, $detail, $price, $period])
                                 <div class="grid grid-cols-[1fr_auto] items-center gap-5 border-b border-slate-300 py-6">
                                     <div><p class="font-bold">{{ $name }}</p><p class="mt-1 text-sm text-slate-500">{{ $detail }}</p></div>
                                     <p class="text-3xl font-bold tracking-tight">{{ $price }}<span class="text-xs font-normal text-slate-500">{{ $period }}</span></p>

@@ -16,7 +16,7 @@
                 type="checkbox"
                 id="{{ $id }}"
                 name="{{ $name }}"
-                value="1"
+                value="{{ $value ?? 1 }}"
                 {{ $checked ? 'checked' : '' }}
                 @if($required) required @endif
                 @if($xModel) x-model="{{ $xModel }}" @endif

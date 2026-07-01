@@ -1,62 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Complete Payment - RouterVault</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-slate-100 text-slate-900 antialiased">
-    <div class="min-h-screen py-12 px-4">
-        <div class="max-w-md mx-auto">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-slate-900">Complete Payment</h1>
-                <p class="mt-2 text-slate-600">Set up your billing for the {{ $plan->name }} plan</p>
+@extends('layouts.onboarding')
+
+@section('title', 'Complete payment')
+
+@section('content')
+<div class="mx-auto max-w-xl">
+    @if($payment)
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold tracking-tight">Confirm your subscription</h1>
+            <p class="mt-3 text-slate-600">Review the plan and complete the simulated checkout.</p>
+        </header>
+
+        <section class="border border-slate-200 bg-white p-6 sm:p-8">
+            <div class="flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
+                <div>
+                    <p class="text-sm font-semibold text-slate-500">Selected plan</p>
+                    <h2 class="mt-1 text-2xl font-bold">{{ $payment->subscription->plan->name }}</h2>
+                </div>
+                <p class="text-2xl font-bold">€{{ number_format($payment->amount, 2) }}<span class="text-sm font-normal text-slate-500">/mo</span></p>
             </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-6">
-                    <div>
-                        <p class="font-semibold text-slate-900">{{ $plan->name }} Plan</p>
-                        <p class="text-sm text-slate-500">Billed monthly</p>
-                    </div>
-                    <p class="text-2xl font-bold text-slate-900">${{ number_format($plan->price, 2) }}</p>
-                </div>
-
-                <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-                    This is a demo payment page. No real payment will be processed.
-                </div>
-
-                <form action="{{ route('onboarding.payment') }}" method="POST">
-                    @csrf
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Card Number</label>
-                            <input type="text" value="4242 4242 4242 4242" readonly class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Expiry</label>
-                                <input type="text" value="12/28" readonly class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">CVC</label>
-                                <input type="text" value="123" readonly class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="mt-6 w-full bg-slate-900 text-white py-3 px-6 rounded-xl font-semibold hover:bg-slate-800 transition">
-                        Pay ${{ number_format($plan->price, 2) }}
-                    </button>
-                </form>
-
-                <div class="mt-4 text-center">
-                    <a href="{{ route('onboarding.step', 1) }}" class="text-sm text-slate-500 hover:text-slate-700">← Change plan</a>
-                </div>
+            <dl class="grid gap-4 py-6 text-sm sm:grid-cols-3">
+                <div><dt class="text-slate-500">Routers</dt><dd class="mt-1 font-bold">{{ $payment->subscription->plan->max_routers }}</dd></div>
+                <div><dt class="text-slate-500">History</dt><dd class="mt-1 font-bold">{{ $payment->subscription->plan->backup_retention_days }} days</dd></div>
+                <div><dt class="text-slate-500">Team</dt><dd class="mt-1 font-bold">{{ $payment->subscription->plan->max_users }}</dd></div>
+            </dl>
+            <div class="border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                Dummy gateway is active. No card will be charged, but a real payment record and subscription will be created.
             </div>
+            <form method="POST" action="{{ route('onboarding.payment') }}" class="mt-6">
+                @csrf
+                <button type="submit" class="flex min-h-12 w-full items-center justify-center bg-blue-600 px-6 text-sm font-bold text-white transition hover:bg-blue-700">
+                    Confirm payment · €{{ number_format($payment->amount, 2) }}
+                </button>
+            </form>
+            <a href="{{ route('onboarding.step', 1) }}" class="mt-5 block text-center text-sm font-semibold text-slate-600 hover:text-slate-950">Back to plans</a>
+        </section>
+    @else
+        <div class="border border-rose-200 bg-white p-8 text-center">
+            <h1 class="text-2xl font-bold">No pending payment</h1>
+            <p class="mt-2 text-slate-600">Choose a plan to continue.</p>
+            <a href="{{ route('onboarding.step', 1) }}" class="mt-6 inline-flex bg-blue-600 px-6 py-3 text-sm font-bold text-white">Choose a plan</a>
         </div>
-    </div>
-</body>
-</html>
+    @endif
+</div>
+@endsection

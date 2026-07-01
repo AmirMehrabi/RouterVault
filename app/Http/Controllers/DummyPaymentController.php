@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
-use App\Services\Saas\DummyPaymentService;
+use App\Services\Saas\SubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,16 +19,11 @@ class DummyPaymentController extends Controller
         ]);
     }
 
-    public function process(Request $request, Payment $payment, DummyPaymentService $paymentService): RedirectResponse
+    public function process(Request $request, Payment $payment, SubscriptionService $subscriptions): RedirectResponse
     {
         $this->authorizeTenant($payment->tenant_id);
 
-        $payment->update([
-            'status' => 'completed',
-            'payment_method' => 'dummy',
-            'transaction_id' => 'DUMMY-'.strtoupper(uniqid()),
-            'paid_at' => now(),
-        ]);
+        $payment = $subscriptions->completePayment($payment);
 
         return redirect()->route('billing.payment.confirmation', $payment)
             ->with('success', 'Payment processed successfully!');

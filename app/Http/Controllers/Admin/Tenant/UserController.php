@@ -66,6 +66,12 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        if (! tenant() || tenant()->users()->count() >= tenant()->max_users) {
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors(['name' => 'Team member limit reached. Upgrade your plan to add another user.']);
+        }
+
         $validated = $request->validated();
 
         $user = User::create([

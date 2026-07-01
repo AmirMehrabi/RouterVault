@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OnboardingStep;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,15 +35,22 @@ class Tenant extends Model
         'extra_routers_count',
         'next_billing_at',
         'onboarding_completed',
+        'onboarding_step',
+        'onboarding_completed_at',
     ];
 
-    protected $casts = [
-        'trial_ends_at' => 'datetime',
-        'subscription_starts_at' => 'datetime',
-        'subscription_expires_at' => 'datetime',
-        'next_billing_at' => 'datetime',
-        'onboarding_completed' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'trial_ends_at' => 'datetime',
+            'subscription_starts_at' => 'datetime',
+            'subscription_expires_at' => 'datetime',
+            'next_billing_at' => 'datetime',
+            'onboarding_completed' => 'boolean',
+            'onboarding_step' => OnboardingStep::class,
+            'onboarding_completed_at' => 'datetime',
+        ];
+    }
 
     public function plan(): BelongsTo
     {

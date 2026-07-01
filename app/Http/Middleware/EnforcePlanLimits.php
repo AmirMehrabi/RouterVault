@@ -29,9 +29,7 @@ class EnforcePlanLimits
             return $next($request);
         }
 
-        $request->merge(['_plan_limits' => $this->planEnforcement->getPlanLimits($tenant)]);
-        $request->merge(['_can_add_router' => $this->planEnforcement->canAddRouter($tenant)]);
-        $request->merge(['_can_add_user' => $this->planEnforcement->canAddUser($tenant)]);
+        $request->attributes->set('plan_context', $this->planEnforcement->getPlanContext($tenant));
 
         return $next($request);
     }
