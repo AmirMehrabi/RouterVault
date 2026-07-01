@@ -91,20 +91,8 @@
             name="country"
             label="Country"
             placeholder="Select a country"
-            :options="[
-                'US' => 'United States',
-                'UK' => 'United Kingdom',
-                'CA' => 'Canada',
-                'AU' => 'Australia',
-                'DE' => 'Germany',
-                'FR' => 'France',
-                'IN' => 'India',
-                'BR' => 'Brazil',
-                'NG' => 'Nigeria',
-                'KE' => 'Kenya',
-                'ZA' => 'South Africa',
-                'OTHER' => 'Other',
-            ]"
+            :options="$countries"
+            :searchable="true"
             xModel="country"
         />
 
@@ -112,29 +100,18 @@
             id="timezone"
             name="timezone"
             label="Timezone"
-            :options="[
-                'UTC' => 'UTC (Coordinated Universal Time)',
-                'America/New_York' => 'Eastern Time (US & Canada)',
-                'America/Chicago' => 'Central Time (US & Canada)',
-                'America/Denver' => 'Mountain Time (US & Canada)',
-                'America/Los_Angeles' => 'Pacific Time (US & Canada)',
-                'Europe/London' => 'London (GMT)',
-                'Europe/Paris' => 'Central European Time',
-                'Asia/Kolkata' => 'India Standard Time',
-                'Asia/Dubai' => 'Gulf Standard Time',
-                'Africa/Nairobi' => 'East Africa Time',
-                'Africa/Johannesburg' => 'South Africa Standard Time',
-            ]"
+            :options="$timezones"
+            :searchable="true"
             xModel="timezone"
         />
 
         <x-input.checkbox
             id="terms"
             name="terms"
-            :value="true"
             :required="true"
-            label='I agree to the <a href="#" class="text-blue-600 hover:text-blue-700">Terms of Service</a> and <a href="#" class="text-blue-600 hover:text-blue-700">Privacy Policy</a>'
-        />
+        >
+            I agree to the <a href="#" class="text-blue-600 transition hover:text-blue-700">Terms of Service</a> and <a href="#" class="text-blue-600 transition hover:text-blue-700">Privacy Policy</a>
+        </x-input.checkbox>
 
         <!-- Submit Button -->
         <button

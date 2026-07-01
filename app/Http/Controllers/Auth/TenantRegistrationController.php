@@ -9,6 +9,8 @@ use App\Models\Role;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\RegistrationOptions;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -16,9 +18,12 @@ use Illuminate\Support\Str;
 
 class TenantRegistrationController extends Controller
 {
-    public function showRegistrationForm()
+    public function showRegistrationForm(): View
     {
-        return view('auth.register-tenant');
+        return view('auth.register-tenant', [
+            'countries' => RegistrationOptions::countries(),
+            'timezones' => RegistrationOptions::timezones(),
+        ]);
     }
 
     public function register(RegisterTenantRequest $request)

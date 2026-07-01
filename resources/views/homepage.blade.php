@@ -23,7 +23,7 @@
                         <h1 class="max-w-3xl text-[3.4rem] font-bold leading-[0.92] tracking-[-0.065em] text-slate-950 sm:text-7xl lg:text-[5.8rem]">
                             One router<br>is fine.<br><span class="text-routervault-600">Fifty is chaos.</span>
                         </h1>
-                        <p class="mt-8 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
+                        <p class="mt-8 max-w-xl text-lg leading-8 text-slate-900 sm:text-xl">
                             RouterVault keeps every MikroTik config backed up, versioned, and ready to roll back — so 2am emergencies don't become 2am disasters.
                         </p>
                         <div class="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
@@ -35,7 +35,7 @@
                             </a>
                             <a
                                 href="#how-it-works"
-                                class="group inline-flex items-center gap-2 py-3 text-sm font-bold text-routervault-700 focus:outline-none focus:ring-2 focus:ring-routervault-600 focus:ring-offset-4"
+                                class="group inline-flex items-center gap-2 py-3 text-sm font-bold text-slate-950 transition hover:text-routervault-700 focus:outline-none focus:ring-2 focus:ring-routervault-600 focus:ring-offset-4"
                             >
                                 See How It Works
                                 <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
