@@ -10,7 +10,6 @@ use App\Services\RouterOs\RouterOsClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RouterOS\Query;
 use Spatie\Ssh\Ssh;
 use Throwable;
 
@@ -143,16 +142,16 @@ class RouterBackupService
             'private_key_present' => filled($config['ssh_private_key'] ?? null),
         ]);
 
-        if ($this->hasApiCredentials($router)) {
+        if ($this->hasApiCredentials($router) && ($router->ssh_auth_method ?: 'private_key') === 'private_key') {
             try {
-                Log::info('Attempting RouterOS API export.', [
+                Log::info('Attempting RouterOS API export via library.', [
                     'router_id' => $router->id,
                     'tenant_id' => $router->tenant_id,
                     'router_name' => $router->name,
                     'host' => $config['host'],
                 ]);
 
-                return $this->exportViaApi($router);
+                return $this->exportViaLibrary($router);
             } catch (Throwable $throwable) {
                 Log::warning('RouterOS API export failed, falling back to SSH.', [
                     'router_id' => $router->id,
@@ -172,34 +171,23 @@ class RouterBackupService
         return filled($router->resolvedApiUsername()) && filled($router->resolvedApiPassword());
     }
 
-    protected function exportViaApi(Router $router): string
+    protected function exportViaLibrary(Router $router): string
     {
         $client = $this->clientFactory->make($router);
 
-        /** @var array<int, array<string, string>> $result */
-        $result = $client->query(new Query('/export show-sensitive'));
-
-        $lines = [];
-
-        foreach ($result as $row) {
-            if (is_array($row)) {
-                $lines[] = $row['=ret'] ?? '';
-            }
-        }
-
-        return implode("\n", $lines);
+        return $client->export('show-sensitive');
     }
 
     protected function exportViaSsh(Router $router): string
     {
         $config = $router->routerOsConfig();
+        $sshUser = ($config['user'] ?? '').'+etc';
 
-        $ssh = Ssh::create($config['user'], $config['host'], $config['ssh_port'])
+        $ssh = Ssh::create($sshUser, $config['host'], $config['ssh_port'])
             ->removeBash()
             ->disableStrictHostKeyChecking()
             ->enableQuietMode()
             ->addExtraOption('-T')
-            ->addExtraOption('-o BatchMode=no')
             ->addExtraOption('-o ConnectTimeout='.$config['ssh_timeout'])
             ->setTimeout($config['ssh_timeout']);
 
