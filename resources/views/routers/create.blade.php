@@ -13,12 +13,14 @@
 @section('content')
 @php
     $credentialSource = old('credential_source', 'manual');
+    $enableApi = old('enable_api', '1');
+    $enableSsh = old('enable_ssh', '1');
 @endphp
-<div class="space-y-6 pb-24" x-data="{ credentialSource: @js($credentialSource) }">
+<div class="space-y-6 pb-24" x-data="{ credentialSource: @js($credentialSource), enableApi: @js($enableApi), enableSsh: @js($enableSsh) }" x-cloak>
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Add New Router</h1>
-            <p class="mt-1 text-sm text-gray-500">Add a router and choose whether to reuse a stored credential or enter one manually.</p>
+            <p class="mt-1 text-sm text-gray-500">Add a router and configure how to connect to it.</p>
         </div>
     </div>
 
@@ -43,17 +45,61 @@
         </div>
 
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 class="mb-4 text-lg font-semibold text-gray-900">Connection Settings</h3>
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <x-ui.input.text type="text" label="IP Address" name="ip_address" placeholder="192.168.1.1" :required="true" :value="old('ip_address')" :error="$errors->first('ip_address')" />
-                <x-ui.input.text type="number" label="API Port" name="api_port" :value="old('api_port', 8728)" :error="$errors->first('api_port')" hint="Default: 8728" />
-                <x-ui.input.text type="number" label="SSH Port" name="ssh_port" :value="old('ssh_port', 22)" :error="$errors->first('ssh_port')" hint="Default: 22" />
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">RouterOS API</h3>
+                    <p class="mt-1 text-sm text-gray-500">Connect via the MikroTik RouterOS API for management and monitoring.</p>
+                </div>
+                <button type="button" @click="enableApi = enableApi === '1' ? '0' : '1'"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    :class="enableApi === '1' ? 'bg-blue-600' : 'bg-gray-200'">
+                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="enableApi === '1' ? 'translate-x-5' : 'translate-x-0'"></span>
+                </button>
+                <input type="hidden" name="enable_api" x-model="enableApi">
+            </div>
+            <div x-show="enableApi === '1'" x-transition class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <x-ui.input.text label="IP Address" name="ip_address" placeholder="192.168.1.1" :required="true" :value="old('ip_address')" :error="$errors->first('ip_address')" />
+                <x-ui.input.text label="API Port" name="api_port" type="number" :value="old('api_port', 8728)" :error="$errors->first('api_port')" hint="Default: 8728" />
                 <div class="flex items-center pt-6">
-                    <x-ui.input.checkbox label="Use SSL for RouterOS API" name="use_ssl" :checked="old('use_ssl', false)" :error="$errors->first('use_ssl')" />
+                    <x-ui.input.checkbox label="Use SSL for API connection" name="use_ssl" :checked="old('use_ssl', false)" :error="$errors->first('use_ssl')" />
                 </div>
                 <div class="flex items-center pt-6">
                     <x-ui.input.checkbox label="Use legacy RouterOS login" name="legacy_login" :checked="old('legacy_login', false)" :error="$errors->first('legacy_login')" />
                 </div>
+            </div>
+            <div x-show="enableApi !== '1'" x-transition class="py-4 text-center text-sm text-gray-400">
+                RouterOS API is disabled. The router will only be accessible via SSH.
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">SSH Access</h3>
+                    <p class="mt-1 text-sm text-gray-500">Connect via SSH for configuration backups and command execution.</p>
+                </div>
+                <button type="button" @click="enableSsh = enableSsh === '1' ? '0' : '1'"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    :class="enableSsh === '1' ? 'bg-blue-600' : 'bg-gray-200'">
+                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="enableSsh === '1' ? 'translate-x-5' : 'translate-x-0'"></span>
+                </button>
+                <input type="hidden" name="enable_ssh" x-model="enableSsh">
+            </div>
+            <div x-show="enableSsh === '1'" x-transition class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div x-show="enableApi !== '1'" class="md:col-span-2 lg:col-span-3">
+                    <x-ui.input.text label="IP Address" name="ip_address" placeholder="192.168.1.1" :required="true" :value="old('ip_address')" :error="$errors->first('ip_address')" />
+                </div>
+                <x-ui.input.text label="SSH Port" name="ssh_port" type="number" :value="old('ssh_port', 22)" :error="$errors->first('ssh_port')" hint="Default: 22" />
+                <x-ui.input.select label="SSH Auth Method" name="ssh_auth_method" :options="['private_key' => 'Private Key', 'password' => 'Password']" :value="old('ssh_auth_method', 'private_key')" :error="$errors->first('ssh_auth_method')" />
+                <x-ui.input.text type="number" label="SSH Timeout (seconds)" name="ssh_timeout" :value="old('ssh_timeout', 30)" :error="$errors->first('ssh_timeout')" />
+                <div class="md:col-span-2 lg:col-span-3">
+                    <x-ui.input.textarea label="SSH Private Key Path" name="ssh_private_key" :value="old('ssh_private_key')" :error="$errors->first('ssh_private_key')" hint="Defaults to ~/.ssh/id_rsa when blank." />
+                </div>
+            </div>
+            <div x-show="enableSsh !== '1'" x-transition class="py-4 text-center text-sm text-gray-400">
+                SSH access is disabled. The router will only be accessible via the RouterOS API.
             </div>
         </div>
 
@@ -92,12 +138,7 @@
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Advanced Settings</h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <x-ui.input.text type="number" label="Timeout (seconds)" name="timeout" :value="old('timeout', 30)" :error="$errors->first('timeout')" hint="Connection timeout in seconds" />
-                <x-ui.input.select label="SSH Auth Method" name="ssh_auth_method" :options="['private_key' => 'Private Key', 'password' => 'Password']" :value="old('ssh_auth_method', 'private_key')" :error="$errors->first('ssh_auth_method')" />
-                <x-ui.input.text type="number" label="SSH Timeout" name="ssh_timeout" :value="old('ssh_timeout', 30)" :error="$errors->first('ssh_timeout')" />
-                <div class="md:col-span-2 lg:col-span-3">
-                    <x-ui.input.textarea label="SSH Private Key Path" name="ssh_private_key" :value="old('ssh_private_key')" :error="$errors->first('ssh_private_key')" hint="Defaults to ~/.ssh/id_rsa when blank." />
-                </div>
+                <x-ui.input.text type="number" label="Connection Timeout (seconds)" name="timeout" :value="old('timeout', 30)" :error="$errors->first('timeout')" hint="Overall connection timeout" />
                 <div class="flex items-center pt-6">
                     <x-ui.input.checkbox label="Enable Monitoring" name="enable_monitoring" :checked="old('enable_monitoring', true)" :error="$errors->first('enable_monitoring')" />
                 </div>

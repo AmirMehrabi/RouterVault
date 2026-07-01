@@ -325,7 +325,7 @@ function routersIndex() {
         debounceTimer: null,
         urls: {
             show: '{{ url('routers') }}',
-            edit: '{{ url('routers') }}',
+            edit: '{{ url('routers/edit') }}',
             destroy: '{{ url('routers') }}'
         },
 

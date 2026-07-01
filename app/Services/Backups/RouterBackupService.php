@@ -6,9 +6,11 @@ use App\Models\BackupRun;
 use App\Models\BackupSchedule;
 use App\Models\Router;
 use App\Models\RouterBackup;
+use App\Services\RouterOs\RouterOsClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RouterOS\Query;
 use Spatie\Ssh\Ssh;
 use Throwable;
 
@@ -18,7 +20,8 @@ class RouterBackupService
 
     public function __construct(
         protected BackupDiffService $diffService,
-        protected DiffAlertService $alertService
+        protected DiffAlertService $alertService,
+        protected RouterOsClientFactory $clientFactory
     ) {}
 
     public function fakeExportUsing(?callable $exporter): void
@@ -140,9 +143,64 @@ class RouterBackupService
             'private_key_present' => filled($config['ssh_private_key'] ?? null),
         ]);
 
+        if ($this->hasApiCredentials($router)) {
+            try {
+                Log::info('Attempting RouterOS API export.', [
+                    'router_id' => $router->id,
+                    'tenant_id' => $router->tenant_id,
+                    'router_name' => $router->name,
+                    'host' => $config['host'],
+                ]);
+
+                return $this->exportViaApi($router);
+            } catch (Throwable $throwable) {
+                Log::warning('RouterOS API export failed, falling back to SSH.', [
+                    'router_id' => $router->id,
+                    'tenant_id' => $router->tenant_id,
+                    'router_name' => $router->name,
+                    'host' => $config['host'],
+                    'error' => $throwable->getMessage(),
+                ]);
+            }
+        }
+
+        return $this->exportViaSsh($router);
+    }
+
+    protected function hasApiCredentials(Router $router): bool
+    {
+        return filled($router->resolvedApiUsername()) && filled($router->resolvedApiPassword());
+    }
+
+    protected function exportViaApi(Router $router): string
+    {
+        $client = $this->clientFactory->make($router);
+
+        /** @var array<int, array<string, string>> $result */
+        $result = $client->query(new Query('/export show-sensitive'));
+
+        $lines = [];
+
+        foreach ($result as $row) {
+            if (is_array($row)) {
+                $lines[] = $row['=ret'] ?? '';
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    protected function exportViaSsh(Router $router): string
+    {
+        $config = $router->routerOsConfig();
+
         $ssh = Ssh::create($config['user'], $config['host'], $config['ssh_port'])
             ->removeBash()
             ->disableStrictHostKeyChecking()
+            ->enableQuietMode()
+            ->addExtraOption('-T')
+            ->addExtraOption('-o BatchMode=no')
+            ->addExtraOption('-o ConnectTimeout='.$config['ssh_timeout'])
             ->setTimeout($config['ssh_timeout']);
 
         if (($router->ssh_auth_method ?: 'private_key') === 'password') {
@@ -153,22 +211,24 @@ class RouterBackupService
 
         $process = $ssh->execute('/export show-sensitive');
 
+        $stderrOutput = trim($process->getErrorOutput());
+
         if (! $process->isSuccessful()) {
-            Log::warning('Router backup export failed.', [
+            Log::warning('Router backup SSH export failed.', [
                 'router_id' => $router->id,
                 'tenant_id' => $router->tenant_id,
                 'router_name' => $router->name,
                 'host' => $config['host'],
                 'ssh_port' => $config['ssh_port'],
                 'exit_code' => $process->getExitCode(),
-                'error_output' => trim($process->getErrorOutput()),
+                'error_output' => $stderrOutput,
                 'standard_output' => Str::of(trim($process->getOutput()))->limit(1000)->toString(),
             ]);
 
-            throw new \RuntimeException($process->getErrorOutput() ?: 'RouterOS export command failed.');
+            throw new \RuntimeException($stderrOutput ?: 'RouterOS export command failed.');
         }
 
-        Log::info('Router backup export completed.', [
+        Log::info('Router backup SSH export completed.', [
             'router_id' => $router->id,
             'tenant_id' => $router->tenant_id,
             'router_name' => $router->name,

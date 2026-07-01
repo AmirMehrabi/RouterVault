@@ -6,6 +6,7 @@ use App\Http\Requests\Router\StoreRouterRequest;
 use App\Http\Requests\Router\UpdateRouterRequest;
 use App\Models\PasswordManagerCredential;
 use App\Models\Router;
+use App\Models\RouterBackup;
 use App\Services\Backups\RouterPushScriptGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -107,8 +108,31 @@ class RouterController extends Controller
     {
         $this->authorizeTenantAccess($router);
 
+        $backups = RouterBackup::query()
+            ->where('tenant_id', $router->tenant_id)
+            ->where('router_id', $router->id)
+            ->with('diff:id,router_backup_id,added_lines,removed_lines')
+            ->latest()
+            ->paginate(10);
+
+        $backupStats = [
+            'total' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->count(),
+            'successful' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'success')->count(),
+            'failed' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'failed')->count(),
+            'changed' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'success')->where('changed', true)->count(),
+        ];
+
+        $lastBackup = RouterBackup::query()
+            ->where('tenant_id', $router->tenant_id)
+            ->where('router_id', $router->id)
+            ->latest()
+            ->first();
+
         return view('routers.show', [
             'router' => $router->load('passwordManagerCredential:id,name,username'),
+            'backups' => $backups,
+            'backupStats' => $backupStats,
+            'lastBackup' => $lastBackup,
         ]);
     }
 
@@ -231,6 +255,8 @@ class RouterController extends Controller
             $validated['tenant_id'] = auth()->user()->tenant_id;
         }
 
+        $validated['enable_api'] = (bool) ($validated['enable_api'] ?? true);
+        $validated['enable_ssh'] = (bool) ($validated['enable_ssh'] ?? true);
         $validated['use_ssl'] = (bool) ($validated['use_ssl'] ?? false);
         $validated['legacy_login'] = (bool) ($validated['legacy_login'] ?? false);
         $validated['ssh_auth_method'] = $validated['ssh_auth_method'] ?? 'private_key';

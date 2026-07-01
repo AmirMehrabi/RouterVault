@@ -40,6 +40,8 @@ class StoreRouterRequest extends FormRequest
             'site' => ['nullable', 'string', 'max:255'],
             'timeout' => ['nullable', 'integer', 'min:1', 'max:300'],
             'status' => ['nullable', 'string', Rule::in(['pending', 'online', 'offline'])],
+            'enable_api' => ['nullable', 'boolean'],
+            'enable_ssh' => ['nullable', 'boolean'],
             'enable_monitoring' => ['nullable', 'boolean'],
             'enable_provisioning' => ['nullable', 'boolean'],
             'tenant_id' => ['nullable', 'exists:tenants,id'],
