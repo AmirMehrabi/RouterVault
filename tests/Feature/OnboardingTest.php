@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Plan;
+use App\Models\Router;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,12 +24,31 @@ class OnboardingTest extends TestCase
         $plan = Plan::create([
             'name' => 'Free',
             'internal_name' => 'test_free',
+            'type' => 'saas',
             'price' => 0,
             'max_routers' => 1,
             'backup_retention_days' => 7,
             'alert_channels' => ['in_app'],
             'max_users' => 1,
             'is_saas_plan' => true,
+            'status' => 'active',
+        ]);
+
+        Plan::factory()->create([
+            'name' => 'Starter',
+            'internal_name' => 'fixture_starter',
+            'type' => 'saas',
+            'is_saas_plan' => true,
+            'is_extra_router' => false,
+            'status' => 'active',
+        ]);
+
+        Plan::factory()->create([
+            'name' => 'Operator',
+            'internal_name' => 'fixture_operator',
+            'type' => 'saas',
+            'is_saas_plan' => true,
+            'is_extra_router' => false,
             'status' => 'active',
         ]);
 
@@ -90,6 +110,7 @@ class OnboardingTest extends TestCase
         $paidPlan = Plan::create([
             'name' => 'Starter',
             'internal_name' => 'test_starter',
+            'type' => 'saas',
             'price' => 9,
             'max_routers' => 3,
             'backup_retention_days' => 30,
@@ -122,6 +143,59 @@ class OnboardingTest extends TestCase
             'tenant_id' => $this->tenant->id,
             'name' => 'Test Router',
         ]);
+    }
+
+    public function test_different_tenants_can_add_routers_with_the_same_ip_address(): void
+    {
+        $otherTenant = Tenant::create([
+            'id' => 'other-tenant-id',
+            'name' => 'Other Tenant',
+            'slug' => 'other-tenant',
+            'company_name' => 'Other Company',
+            'email' => 'other@example.com',
+            'status' => 'active',
+            'saas_plan_id' => $this->tenant->saas_plan_id,
+        ]);
+
+        Router::factory()->create([
+            'tenant_id' => $otherTenant->id,
+            'ip_address' => '192.168.1.1',
+        ]);
+
+        $this->actingAs($this->user)
+            ->post(route('onboarding.router'), [
+                'name' => 'Test Router',
+                'ip_address' => '192.168.1.1',
+                'api_username' => 'admin',
+                'api_password' => 'password',
+            ])
+            ->assertRedirect(route('onboarding.step', 4))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('routers', 2);
+    }
+
+    public function test_duplicate_router_ip_address_for_the_same_tenant_returns_a_validation_error(): void
+    {
+        Router::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'ip_address' => '192.168.1.1',
+        ]);
+
+        $this->actingAs($this->user)
+            ->from(route('onboarding.step', 3))
+            ->post(route('onboarding.router'), [
+                'name' => 'Duplicate Router',
+                'ip_address' => '192.168.1.1',
+                'api_username' => 'admin',
+                'api_password' => 'password',
+            ])
+            ->assertRedirect(route('onboarding.step', 3))
+            ->assertSessionHasErrors([
+                'ip_address' => 'A router with this IP address already exists in your account.',
+            ]);
+
+        $this->assertDatabaseCount('routers', 1);
     }
 
     public function test_complete_onboarding(): void

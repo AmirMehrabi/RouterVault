@@ -24,7 +24,13 @@ class UpdateRouterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
             'vendor' => ['required', 'string', 'in:Mikrotik,Cisco,Juniper,Huawei'],
-            'ip_address' => ['required', 'ip', 'unique:routers,ip_address,'.$routerId],
+            'ip_address' => [
+                'required',
+                'ip',
+                Rule::unique('routers', 'ip_address')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenantId))
+                    ->ignore($routerId),
+            ],
             'api_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'use_ssl' => ['nullable', 'boolean'],
             'legacy_login' => ['nullable', 'boolean'],
@@ -54,7 +60,7 @@ class UpdateRouterRequest extends FormRequest
             'vendor.in' => 'The vendor must be one of: Mikrotik, Cisco, Juniper, Huawei.',
             'ip_address.required' => 'The IP address is required.',
             'ip_address.ip' => 'Please enter a valid IP address.',
-            'ip_address.unique' => 'A router with this IP address already exists.',
+            'ip_address.unique' => 'A router with this IP address already exists in your account.',
             'password_manager_credential_id.exists' => 'The selected Password Manager credential is invalid.',
         ];
     }

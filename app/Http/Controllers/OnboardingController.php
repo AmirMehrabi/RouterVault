@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Onboarding\AddRouterRequest;
 use App\Models\BackupSchedule;
 use App\Models\BackupToken;
 use App\Models\Plan;
 use App\Models\Router;
 use App\Models\TenantSubscription;
 use App\Services\Saas\DummyPaymentService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -97,35 +99,32 @@ class OnboardingController extends Controller
         return redirect()->route('onboarding.step', 3);
     }
 
-    public function addRouter(Request $request): RedirectResponse
+    public function addRouter(AddRouterRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'ip_address' => ['required', 'string', 'max:45'],
-            'api_username' => ['required', 'string', 'max:255'],
-            'api_password' => ['required', 'string', 'max:255'],
-            'ssh_auth_method' => ['nullable', 'string', 'in:private_key,password'],
-            'ssh_private_key' => ['nullable', 'string'],
-            'ssh_port' => ['nullable', 'integer'],
-        ]);
-
+        $validated = $request->validated();
         $tenant = auth()->user()->tenant;
 
         if (! $tenant->canAddRouter()) {
             return back()->withErrors(['name' => 'Router limit reached. Please upgrade your plan or purchase extra routers.']);
         }
 
-        $router = Router::create([
-            'tenant_id' => $tenant->id,
-            'name' => $validated['name'],
-            'ip_address' => $validated['ip_address'],
-            'api_username' => $validated['api_username'],
-            'api_password' => $validated['api_password'],
-            'ssh_auth_method' => $validated['ssh_auth_method'] ?? 'private_key',
-            'ssh_private_key' => $validated['ssh_private_key'] ?? '~/.ssh/id_rsa',
-            'ssh_port' => $validated['ssh_port'] ?? 22,
-            'status' => 'offline',
-        ]);
+        try {
+            $router = Router::create([
+                'tenant_id' => $tenant->id,
+                'name' => $validated['name'],
+                'ip_address' => $validated['ip_address'],
+                'api_username' => $validated['api_username'],
+                'api_password' => $validated['api_password'],
+                'ssh_auth_method' => $validated['ssh_auth_method'] ?? 'private_key',
+                'ssh_private_key' => $validated['ssh_private_key'] ?? '~/.ssh/id_rsa',
+                'ssh_port' => $validated['ssh_port'] ?? 22,
+                'status' => 'offline',
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return back()
+                ->withInput($request->except(['api_password', 'ssh_private_key']))
+                ->withErrors(['ip_address' => 'A router with this IP address already exists in your account.']);
+        }
 
         BackupToken::generateForRouter($router);
 

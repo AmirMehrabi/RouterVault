@@ -11,7 +11,7 @@
         :class="scrolled ? 'h-16' : 'h-20'"
     >
         <a href="{{ route('home') }}" class="flex shrink-0 items-center">
-            <x-brand-logo class="w-12 transition-[width] duration-300 ease-out" ::class="{ '!w-10': scrolled }" />
+            <x-brand-logo class="transition-[width] duration-300 ease-out"  />
         </a>
 
         <nav class="ml-auto hidden items-center gap-7 text-sm font-semibold text-slate-950 lg:flex" aria-label="Primary navigation">
