@@ -130,8 +130,8 @@
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2" x-show="credentialSource === 'manual'" x-cloak>
-                <x-ui.input.text label="API Username" name="api_username" placeholder="admin" :value="old('api_username')" :error="$errors->first('api_username')" />
-                <x-ui.input.password label="API Password" name="api_password" placeholder="Enter API password" :error="$errors->first('api_password')" />
+                <x-ui.input.text label="Username" name="api_username" placeholder="admin" :value="old('api_username')" :error="$errors->first('api_username')" />
+                <x-ui.input.password label="Password" name="api_password" placeholder="Enter password" :error="$errors->first('api_password')" />
             </div>
         </div>
 
