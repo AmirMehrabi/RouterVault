@@ -13,8 +13,8 @@
 @section('content')
 @php
     $credentialSource = old('credential_source', 'manual');
-    $enableApi = old('enable_api', '1');
-    $enableSsh = old('enable_ssh', '1');
+    $enableApi = old('enable_api', '1') ? '1' : '0';
+    $enableSsh = old('enable_ssh', '1') ? '1' : '0';
 @endphp
 <div class="space-y-6 pb-24" x-data="{ credentialSource: @js($credentialSource), enableApi: @js($enableApi), enableSsh: @js($enableSsh) }" x-cloak>
     <div class="flex items-center justify-between">
