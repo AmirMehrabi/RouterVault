@@ -150,6 +150,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce
         Route::get('/{router}/edit', [RouterController::class, 'edit'])->name('edit');
         Route::put('/{router}', [RouterController::class, 'update'])->name('update');
         Route::delete('/{router}', [RouterController::class, 'destroy'])->name('destroy');
+        Route::post('/{router}/backup', [RouterController::class, 'triggerBackup'])->name('backup');
         Route::get('/{router}/push-script', [RouterController::class, 'pushScript'])->name('push-script');
         Route::get('/{router}/sessions', [RouterController::class, 'sessions'])->name('sessions');
         Route::get('/{router}/queues', [RouterController::class, 'queues'])->name('queues');

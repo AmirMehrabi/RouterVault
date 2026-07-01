@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Router\StoreRouterRequest;
 use App\Http\Requests\Router\UpdateRouterRequest;
+use App\Jobs\ProcessRouterBackup;
 use App\Models\PasswordManagerCredential;
 use App\Models\Router;
 use App\Models\RouterBackup;
@@ -178,6 +179,32 @@ class RouterController extends Controller
         return redirect()
             ->route('routers.index')
             ->with('success', 'Router deleted successfully.');
+    }
+
+    public function triggerBackup(Router $router): JsonResponse
+    {
+        $this->authorizeTenantAccess($router);
+
+        $alreadyQueued = RouterBackup::query()
+            ->where('tenant_id', $router->tenant_id)
+            ->where('router_id', $router->id)
+            ->whereIn('status', ['pending', 'running'])
+            ->exists();
+
+        if ($alreadyQueued) {
+            return response()->json(['message' => 'A backup is already queued or running for this router.'], 409);
+        }
+
+        $backup = RouterBackup::query()->create([
+            'tenant_id' => $router->tenant_id,
+            'router_id' => $router->id,
+            'status' => 'pending',
+            'disk' => 'local',
+        ]);
+
+        ProcessRouterBackup::dispatch($backup->id);
+
+        return response()->json(['message' => 'Backup queued successfully.', 'backup_id' => $backup->id]);
     }
 
     protected function authorizeTenantAccess(Router $router): void

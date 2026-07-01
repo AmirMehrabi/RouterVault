@@ -394,7 +394,7 @@ function routerShow() {
         async triggerBackup() {
             this.backupRunning = true;
             try {
-                const response = await fetch('{{ route("routers.index") }}/{{ $router->id }}/backup', {
+                const response = await fetch('{{ route("routers.backup", $router) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
