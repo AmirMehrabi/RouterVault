@@ -45,4 +45,17 @@ class BackupDiffServiceTest extends TestCase
             hash('sha256', $service->normalizeForComparison($new))
         );
     }
+
+    public function test_diff_ignores_routeros_v6_export_timestamp_header(): void
+    {
+        $old = "# jul/02/2026 08:23:20 by RouterOS 6.49.17\n/system identity set name=core\n";
+        $new = "# jul/02/2026 08:22:47 by RouterOS 6.49.17\n/system identity set name=core\n";
+
+        $diff = (new BackupDiffService)->diff($old, $new);
+
+        $this->assertSame(0, $diff['added']);
+        $this->assertSame(0, $diff['removed']);
+        $this->assertSame('', $diff['unified_diff']);
+        $this->assertSame([], $diff['hunks']);
+    }
 }

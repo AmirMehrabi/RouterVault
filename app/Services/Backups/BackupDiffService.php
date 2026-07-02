@@ -73,7 +73,12 @@ class BackupDiffService
 
     protected function isRouterOsExportHeader(string $line): bool
     {
-        return preg_match('/^#\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+by\s+RouterOS\s+/i', $line) === 1;
+        // Matches both RouterOS v7 format (# 2026-05-01 15:46:35 by RouterOS 7.20.6)
+        // and RouterOS v6 format (# jul/02/2026 08:23:20 by RouterOS 6.49.17)
+        return preg_match(
+            '/^#\s+(?:\d{4}-\d{2}-\d{2}|[a-z]{3}\/\d{1,2}\/\d{4})\s+\d{2}:\d{2}:\d{2}\s+by\s+RouterOS\s+/i',
+            $line
+        ) === 1;
     }
 
     /**
