@@ -10,7 +10,7 @@ use App\Services\RouterOs\RouterOsClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\Ssh\Ssh;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 class RouterBackupService
@@ -182,21 +182,13 @@ class RouterBackupService
     {
         $config = $router->routerOsConfig();
 
-        $ssh = Ssh::create($config['user'], $config['host'], $config['ssh_port'])
-            ->removeBash()
-            ->disableStrictHostKeyChecking()
-            ->enableQuietMode()
-            ->addExtraOption('-T')
-            ->addExtraOption('-o ConnectTimeout='.$config['ssh_timeout'])
-            ->setTimeout($config['ssh_timeout']);
+        // Build SSH command directly — spatie/ssh uses heredoc which RouterOS cannot parse.
+        // Passing the command as a direct SSH argument lets RouterOS CLI interpret it correctly.
+        $sshCommand = $this->buildSshCommand($router, $config);
 
-        if (($router->ssh_auth_method ?: 'private_key') === 'password') {
-            $ssh->usePassword($config['pass']);
-        } else {
-            $ssh->usePrivateKey($config['ssh_private_key']);
-        }
-
-        $process = $ssh->execute('/export show-sensitive');
+        $process = Process::fromShellCommandline($sshCommand);
+        $process->setTimeout($config['ssh_timeout']);
+        $process->run();
 
         $stdoutOutput = trim($process->getOutput());
         $stderrOutput = trim($process->getErrorOutput());
@@ -217,7 +209,14 @@ class RouterBackupService
             // RouterOS may exit with non-zero code even when the export command succeeded.
             // If we received meaningful output, treat it as a successful export.
             if ($stdoutOutput === '') {
-                throw new \RuntimeException($stderrOutput ?: 'RouterOS export command failed.');
+                $error = $stderrOutput ?: 'RouterOS export command failed.';
+
+                // Detect missing sshpass so the operator knows to install it.
+                if (str_contains($stderrOutput, 'sshpass:') || str_contains($stderrOutput, 'command not found')) {
+                    $error = 'sshpass is not installed. Install it with: apt-get install sshpass';
+                }
+
+                throw new \RuntimeException($error);
             }
         }
 
@@ -231,6 +230,46 @@ class RouterBackupService
         ]);
 
         return $process->getOutput();
+    }
+
+    /**
+     * Build the SSH command for exporting RouterOS configuration.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private function buildSshCommand(Router $router, array $config): string
+    {
+        $host = $config['host'];
+        $port = $config['ssh_port'];
+        $user = $config['user'];
+        $timeout = $config['ssh_timeout'];
+
+        $options = sprintf(
+            '-p %d -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q -T -o ConnectTimeout=%d',
+            $port,
+            $timeout
+        );
+
+        if (($router->ssh_auth_method ?: 'private_key') === 'password') {
+            $pass = str_replace("'", "'\\''", $config['pass']);
+            $sshCommand = sprintf(
+                "sshpass -p '%s' ssh %s %s %s",
+                $pass,
+                $options,
+                escapeshellarg($user.'@'.$host),
+                escapeshellarg('/export show-sensitive')
+            );
+        } else {
+            $sshCommand = sprintf(
+                'ssh %s -i %s %s %s',
+                $options,
+                escapeshellarg($config['ssh_private_key']),
+                escapeshellarg($user.'@'.$host),
+                escapeshellarg('/export show-sensitive')
+            );
+        }
+
+        return $sshCommand;
     }
 
     protected function path(Router $router, RouterBackup $backup): string
