@@ -50,6 +50,7 @@ class Router extends Model
         'total_customers',
         'enable_monitoring',
         'enable_provisioning',
+        'is_dashboard_visible',
         'timeout',
     ];
 
@@ -61,6 +62,7 @@ class Router extends Model
         return [
             'enable_monitoring' => 'boolean',
             'enable_provisioning' => 'boolean',
+            'is_dashboard_visible' => 'boolean',
             'enable_api' => 'boolean',
             'enable_ssh' => 'boolean',
             'use_ssl' => 'boolean',

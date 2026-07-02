@@ -124,6 +124,25 @@ class BackupDashboardTest extends TestCase
         Queue::assertPushed(ProcessRouterBackup::class, fn (ProcessRouterBackup $job): bool => $job->routerBackupId === $retry->id);
     }
 
+    public function test_failed_backup_retry_returns_live_activity_payload_for_json_requests(): void
+    {
+        Queue::fake();
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        $router = Router::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Edge Router']);
+        $failedBackup = RouterBackup::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'status' => 'failed',
+        ]);
+
+        $this->postJson(route('backups.retry', $failedBackup))
+            ->assertAccepted()
+            ->assertJsonPath('backup.status', 'pending')
+            ->assertJsonPath('backup.router_name', 'Edge Router');
+    }
+
     public function test_duplicate_router_retry_is_rejected(): void
     {
         Queue::fake();
@@ -188,6 +207,37 @@ class BackupDashboardTest extends TestCase
         $run = BackupRun::query()->where('backup_schedule_id', $schedule->id)->first();
         $this->assertSame('queued', $run?->status);
         Queue::assertPushed(ProcessBackupScheduleRun::class, fn (ProcessBackupScheduleRun $job): bool => $job->backupRunId === $run?->id);
+    }
+
+    public function test_schedule_run_and_polling_return_live_json(): void
+    {
+        Queue::fake();
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        $schedule = BackupSchedule::factory()->create(['tenant_id' => $tenant->id]);
+
+        $response = $this->postJson(route('schedules.run', $schedule))
+            ->assertAccepted()
+            ->assertJsonPath('run.status', 'queued');
+
+        $this->getJson(route('schedules.runs', $schedule))
+            ->assertOk()
+            ->assertJsonPath('runs.0.id', $response->json('run.id'));
+    }
+
+    public function test_dashboard_only_displays_selected_managed_routers(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        Router::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Pinned Router', 'is_dashboard_visible' => true]);
+        Router::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Hidden Router', 'is_dashboard_visible' => false]);
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Pinned Router')
+            ->assertDontSee('Hidden Router');
     }
 
     public function test_backup_jobs_process_prepared_records(): void

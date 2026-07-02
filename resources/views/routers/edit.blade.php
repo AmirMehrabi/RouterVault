@@ -147,6 +147,9 @@
                 <div class="flex items-center pt-6">
                     <x-ui.input.checkbox label="Enable Provisioning" name="enable_provisioning" :checked="old('enable_provisioning', $router->enable_provisioning ?? true)" :error="$errors->first('enable_provisioning')" />
                 </div>
+                <div class="flex items-center pt-6">
+                    <x-ui.input.checkbox label="Show and manage on dashboard" name="is_dashboard_visible" :checked="old('is_dashboard_visible', $router->is_dashboard_visible)" :error="$errors->first('is_dashboard_visible')" />
+                </div>
             </div>
         </div>
 

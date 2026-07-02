@@ -11,7 +11,8 @@
         @endif
     </div>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-        @foreach(['Status' => $backup->status, 'Changed' => $backup->changed ? 'Yes' : 'No', 'Size' => number_format((int) $backup->size_bytes).' bytes', 'Checksum' => $backup->checksum ? substr($backup->checksum, 0, 12) : ''] as $label => $value)
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">Status</p><p class="mt-2"><x-backup-status :status="$backup->status" /></p></div>
+        @foreach(['Changed' => $backup->changed === null ? '—' : ($backup->changed ? 'Yes' : 'No'), 'Size' => $backup->size_bytes ? number_format((int) $backup->size_bytes).' bytes' : '—', 'Checksum' => $backup->checksum ? substr($backup->checksum, 0, 12) : '—'] as $label => $value)
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">{{ $label }}</p><p class="mt-2 break-all text-lg font-semibold">{{ $value }}</p></div>
         @endforeach
     </div>

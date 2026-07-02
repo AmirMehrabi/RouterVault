@@ -81,6 +81,28 @@ class RouterVaultModulesTest extends TestCase
         $this->assertSame([], Storage::disk('public')->allFiles('router-backups'));
     }
 
+    public function test_compare_backup_options_are_limited_to_selected_tenant_router(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        [$otherTenant] = $this->createTenantUser('tenant-two');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        $router = Router::factory()->create(['tenant_id' => $tenant->id]);
+        $foreignRouter = Router::withoutGlobalScopes()->create(Router::factory()->make(['tenant_id' => $otherTenant->id])->toArray());
+        $backup = RouterBackup::factory()->create(['tenant_id' => $tenant->id, 'router_id' => $router->id, 'status' => 'success']);
+        RouterBackup::withoutGlobalScopes()->create([
+            'tenant_id' => $otherTenant->id,
+            'router_id' => $foreignRouter->id,
+            'status' => 'success',
+            'disk' => 'public',
+        ]);
+
+        $this->getJson(route('backups.for-router', $router))
+            ->assertOk()
+            ->assertJsonCount(1, 'backups')
+            ->assertJsonPath('backups.0.id', $backup->id);
+    }
+
     public function test_first_backup_creates_no_alert(): void
     {
         [$tenant, $user] = $this->createTenantUser('tenant-one');

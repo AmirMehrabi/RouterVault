@@ -70,6 +70,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce
 
     // Dashboard
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -169,12 +170,15 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce
         Route::put('/{schedule}', [BackupScheduleController::class, 'update'])->name('update');
         Route::delete('/{schedule}', [BackupScheduleController::class, 'destroy'])->name('destroy');
         Route::post('/{schedule}/run', [BackupScheduleController::class, 'run'])->name('run');
+        Route::get('/{schedule}/runs', [BackupScheduleController::class, 'runs'])->name('runs');
         Route::post('/{schedule}/toggle', [BackupScheduleController::class, 'toggle'])->name('toggle');
     });
 
     Route::prefix('backups')->name('backups.')->group(function () {
         Route::get('/', [RouterBackupController::class, 'index'])->name('index');
         Route::get('/compare', [RouterBackupController::class, 'compare'])->name('compare');
+        Route::get('/router/{router}', [RouterBackupController::class, 'forRouter'])->name('for-router');
+        Route::get('/{backup}/status', [RouterBackupController::class, 'status'])->name('status');
         Route::post('/{backup}/retry', [RouterBackupController::class, 'retry'])->name('retry');
         Route::get('/{backup}', [RouterBackupController::class, 'show'])->name('show');
         Route::get('/{backup}/download', [RouterBackupController::class, 'download'])->name('download');

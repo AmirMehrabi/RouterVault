@@ -7,6 +7,7 @@ use App\Models\DiffAlert;
 use App\Models\Router;
 use App\Models\RouterBackup;
 use Illuminate\Support\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -100,7 +101,35 @@ class DashboardController extends Controller
                     ->latest()
                     ->limit(6)
                     ->get(),
+                'routers' => Router::query()
+                    ->where('is_dashboard_visible', true)
+                    ->with(['latestBackup', 'backupSchedules' => fn ($query) => $query->where('is_enabled', true)])
+                    ->orderBy('name')
+                    ->paginate(6, ['*'], 'routers_page')
+                    ->withQueryString(),
             ],
+        ]);
+    }
+
+    public function data(): JsonResponse
+    {
+        return response()->json([
+            'backups' => RouterBackup::query()
+                ->with(['router:id,name', 'schedule:id,name'])
+                ->latest()
+                ->limit(6)
+                ->get()
+                ->map(fn (RouterBackup $backup): array => [
+                    'id' => $backup->id,
+                    'router_name' => $backup->router?->name ?? 'Unknown',
+                    'schedule_name' => $backup->schedule?->name ?? 'Manual',
+                    'status' => $backup->status,
+                    'changed' => $backup->changed,
+                    'size_bytes' => $backup->size_bytes,
+                    'finished_at' => ($backup->finished_at ?? $backup->started_at ?? $backup->created_at)?->toIso8601String(),
+                    'show_url' => route('backups.show', $backup),
+                    'status_url' => route('backups.status', $backup),
+                ]),
         ]);
     }
 

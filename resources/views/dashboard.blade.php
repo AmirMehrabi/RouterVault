@@ -15,7 +15,8 @@
     $coverageRate = $coverage['total'] > 0 ? round(($coverage['covered'] / $coverage['total']) * 100, 1) : 0;
 @endphp
 
-<div class="mx-auto max-w-[1500px] space-y-5 pb-10">
+<div class="mx-auto max-w-[1500px] space-y-5 pb-10" x-data="dashboardOperations()" x-init="init()">
+    <div x-show="notice" x-transition class="fixed right-5 top-20 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg" :class="noticeType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'" x-text="notice"></div>
     @if(session('success'))
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{{ session('success') }}</div>
     @endif
@@ -87,19 +88,19 @@
                         <div class="flex min-w-0 items-center gap-3"><span class="h-2.5 w-2.5 shrink-0 rounded-full {{ $item['tone'] === 'danger' ? 'bg-rose-500' : ($item['tone'] === 'warning' ? 'bg-amber-500' : 'bg-slate-400') }}"></span><span class="truncate text-sm font-semibold text-blue-700">{{ $item['title'] }}</span></div>
                         <p class="truncate text-sm text-slate-600" title="{{ $item['summary'] }}">{{ $item['summary'] }}</p>
                         <div class="flex items-center gap-3"><x-dashboard-status :tone="$item['tone']">{{ $item['status'] }}</x-dashboard-status><span class="whitespace-nowrap text-xs text-slate-500">{{ $item['occurred_at']?->diffForHumans() ?? 'Unknown' }}</span></div>
-                        <div class="flex items-center justify-end gap-3">
+                        <div class="grid w-full grid-cols-2 items-center gap-2 md:w-40">
                             @if($item['type'] === 'backup')
-                                <a href="{{ route('backups.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Inspect</a>
-                                <form method="POST" action="{{ route('backups.retry', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Retry</button></form>
+                                <a href="{{ route('backups.show', $item['model']) }}" class="inline-flex h-8 items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Inspect</a>
+                                <button @click="retryBackup(@js(route('backups.retry', $item['model'])))" class="inline-flex h-8 items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Retry</button>
                             @elseif($item['type'] === 'alert')
-                                <a href="{{ route('diff-alerts.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Review</a>
-                                <form method="POST" action="{{ route('diff-alerts.status', $item['model']) }}">@csrf<input type="hidden" name="status" value="acknowledged"><button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Acknowledge</button></form>
+                                <a href="{{ route('diff-alerts.show', $item['model']) }}" class="inline-flex h-8 items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Review</a>
+                                <form method="POST" action="{{ route('diff-alerts.status', $item['model']) }}" class="flex">@csrf<input type="hidden" name="status" value="acknowledged"><button class="inline-flex h-8 w-full items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Acknowledge</button></form>
                             @elseif($item['type'] === 'overdue_schedule')
-                                <a href="{{ route('schedules.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
-                                <form method="POST" action="{{ route('schedules.run', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Run now</button></form>
+                                <a href="{{ route('schedules.show', $item['model']) }}" class="inline-flex h-8 items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
+                                <form method="POST" action="{{ route('schedules.run', $item['model']) }}" class="flex">@csrf<button class="inline-flex h-8 w-full items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Run now</button></form>
                             @else
-                                <a href="{{ route('schedules.show', $item['model']) }}" class="text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
-                                <form method="POST" action="{{ route('schedules.toggle', $item['model']) }}">@csrf<button class="text-xs font-semibold text-blue-700 hover:text-blue-900">Resume</button></form>
+                                <a href="{{ route('schedules.show', $item['model']) }}" class="inline-flex h-8 items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">View</a>
+                                <form method="POST" action="{{ route('schedules.toggle', $item['model']) }}" class="flex">@csrf<button class="inline-flex h-8 w-full items-center justify-center text-xs font-semibold text-blue-700 hover:text-blue-900">Resume</button></form>
                             @endif
                         </div>
                     </div>
@@ -128,6 +129,22 @@
         </aside>
     </section>
 
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4"><div><h2 class="text-base font-bold text-slate-950">Managed routers</h2><p class="mt-1 text-xs text-slate-500">Routers selected for dashboard access.</p></div><a href="{{ route('routers.index') }}" class="text-sm font-semibold text-blue-700">Manage routers</a></div>
+        <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+            @forelse($backupDashboard['routers'] as $router)
+                <article class="rounded-xl border border-slate-200 p-4">
+                    <div class="flex items-start justify-between gap-3"><div><a href="{{ route('routers.show', $router) }}" class="font-bold text-blue-700">{{ $router->name }}</a><p class="mt-1 text-xs text-slate-500">{{ $router->ip_address }}</p></div><x-ui.badge :status="$router->status">{{ ucfirst($router->status ?? 'offline') }}</x-ui.badge></div>
+                    <div class="mt-4 flex items-center justify-between text-xs text-slate-500"><span>{{ $router->backupSchedules->count() }} active schedules</span><span>{{ $router->latestBackup?->created_at?->diffForHumans() ?? 'Never backed up' }}</span></div>
+                    <div class="mt-4 grid grid-cols-3 gap-2"><a href="{{ route('routers.show', $router) }}" class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 text-xs font-semibold">View</a><a href="{{ route('routers.edit', $router) }}" class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 text-xs font-semibold">Edit</a><button @click="triggerRouterBackup(@js(route('routers.backup', $router)))" class="inline-flex h-9 items-center justify-center rounded-lg bg-blue-600 text-xs font-semibold text-white">Backup</button></div>
+                </article>
+            @empty
+                <div class="col-span-full py-8 text-center text-sm text-slate-500">No routers are enabled for the dashboard. Enable one from its create or edit page.</div>
+            @endforelse
+        </div>
+        @if($backupDashboard['routers']->hasPages())<div class="border-t border-slate-200 px-5 py-3">{{ $backupDashboard['routers']->links() }}</div>@endif
+    </section>
+
     <section class="grid gap-4 xl:grid-cols-2">
         <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-5 py-4"><h2 class="text-base font-bold text-slate-950">Recent backup activity</h2></div>
@@ -135,19 +152,8 @@
                 <table class="w-full min-w-[540px] table-fixed text-left text-sm">
                     <thead class="border-b border-slate-200 bg-slate-50/70 text-xs font-semibold text-slate-500"><tr><th class="w-[23%] px-4 py-3">Router</th><th class="w-[16%] px-3 py-3">Result</th><th class="w-[16%] px-3 py-3">Change</th><th class="w-[21%] px-3 py-3">Schedule</th><th class="w-[10%] px-3 py-3">Size</th><th class="w-[14%] px-3 py-3">Completed</th></tr></thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse($backupDashboard['recent_backups'] as $backup)
-                            @php($resultTone = $backup->status === 'success' ? 'success' : (in_array($backup->status, ['pending', 'running']) ? 'info' : 'danger'))
-                            <tr class="transition hover:bg-slate-50">
-                                <td class="truncate px-4 py-3"><a href="{{ route('backups.show', $backup) }}" class="font-semibold text-blue-700 hover:text-blue-900">{{ $backup->router?->name ?? 'Unknown' }}</a></td>
-                                <td class="whitespace-nowrap px-3 py-3"><x-dashboard-status :tone="$resultTone">{{ ucfirst($backup->status) }}</x-dashboard-status></td>
-                                <td class="whitespace-nowrap px-3 py-3 text-xs {{ $backup->changed ? 'font-semibold text-amber-700' : 'text-slate-500' }}">{{ $backup->changed === null ? '—' : ($backup->changed ? 'Changed' : 'No changes') }}</td>
-                                <td class="truncate px-3 py-3 text-xs text-slate-600">{{ $backup->schedule?->name ?? 'Manual' }}</td>
-                                <td class="whitespace-nowrap px-3 py-3 text-xs text-slate-600">{{ $backup->size_bytes ? Illuminate\Support\Number::fileSize($backup->size_bytes) : '—' }}</td>
-                                <td class="truncate px-3 py-3 text-xs text-slate-500">{{ ($backup->finished_at ?? $backup->started_at ?? $backup->created_at)?->diffForHumans(short: true) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No backup activity yet. Create a schedule to begin protecting router configurations.</td></tr>
-                        @endforelse
+                        <template x-for="backup in backups" :key="backup.id"><tr class="transition hover:bg-slate-50"><td class="truncate px-4 py-3"><a :href="backup.show_url" class="font-semibold text-blue-700" x-text="backup.router_name"></a></td><td class="px-3 py-3"><span class="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium" :class="badgeClass(backup.status)" x-text="backup.status"></span></td><td class="px-3 py-3 text-xs text-slate-500" x-text="backup.changed === null ? '—' : (backup.changed ? 'Changed' : 'No changes')"></td><td class="truncate px-3 py-3 text-xs text-slate-600" x-text="backup.schedule_name"></td><td class="px-3 py-3 text-xs text-slate-600" x-text="formatBytes(backup.size_bytes)"></td><td class="px-3 py-3 text-xs text-slate-500" x-text="backup.finished_at ? new Date(backup.finished_at).toLocaleString() : 'Queued'"></td></tr></template>
+                        <tr x-show="backups.length === 0"><td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No backup activity yet.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -175,3 +181,22 @@
     </section>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function dashboardOperations() {
+    return {
+        backups: [], notice: '', noticeType: 'success', timer: null,
+        async init() { await this.refresh(); },
+        async refresh() { const response = await fetch(@js(route('dashboard.data')), { headers: { Accept: 'application/json' } }); const data = await response.json(); this.backups = data.backups ?? []; if (this.backups.some(item => ['pending','running'].includes(item.status))) this.poll(); },
+        poll() { clearTimeout(this.timer); this.timer = setTimeout(async () => { const activeBefore = this.backups.filter(item => ['pending','running'].includes(item.status)).map(item => item.id); await this.refresh(); const completed = this.backups.find(item => activeBefore.includes(item.id) && !['pending','running'].includes(item.status)); if (completed) this.notify(completed.status === 'success' ? `${completed.router_name} backup completed.` : `${completed.router_name} backup failed.`, completed.status === 'success' ? 'success' : 'error'); }, 1800); },
+        async post(url) { const response = await fetch(url, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': @js(csrf_token()) } }); const data = await response.json(); if (!response.ok) throw new Error(data.message ?? 'Request failed.'); return data; },
+        async retryBackup(url) { try { const data = await this.post(url); this.backups.unshift(data.backup); this.backups = this.backups.slice(0, 6); this.notify(data.message, 'success'); this.poll(); } catch (error) { this.notify(error.message, 'error'); } },
+        async triggerRouterBackup(url) { try { const data = await this.post(url); this.notify(data.message, 'success'); await this.refresh(); } catch (error) { this.notify(error.message, 'error'); } },
+        notify(message, type) { this.notice = message; this.noticeType = type; setTimeout(() => this.notice = '', 5000); },
+        badgeClass(status) { return status === 'success' ? 'border-green-200 bg-green-100 text-green-800' : status === 'failed' ? 'border-red-200 bg-red-100 text-red-800' : status === 'running' ? 'border-blue-200 bg-blue-100 text-blue-800' : 'border-yellow-200 bg-yellow-100 text-yellow-800'; },
+        formatBytes(bytes) { if (!bytes) return '—'; return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`; },
+    };
+}
+</script>
+@endpush

@@ -20,16 +20,17 @@
             <select x-model="changed" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value="">Changed or unchanged</option><option value="1">Changed</option><option value="0">Unchanged</option></select>
         </div>
         <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left">Router</th><th class="px-4 py-3 text-left">Schedule</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left">Changed</th><th class="px-4 py-3 text-left">Created</th></tr></thead>
+            <thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left">Router</th><th class="px-4 py-3 text-left">Schedule</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left">Changed</th><th class="px-4 py-3 text-left">Created</th><th class="px-4 py-3 text-right">Action</th></tr></thead>
             <tbody class="divide-y divide-gray-200">
                 @foreach($backups as $backup)
                     @php($search = strtolower(($backup->router?->name ?? '').' '.($backup->schedule?->name ?? '')))
                     <tr x-show="(!q || @js($search).includes(q.toLowerCase())) && (!status || status === '{{ $backup->status }}') && (!changed || changed === '{{ (int) $backup->changed }}')">
                         <td class="px-4 py-3"><a class="font-medium text-blue-600" href="{{ route('backups.show', $backup) }}">{{ $backup->router?->name }}</a></td>
                         <td class="px-4 py-3">{{ $backup->schedule?->name ?? 'Manual' }}</td>
-                        <td class="px-4 py-3">{{ $backup->status }}</td>
+                        <td class="px-4 py-3"><x-backup-status :status="$backup->status" /></td>
                         <td class="px-4 py-3">{{ $backup->changed ? 'Yes' : 'No' }}</td>
                         <td class="px-4 py-3">{{ $backup->created_at?->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 text-right"><a href="{{ route('backups.show', $backup) }}" class="font-semibold text-blue-700 hover:text-blue-900">View</a></td>
                     </tr>
                 @endforeach
             </tbody>

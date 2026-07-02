@@ -8,8 +8,11 @@ use App\Jobs\ProcessBackupScheduleRun;
 use App\Models\BackupRun;
 use App\Models\BackupSchedule;
 use App\Models\Router;
+use App\Models\RouterBackup;
 use App\Services\Backups\BackupScheduleRunner;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BackupScheduleController extends Controller
@@ -40,12 +43,23 @@ class BackupScheduleController extends Controller
         return redirect()->route('schedules.show', $schedule)->with('success', 'Backup schedule created.');
     }
 
-    public function show(BackupSchedule $schedule): View
+    public function show(Request $request, BackupSchedule $schedule): View
     {
         $this->authorizeTenant($schedule->tenant_id);
 
+        $backups = RouterBackup::query()
+            ->with('router:id,name')
+            ->where('backup_schedule_id', $schedule->id)
+            ->when($request->integer('router_id'), fn ($query, $routerId) => $query->where('router_id', $routerId))
+            ->when($request->string('status')->value(), fn ($query, $status) => $query->where('status', $status))
+            ->when($request->filled('changed'), fn ($query) => $query->where('changed', $request->boolean('changed')))
+            ->latest()
+            ->paginate(10, ['*'], 'backups_page')
+            ->withQueryString();
+
         return view('schedules.show', [
             'schedule' => $schedule->load(['routers', 'runs' => fn ($query) => $query->latest()->limit(10)]),
+            'backups' => $backups,
         ]);
     }
 
@@ -73,7 +87,7 @@ class BackupScheduleController extends Controller
         return redirect()->route('schedules.index')->with('success', 'Backup schedule deleted.');
     }
 
-    public function run(BackupSchedule $schedule, BackupScheduleRunner $runner): RedirectResponse
+    public function run(Request $request, BackupSchedule $schedule, BackupScheduleRunner $runner): JsonResponse|RedirectResponse
     {
         $this->authorizeTenant($schedule->tenant_id);
 
@@ -83,13 +97,30 @@ class BackupScheduleController extends Controller
             ->exists();
 
         if ($alreadyQueued) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'This backup schedule already has a queued or running execution.'], 409);
+            }
+
             return back()->with('error', 'This backup schedule already has a queued or running execution.');
         }
 
         $run = $runner->prepare($schedule);
         ProcessBackupScheduleRun::dispatch($run->id);
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Backup schedule run queued.', 'run' => $this->runPayload($run)], 202);
+        }
+
         return back()->with('success', 'Backup schedule run queued.');
+    }
+
+    public function runs(BackupSchedule $schedule): JsonResponse
+    {
+        $this->authorizeTenant($schedule->tenant_id);
+
+        return response()->json([
+            'runs' => $schedule->runs()->latest()->limit(10)->get()->map(fn (BackupRun $run): array => $this->runPayload($run)),
+        ]);
     }
 
     public function toggle(BackupSchedule $schedule): RedirectResponse
@@ -125,5 +156,20 @@ class BackupScheduleController extends Controller
         if (auth()->user()?->tenant_id !== $tenantId) {
             abort(403);
         }
+    }
+
+    /** @return array<string, mixed> */
+    protected function runPayload(BackupRun $run): array
+    {
+        return [
+            'id' => $run->id,
+            'status' => $run->status,
+            'successful_backups' => $run->successful_backups,
+            'failed_backups' => $run->failed_backups,
+            'total_routers' => $run->total_routers,
+            'started_at' => $run->started_at?->toIso8601String(),
+            'finished_at' => $run->finished_at?->toIso8601String(),
+            'error_summary' => $run->error_summary,
+        ];
     }
 }

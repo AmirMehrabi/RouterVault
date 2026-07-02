@@ -199,7 +199,7 @@ class RouterController extends Controller
             'tenant_id' => $router->tenant_id,
             'router_id' => $router->id,
             'status' => 'pending',
-            'disk' => 'local',
+            'disk' => 'public',
         ]);
 
         ProcessRouterBackup::dispatch($backup->id);
@@ -286,6 +286,7 @@ class RouterController extends Controller
         $validated['enable_ssh'] = (bool) ($validated['enable_ssh'] ?? true);
         $validated['use_ssl'] = (bool) ($validated['use_ssl'] ?? false);
         $validated['legacy_login'] = (bool) ($validated['legacy_login'] ?? false);
+        $validated['is_dashboard_visible'] = (bool) ($validated['is_dashboard_visible'] ?? false);
         $validated['ssh_auth_method'] = $validated['ssh_auth_method'] ?? 'private_key';
         $validated['ssh_timeout'] = $validated['ssh_timeout'] ?? 30;
 

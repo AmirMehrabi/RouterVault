@@ -44,6 +44,7 @@ class StoreRouterRequest extends FormRequest
             'enable_ssh' => ['nullable', 'boolean'],
             'enable_monitoring' => ['nullable', 'boolean'],
             'enable_provisioning' => ['nullable', 'boolean'],
+            'is_dashboard_visible' => ['nullable', 'boolean'],
             'tenant_id' => ['nullable', 'exists:tenants,id'],
             'credential_source' => ['nullable', 'string', Rule::in(['manual', 'password_manager'])],
             'password_manager_credential_id' => ['nullable', Rule::exists('password_manager_credentials', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],

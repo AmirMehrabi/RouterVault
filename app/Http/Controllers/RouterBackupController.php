@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Backup\CompareBackupsRequest;
 use App\Jobs\ProcessRouterBackup;
 use App\Models\RouterBackup;
+use App\Models\Router;
 use App\Services\Backups\BackupDiffService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -48,7 +51,7 @@ class RouterBackupController extends Controller
         return Storage::disk($backup->disk)->download($backup->path, "router-backup-{$backup->id}.rsc");
     }
 
-    public function retry(RouterBackup $backup): RedirectResponse
+    public function retry(Request $request, RouterBackup $backup): JsonResponse|RedirectResponse
     {
         $this->authorizeTenant($backup->tenant_id);
         abort_unless($backup->status === 'failed', 422);
@@ -59,6 +62,10 @@ class RouterBackupController extends Controller
             ->exists();
 
         if ($alreadyQueued) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'This router already has a queued or running backup.'], 409);
+            }
+
             return back()->with('error', 'This router already has a queued or running backup.');
         }
 
@@ -67,17 +74,42 @@ class RouterBackupController extends Controller
             'router_id' => $backup->router_id,
             'backup_schedule_id' => $backup->backup_schedule_id,
             'status' => 'pending',
-            'disk' => 'local',
+            'disk' => 'public',
         ]);
 
         ProcessRouterBackup::dispatch($retry->id);
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Router backup retry queued.', 'backup' => $this->payload($retry->load('router', 'schedule'))], 202);
+        }
+
         return back()->with('success', 'Router backup retry queued.');
     }
 
-    public function compare(Request $request, BackupDiffService $diffService): View
+    public function forRouter(Router $router): JsonResponse
     {
-        $backups = RouterBackup::query()->with('router:id,name')->where('status', 'success')->latest()->limit(100)->get();
+        $this->authorizeTenant($router->tenant_id);
+
+        return response()->json([
+            'backups' => RouterBackup::query()
+                ->where('router_id', $router->id)
+                ->where('status', 'success')
+                ->latest()
+                ->get()
+                ->map(fn (RouterBackup $backup): array => $this->payload($backup)),
+        ]);
+    }
+
+    public function status(RouterBackup $backup): JsonResponse
+    {
+        $this->authorizeTenant($backup->tenant_id);
+
+        return response()->json(['backup' => $this->payload($backup->load('router', 'schedule'))]);
+    }
+
+    public function compare(CompareBackupsRequest $request, BackupDiffService $diffService): View
+    {
+        $routers = Router::query()->whereHas('backups', fn ($query) => $query->where('status', 'success'))->orderBy('name')->get(['id', 'name']);
         $diff = null;
 
         if ($request->filled(['old_backup_id', 'new_backup_id'])) {
@@ -90,7 +122,26 @@ class RouterBackupController extends Controller
             $diff = $diffService->diff(Storage::disk($old->disk)->get($old->path), Storage::disk($new->disk)->get($new->path));
         }
 
-        return view('backups.compare', compact('backups', 'diff'));
+        return view('backups.compare', compact('routers', 'diff'));
+    }
+
+    /** @return array<string, mixed> */
+    protected function payload(RouterBackup $backup): array
+    {
+        return [
+            'id' => $backup->id,
+            'router_id' => $backup->router_id,
+            'router_name' => $backup->router?->name,
+            'schedule_name' => $backup->schedule?->name ?? 'Manual',
+            'status' => $backup->status,
+            'changed' => $backup->changed,
+            'size_bytes' => $backup->size_bytes,
+            'created_at' => $backup->created_at?->toIso8601String(),
+            'finished_at' => $backup->finished_at?->toIso8601String(),
+            'error_message' => $backup->error_message,
+            'show_url' => route('backups.show', $backup),
+            'status_url' => route('backups.status', $backup),
+        ];
     }
 
     protected function authorizeTenant(string $tenantId): void
