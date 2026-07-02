@@ -5,9 +5,8 @@
     $isFarsi = $language === 'fa';
     $user = auth()->user();
     $planContext = request()->attributes->get('plan_context', []);
-    $hasLimitBanner = (bool) data_get($planContext, 'any_limit_reached', false);
     $routerLimitReached = (bool) data_get($planContext, 'router_limit_reached', false);
-    $teamLimitReached = (bool) data_get($planContext, 'team_limit_reached', false);
+    $hasLimitBanner = $routerLimitReached;
 @endphp
 
 <!DOCTYPE html>
@@ -263,20 +262,12 @@
                     <div class="flex items-start gap-3 text-sm text-amber-950">
                         <svg class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.3 2.9c.8-1.4 2.8-1.4 3.6 0l6 10.5c.8 1.4-.2 3.1-1.8 3.1H4c-1.6 0-2.6-1.7-1.8-3.1l6.1-10.5ZM10 7a.8.8 0 0 1 .8.8v3.4a.8.8 0 0 1-1.6 0V7.8A.8.8 0 0 1 10 7Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
                         <p class="font-semibold">
-                            @if($routerLimitReached && $teamLimitReached)
-                                Plan limits reached — {{ data_get($planContext, 'routers.current') }} of {{ data_get($planContext, 'routers.total_allowed') }} routers and {{ data_get($planContext, 'team.current') }} of {{ data_get($planContext, 'team.limit') }} team members in use.
-                            @elseif($routerLimitReached)
-                                Router limit reached — {{ data_get($planContext, 'routers.current') }} of {{ data_get($planContext, 'routers.total_allowed') }} routers in use.
-                            @else
-                                Team member limit reached — {{ data_get($planContext, 'team.current') }} of {{ data_get($planContext, 'team.limit') }} seats in use.
-                            @endif
+                            Router limit reached — {{ data_get($planContext, 'routers.current') }} of {{ data_get($planContext, 'routers.total_allowed') }} routers in use.
                         </p>
                     </div>
                     <div class="flex shrink-0 items-center gap-4">
                         <a href="{{ route('billing.subscription') }}" class="inline-flex min-h-9 items-center justify-center bg-amber-600 px-4 text-xs font-bold text-white transition hover:bg-amber-700">Upgrade plan</a>
-                        @if($routerLimitReached)
-                            <a href="{{ route('billing.subscription') }}#extra-routers" class="text-xs font-bold text-amber-900 underline decoration-amber-500 underline-offset-4">Add extra router</a>
-                        @endif
+                        <a href="{{ route('billing.subscription') }}#extra-routers" class="text-xs font-bold text-amber-900 underline decoration-amber-500 underline-offset-4">Add extra router</a>
                     </div>
                 </div>
             </div>

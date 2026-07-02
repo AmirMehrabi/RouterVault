@@ -121,6 +121,35 @@ class BillingSubscriptionTest extends TestCase
             ->assertSee('€2');
     }
 
+    public function test_extra_router_purchase_clears_the_navbar_limit_banner(): void
+    {
+        $this->starter->update(['max_users' => 1]);
+
+        for ($index = 1; $index <= 3; $index++) {
+            Router::factory()->create([
+                'tenant_id' => $this->tenant->id,
+                'ip_address' => "192.168.20.{$index}",
+            ]);
+        }
+
+        $this->actingAs($this->user)
+            ->post(route('billing.extra-routers.store'), ['quantity' => 1]);
+
+        $payment = Payment::query()->where('status', 'pending')->firstOrFail();
+
+        $this->actingAs($this->user)
+            ->patch(route('billing.payment.process', $payment));
+
+        $this->user->unsetRelation('tenant');
+
+        $this->actingAs($this->user)
+            ->get(route('billing.subscription'))
+            ->assertOk()
+            ->assertDontSee('Router limit reached')
+            ->assertDontSee('Team member limit reached')
+            ->assertSee('Includes 1 extra router');
+    }
+
     protected function createPlan(
         string $name,
         string $internalName,
