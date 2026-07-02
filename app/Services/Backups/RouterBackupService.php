@@ -64,9 +64,7 @@ class RouterBackupService
             $export = $this->export($router);
             $export = trim($export);
 
-            if ($export === '') {
-                throw new \RuntimeException('RouterOS export returned empty output.');
-            }
+            $this->ensureValidExport($export);
 
             $normalizedExport = $this->diffService->normalizeForComparison($export."\n");
             $checksum = hash('sha256', $normalizedExport);
@@ -175,7 +173,7 @@ class RouterBackupService
     {
         $client = $this->clientFactory->make($router);
 
-        return $client->export('show-sensitive');
+        return $client->export();
     }
 
     protected function exportViaSsh(Router $router): string
@@ -257,7 +255,7 @@ class RouterBackupService
                 $pass,
                 $options,
                 escapeshellarg($user.'@'.$host),
-                escapeshellarg('/export show-sensitive')
+                escapeshellarg('/export')
             );
         } else {
             $sshCommand = sprintf(
@@ -265,11 +263,34 @@ class RouterBackupService
                 $options,
                 escapeshellarg($config['ssh_private_key']),
                 escapeshellarg($user.'@'.$host),
-                escapeshellarg('/export show-sensitive')
+                escapeshellarg('/export')
             );
         }
 
         return $sshCommand;
+    }
+
+    protected function ensureValidExport(string $export): void
+    {
+        if ($export === '') {
+            throw new \RuntimeException('RouterOS export returned empty output.');
+        }
+
+        $firstLine = trim(Str::before($export, "\n"));
+        $routerOsErrors = [
+            'expected end of command',
+            'expected command name',
+            'expected value of',
+            'syntax error',
+            'bad command name',
+            'failure:',
+        ];
+
+        foreach ($routerOsErrors as $routerOsError) {
+            if (str_starts_with(strtolower($firstLine), $routerOsError)) {
+                throw new \RuntimeException('RouterOS export failed: '.$firstLine);
+            }
+        }
     }
 
     protected function path(Router $router, RouterBackup $backup): string

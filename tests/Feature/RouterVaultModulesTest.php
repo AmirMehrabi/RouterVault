@@ -63,6 +63,24 @@ class RouterVaultModulesTest extends TestCase
         $this->assertStringContainsString('empty', $backup->error_message);
     }
 
+    public function test_backup_service_does_not_store_routeros_command_errors(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        Storage::fake('public');
+        $router = Router::factory()->create(['tenant_id' => $tenant->id]);
+        $service = app(RouterBackupService::class);
+        $service->fakeExportUsing(fn () => 'expected end of command (line 1 column 9)');
+
+        $backup = $service->create($router);
+
+        $this->assertSame('failed', $backup->status);
+        $this->assertNull($backup->path);
+        $this->assertStringContainsString('RouterOS export failed', $backup->error_message);
+        $this->assertSame([], Storage::disk('public')->allFiles('router-backups'));
+    }
+
     public function test_first_backup_creates_no_alert(): void
     {
         [$tenant, $user] = $this->createTenantUser('tenant-one');
