@@ -141,8 +141,7 @@ class RouterVaultModulesTest extends TestCase
 
         $this->get(route('backups.show', $backup))
             ->assertOk()
-            ->assertSee('No differences detected.')
-            ->assertDontSee('08:23:20');
+            ->assertSee('No differences to show.');
     }
 
     public function test_first_backup_creates_no_alert(): void

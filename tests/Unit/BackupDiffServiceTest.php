@@ -58,4 +58,33 @@ class BackupDiffServiceTest extends TestCase
         $this->assertSame('', $diff['unified_diff']);
         $this->assertSame([], $diff['hunks']);
     }
+
+    public function test_diff_ignores_generated_headers_across_routeros_version_families(): void
+    {
+        $headerPairs = [
+            ['# jan/01/2013 00:00:01 by RouterOS 5.26', '# jan/01/2013 00:01:02 by RouterOS 5.26'],
+            ['# dec/31/2021 23:59:58 by RouterOS 6.48.6', '# jan/01/2022 00:00:02 by RouterOS 6.48.6'],
+            ['# jul/02/2026 08:22:47 by RouterOS 6.49.17', '# jul/02/2026 08:23:20 by RouterOS 6.49.17'],
+            ['# 2022-01-01 00:00:01 by RouterOS 7.1', '# 2022-01-01 00:01:02 by RouterOS 7.1'],
+            ['# 2026-07-02 08:22:47 by RouterOS 7.20.6', '# 2026-07-02 08:23:20 by RouterOS 7.20.6'],
+            ['# 2026-07-02 08:22:47 by RouterOS 7.20.6-long-term', '# 2026-07-02 08:23:20 by RouterOS 7.20.6-long-term'],
+        ];
+
+        $service = new BackupDiffService;
+
+        foreach ($headerPairs as [$oldHeader, $newHeader]) {
+            $old = "{$oldHeader}\n/system identity set name=core\n";
+            $new = "{$newHeader}\n/system identity set name=core\n";
+            $diff = $service->diff($old, $new);
+
+            $this->assertSame(0, $diff['added'], $oldHeader);
+            $this->assertSame(0, $diff['removed'], $oldHeader);
+            $this->assertSame([], $diff['hunks'], $oldHeader);
+            $this->assertSame(
+                hash('sha256', $service->normalizeForComparison($old)),
+                hash('sha256', $service->normalizeForComparison($new)),
+                $oldHeader
+            );
+        }
+    }
 }
