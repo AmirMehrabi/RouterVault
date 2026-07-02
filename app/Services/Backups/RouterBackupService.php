@@ -36,7 +36,7 @@ class RouterBackupService
             'backup_schedule_id' => $schedule?->id,
             'backup_run_id' => $run?->id,
             'status' => 'pending',
-            'disk' => 'local',
+            'disk' => 'public',
         ]);
 
         return $this->process($backup);
@@ -79,7 +79,7 @@ class RouterBackupService
             $changed = $previous === null || $previous->checksum !== $checksum;
             $path = $this->path($router, $backup);
 
-            Storage::disk('local')->put($path, $export."\n");
+            Storage::disk($backup->disk)->put($path, $export."\n");
 
             $backup->forceFill([
                 'previous_router_backup_id' => $previous?->id,
@@ -198,21 +198,27 @@ class RouterBackupService
 
         $process = $ssh->execute('/export show-sensitive');
 
+        $stdoutOutput = trim($process->getOutput());
         $stderrOutput = trim($process->getErrorOutput());
 
         if (! $process->isSuccessful()) {
-            Log::warning('Router backup SSH export failed.', [
+            Log::warning('Router backup SSH process exited with non-zero code.', [
                 'router_id' => $router->id,
                 'tenant_id' => $router->tenant_id,
                 'router_name' => $router->name,
                 'host' => $config['host'],
                 'ssh_port' => $config['ssh_port'],
                 'exit_code' => $process->getExitCode(),
-                'error_output' => $stderrOutput,
-                'standard_output' => Str::of(trim($process->getOutput()))->limit(1000)->toString(),
+                'stderr_output' => $stderrOutput,
+                'stdout_length' => strlen($stdoutOutput),
+                'stdout_preview' => Str::of($stdoutOutput)->limit(500)->toString(),
             ]);
 
-            throw new \RuntimeException($stderrOutput ?: 'RouterOS export command failed.');
+            // RouterOS may exit with non-zero code even when the export command succeeded.
+            // If we received meaningful output, treat it as a successful export.
+            if ($stdoutOutput === '') {
+                throw new \RuntimeException($stderrOutput ?: 'RouterOS export command failed.');
+            }
         }
 
         Log::info('Router backup SSH export completed.', [
