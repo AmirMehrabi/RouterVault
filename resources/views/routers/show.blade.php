@@ -380,7 +380,7 @@
     </div>
 </div>
 
-@scripts
+@push('scripts')
 <script>
 function routerShow() {
     return {
@@ -440,5 +440,5 @@ function routerShow() {
     };
 }
 </script>
-@endscripts
+@endpush
 @endsection

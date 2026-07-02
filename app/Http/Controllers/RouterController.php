@@ -51,6 +51,8 @@ class RouterController extends Controller
                 'enable_provisioning' => $router->enable_provisioning,
                 'credential_name' => $router->passwordManagerCredential?->name,
                 'created_at' => $router->created_at?->format('M d, Y'),
+                'show_url' => route('routers.show', $router),
+                'edit_url' => route('routers.edit', $router),
             ]);
 
         return response()->json([

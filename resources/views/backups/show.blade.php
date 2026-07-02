@@ -24,7 +24,7 @@
     @endif
     <div>
         <h2 class="mb-3 text-lg font-semibold text-gray-900">Diff</h2>
-        @include('backups._diff', ['hunks' => $backup->diff?->hunks ?? []])
+        @include('backups._diff', ['hunks' => $displayDiff])
     </div>
     <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <h2 class="mb-3 text-lg font-semibold text-gray-900">Export Preview</h2>

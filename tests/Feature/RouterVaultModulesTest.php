@@ -103,6 +103,48 @@ class RouterVaultModulesTest extends TestCase
             ->assertJsonPath('backups.0.id', $backup->id);
     }
 
+    public function test_router_data_returns_named_show_and_edit_urls(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        $router = Router::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->getJson(route('routers.data'))
+            ->assertOk()
+            ->assertJsonPath('routers.0.show_url', route('routers.show', $router))
+            ->assertJsonPath('routers.0.edit_url', route('routers.edit', $router));
+    }
+
+    public function test_backup_details_recompute_historical_timestamp_only_diffs(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        Storage::fake('public');
+        $router = Router::factory()->create(['tenant_id' => $tenant->id]);
+        $previous = RouterBackup::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'disk' => 'public',
+            'path' => 'router-backups/old.rsc',
+        ]);
+        $backup = RouterBackup::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'previous_router_backup_id' => $previous->id,
+            'disk' => 'public',
+            'path' => 'router-backups/new.rsc',
+        ]);
+        Storage::disk('public')->put($previous->path, "# jul/02/2026 08:22:47 by RouterOS 6.49.17\n/system identity set name=core\n");
+        Storage::disk('public')->put($backup->path, "# jul/02/2026 08:23:20 by RouterOS 6.49.17\n/system identity set name=core\n");
+
+        $this->get(route('backups.show', $backup))
+            ->assertOk()
+            ->assertSee('No differences detected.')
+            ->assertDontSee('08:23:20');
+    }
+
     public function test_first_backup_creates_no_alert(): void
     {
         [$tenant, $user] = $this->createTenantUser('tenant-one');

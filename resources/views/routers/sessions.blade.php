@@ -194,8 +194,8 @@
     </div>
 </div>
 
-@scripts
+@push('scripts')
 <script src="{{ asset('js/routers/show-data.js') }}"></script>
 <script src="{{ asset('js/routers/sessions.js') }}"></script>
-@endscripts
+@endpush
 @endsection

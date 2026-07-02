@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BackupSchedule\FilterScheduleBackupsRequest;
 use App\Http\Requests\BackupSchedule\StoreBackupScheduleRequest;
 use App\Http\Requests\BackupSchedule\UpdateBackupScheduleRequest;
 use App\Jobs\ProcessBackupScheduleRun;
@@ -43,7 +44,7 @@ class BackupScheduleController extends Controller
         return redirect()->route('schedules.show', $schedule)->with('success', 'Backup schedule created.');
     }
 
-    public function show(Request $request, BackupSchedule $schedule): View
+    public function show(FilterScheduleBackupsRequest $request, BackupSchedule $schedule): View
     {
         $this->authorizeTenant($schedule->tenant_id);
 
@@ -53,6 +54,8 @@ class BackupScheduleController extends Controller
             ->when($request->integer('router_id'), fn ($query, $routerId) => $query->where('router_id', $routerId))
             ->when($request->string('status')->value(), fn ($query, $status) => $query->where('status', $status))
             ->when($request->filled('changed'), fn ($query) => $query->where('changed', $request->boolean('changed')))
+            ->when($request->date('from'), fn ($query, $from) => $query->whereDate('created_at', '>=', $from))
+            ->when($request->date('to'), fn ($query, $to) => $query->whereDate('created_at', '<=', $to))
             ->latest()
             ->paginate(10, ['*'], 'backups_page')
             ->withQueryString();
@@ -60,6 +63,12 @@ class BackupScheduleController extends Controller
         return view('schedules.show', [
             'schedule' => $schedule->load(['routers', 'runs' => fn ($query) => $query->latest()->limit(10)]),
             'backups' => $backups,
+            'backupStats' => [
+                'total' => $schedule->backups()->count(),
+                'success' => $schedule->backups()->where('status', 'success')->count(),
+                'failed' => $schedule->backups()->where('status', 'failed')->count(),
+                'active' => $schedule->backups()->whereIn('status', ['pending', 'running'])->count(),
+            ],
         ]);
     }
 

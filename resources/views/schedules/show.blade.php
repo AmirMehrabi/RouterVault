@@ -32,12 +32,15 @@
     </div>
 
     <section class="rounded-2xl border border-gray-200 bg-white shadow-sm" x-data="{ open: true }">
+        <div class="grid grid-cols-2 gap-px border-b border-gray-200 bg-gray-200 sm:grid-cols-4">@foreach(['Total' => $backupStats['total'], 'Successful' => $backupStats['success'], 'Failed' => $backupStats['failed'], 'Queued / running' => $backupStats['active']] as $label => $value)<div class="bg-white px-5 py-3"><p class="text-xs font-medium text-gray-500">{{ $label }}</p><p class="mt-1 text-xl font-bold text-gray-900">{{ $value }}</p></div>@endforeach</div>
         <button @click="open = !open" class="flex w-full items-center justify-between px-5 py-4 text-left"><span><strong>Schedule backups</strong><span class="ml-2 text-sm font-normal text-gray-500">{{ $backups->total() }} total</span></span><span x-text="open ? 'Hide' : 'Show'" class="text-sm font-semibold text-blue-700"></span></button>
         <div x-show="open" x-transition class="border-t border-gray-200">
-            <form method="GET" class="grid gap-3 border-b border-gray-200 p-4 sm:grid-cols-4">
+            <form method="GET" class="grid gap-3 border-b border-gray-200 p-4 sm:grid-cols-2 lg:grid-cols-6">
                 <select name="router_id" class="rounded-lg border-gray-300 text-sm"><option value="">All routers</option>@foreach($schedule->routers as $router)<option value="{{ $router->id }}" @selected(request('router_id') == $router->id)>{{ $router->name }}</option>@endforeach</select>
                 <select name="status" class="rounded-lg border-gray-300 text-sm"><option value="">All statuses</option>@foreach(['pending','running','success','failed'] as $status)<option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>@endforeach</select>
                 <select name="changed" class="rounded-lg border-gray-300 text-sm"><option value="">Any change state</option><option value="1" @selected(request('changed') === '1')>Changed</option><option value="0" @selected(request('changed') === '0')>Unchanged</option></select>
+                <input type="date" name="from" value="{{ request('from') }}" aria-label="From date" class="rounded-lg border-gray-300 text-sm">
+                <input type="date" name="to" value="{{ request('to') }}" aria-label="To date" class="rounded-lg border-gray-300 text-sm">
                 <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Apply filters</button>
             </form>
             <div class="overflow-x-auto">

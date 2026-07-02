@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Backup\CompareBackupsRequest;
 use App\Jobs\ProcessRouterBackup;
-use App\Models\RouterBackup;
 use App\Models\Router;
+use App\Models\RouterBackup;
 use App\Services\Backups\BackupDiffService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -34,9 +34,21 @@ class RouterBackupController extends Controller
     public function show(RouterBackup $backup): View
     {
         $this->authorizeTenant($backup->tenant_id);
+        $backup->load(['router', 'schedule', 'previousBackup', 'diff']);
+        $displayDiff = $backup->diff?->hunks ?? [];
+
+        if ($backup->path && $backup->previousBackup?->path
+            && Storage::disk($backup->disk)->exists($backup->path)
+            && Storage::disk($backup->previousBackup->disk)->exists($backup->previousBackup->path)) {
+            $displayDiff = app(BackupDiffService::class)->diff(
+                Storage::disk($backup->previousBackup->disk)->get($backup->previousBackup->path),
+                Storage::disk($backup->disk)->get($backup->path)
+            )['hunks'];
+        }
 
         return view('backups.show', [
-            'backup' => $backup->load(['router', 'schedule', 'previousBackup', 'diff']),
+            'backup' => $backup,
+            'displayDiff' => $displayDiff,
             'preview' => $backup->path && Storage::disk($backup->disk)->exists($backup->path)
                 ? Str::of(Storage::disk($backup->disk)->get($backup->path))->limit(12000)->toString()
                 : '',
