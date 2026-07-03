@@ -26,12 +26,7 @@ class SettingController extends Controller
         $tenant = $this->getTenant();
 
         DB::transaction(function () use ($request, $tenant): void {
-            $tenant->update($request->safe()->only([
-                'company_name',
-                'phone',
-                'country',
-                'timezone',
-            ]));
+            $tenant->update(['timezone' => $request->validated('timezone')]);
             $tenant->backupSchedules()->update(['timezone' => $request->validated('timezone')]);
         });
 

@@ -710,5 +710,6 @@
             </div>
         </div>
     </footer>
+    <x-global-waiting-state />
 </body>
 </html>

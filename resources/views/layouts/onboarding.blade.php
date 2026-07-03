@@ -80,5 +80,6 @@
             @yield('content')
         </main>
     </div>
+    <x-global-waiting-state />
 </body>
 </html>

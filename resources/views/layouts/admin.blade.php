@@ -747,6 +747,7 @@
     </script>
     @endif
 
+    <x-global-waiting-state />
     @stack('scripts')
 </body>
 </html>

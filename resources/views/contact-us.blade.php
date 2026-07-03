@@ -86,5 +86,6 @@
 
         <x-marketing.footer />
     </div>
+    <x-global-waiting-state />
 </body>
 </html>

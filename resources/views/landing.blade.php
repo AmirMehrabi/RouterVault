@@ -349,5 +349,6 @@
             </section>
         </main>
     </div>
+    <x-global-waiting-state />
 </body>
 </html>

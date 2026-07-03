@@ -302,5 +302,6 @@
 
         <x-marketing.routervault-footer />
     </div>
+    <x-global-waiting-state />
 </body>
 </html>

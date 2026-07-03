@@ -68,7 +68,7 @@ class SettingsAndDiffAlertTest extends TestCase
             ->assertSee('Alert settings');
     }
 
-    public function test_general_settings_keep_email_immutable_and_propagate_timezone_to_schedules(): void
+    public function test_general_settings_only_update_timezone_and_propagate_it_to_schedules(): void
     {
         [$tenant, $user] = $this->tenantUser();
         $this->actingAs($user);
@@ -79,15 +79,13 @@ class SettingsAndDiffAlertTest extends TestCase
         ]);
 
         $this->put(route('settings.update.general'), [
-            'company_name' => 'Updated ISP',
-            'phone' => '+982100000000',
-            'country' => 'IR',
             'timezone' => 'Asia/Tehran',
             'email' => 'changed@example.com',
+            'company_name' => 'Changed name',
         ])->assertRedirect(route('settings.index', ['tab' => 'general']));
 
         $tenant->refresh();
-        $this->assertSame('Updated ISP', $tenant->company_name);
+        $this->assertSame('Settings Alerts', $tenant->company_name);
         $this->assertSame('owner@example.com', $tenant->email);
         $this->assertSame('Asia/Tehran', $tenant->timezone);
         $this->assertSame('Asia/Tehran', $schedule->fresh()->timezone);
@@ -106,6 +104,34 @@ class SettingsAndDiffAlertTest extends TestCase
 
         config(['app.timezone' => 'UTC']);
         date_default_timezone_set('UTC');
+    }
+
+    public function test_authenticated_layout_installs_global_form_and_ajax_waiting_states(): void
+    {
+        [$tenant, $user] = $this->tenantUser();
+        $this->actingAs($user);
+
+        $this->get(route('settings.index'))
+            ->assertOk()
+            ->assertSee('window.__globalWaitingStateInstalled', false)
+            ->assertSee('Waiting…')
+            ->assertSee("document.addEventListener('submit'", false)
+            ->assertSee('originalFetch(...args).finally', false);
+    }
+
+    public function test_general_settings_only_show_immutable_email_and_timezone(): void
+    {
+        [$tenant, $user] = $this->tenantUser();
+        $this->actingAs($user);
+
+        $this->get(route('settings.index'))
+            ->assertOk()
+            ->assertSee($tenant->email)
+            ->assertSee('The account email cannot be changed.')
+            ->assertSee('Timezone')
+            ->assertDontSee('Currency')
+            ->assertDontSee('Date Format')
+            ->assertDontSee('Company name');
     }
 
     /**

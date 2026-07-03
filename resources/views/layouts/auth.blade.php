@@ -63,6 +63,7 @@
         </div>
     </div>
 
+    <x-global-waiting-state />
     @stack('scripts')
 </body>
 </html>

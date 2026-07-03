@@ -486,7 +486,7 @@
     }
     
     </style>
+    <x-global-waiting-state />
 </body>
 </html>
-
 
