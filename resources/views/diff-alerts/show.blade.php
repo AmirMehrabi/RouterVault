@@ -2,12 +2,30 @@
 
 @section('title', 'Diff Alert #'.$alert->id)
 
+@push('navbar-breadcrumb')
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'href' => route('dashboard')],
+        ['label' => 'Diff Alerts', 'href' => route('diff-alerts.index')],
+        ['label' => 'Alert #'.$alert->id, 'current' => true],
+    ]" />
+@endpush
+
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ status: @js($alert->status), busy: false }">
     <div class="flex items-center justify-between">
         <div><h1 class="text-2xl font-bold text-gray-900">{{ $alert->summary }}</h1><p class="text-sm text-gray-500">{{ $alert->severity }} · {{ $alert->status }} · {{ $alert->router?->name }}</p></div>
         <div class="flex gap-2">
-            @foreach(['acknowledged' => 'Acknowledge', 'ignored' => 'Ignore', 'unread' => 'Mark Unread'] as $status => $label)
+            <button
+                x-show="status !== 'acknowledged'"
+                type="button"
+                @click="busy = true; fetch(@js(route('diff-alerts.status', $alert)), { method: 'POST', headers: { 'X-CSRF-TOKEN': @js(csrf_token()), Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'acknowledged' }) }).then(response => { if (!response.ok) throw new Error(); status = 'acknowledged'; }).catch(() => alert('Unable to acknowledge this alert.')).finally(() => busy = false)"
+                :disabled="busy"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="m5 13 4 4L19 7"/></svg>
+                Acknowledge
+            </button>
+            @foreach(['ignored' => 'Ignore', 'unread' => 'Mark Unread'] as $status => $label)
                 <form method="POST" action="{{ route('diff-alerts.status', $alert) }}">@csrf<input type="hidden" name="status" value="{{ $status }}"><button class="rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ $label }}</button></form>
             @endforeach
         </div>

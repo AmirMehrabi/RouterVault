@@ -38,6 +38,8 @@ class InitializeTenancy
 
         // Store the tenant in the app container for global access
         app()->instance('current_tenant', $tenant);
+        config(['app.timezone' => $tenant->timezone ?: 'UTC']);
+        date_default_timezone_set($tenant->timezone ?: 'UTC');
 
         // Set a global tenant_id in the request for easy access
         $request->merge(['_tenant_id' => $tenant->id]);

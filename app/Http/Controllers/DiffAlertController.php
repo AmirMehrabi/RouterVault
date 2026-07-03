@@ -6,6 +6,7 @@ use App\Http\Requests\DiffAlert\StoreDiffAlertNoteRequest;
 use App\Http\Requests\DiffAlert\UpdateDiffAlertSettingsRequest;
 use App\Models\DiffAlert;
 use App\Models\DiffAlertSetting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,11 +15,18 @@ class DiffAlertController extends Controller
 {
     public function index(): View
     {
-        $alerts = DiffAlert::query()->with('router:id,name')->latest()->paginate(25);
+        $alerts = DiffAlert::query()
+            ->with('router:id,name')
+            ->orderByRaw("CASE WHEN status = 'unread' THEN 0 ELSE 1 END")
+            ->latest()
+            ->paginate(25);
         $base = DiffAlert::query();
         $stats = [
             'unread' => (clone $base)->where('status', 'unread')->count(),
+            'total' => (clone $base)->count(),
             'high' => (clone $base)->where('severity', 'high')->count(),
+            'affectedRouters' => (clone $base)->where('status', 'unread')->distinct('router_id')->count('router_id'),
+            'acknowledged' => (clone $base)->where('status', 'acknowledged')->count(),
             'acknowledgedToday' => (clone $base)->whereDate('acknowledged_at', today())->count(),
             'ignored' => (clone $base)->where('status', 'ignored')->count(),
         ];
@@ -35,7 +43,7 @@ class DiffAlertController extends Controller
         ]);
     }
 
-    public function status(Request $request, DiffAlert $alert): RedirectResponse
+    public function status(Request $request, DiffAlert $alert): JsonResponse|RedirectResponse
     {
         $this->authorizeTenant($alert->tenant_id);
         $validated = $request->validate(['status' => ['required', 'string', 'in:unread,read,acknowledged,ignored']]);
@@ -46,6 +54,18 @@ class DiffAlertController extends Controller
             'read_at' => in_array($status, ['read', 'acknowledged', 'ignored'], true) ? now() : null,
             'acknowledged_at' => $status === 'acknowledged' ? now() : $alert->acknowledged_at,
         ])->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Alert status updated.',
+                'alert' => [
+                    'id' => $alert->id,
+                    'status' => $alert->status,
+                    'read_at' => $alert->read_at?->toIso8601String(),
+                    'acknowledged_at' => $alert->acknowledged_at?->toIso8601String(),
+                ],
+            ]);
+        }
 
         return back()->with('success', 'Alert status updated.');
     }

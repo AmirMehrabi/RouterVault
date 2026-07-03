@@ -6,7 +6,7 @@
             <x-ui.input.text type="number" label="Retention Count" name="retention_count" :value="old('retention_count', $schedule->retention_count ?? 30)" :required="true" :error="$errors->first('retention_count')" />
             <x-ui.input.text type="number" label="Interval Value" name="interval_value" :value="old('interval_value', $schedule->interval_value ?? 1)" :required="true" :error="$errors->first('interval_value')" />
             <x-ui.input.select label="Interval Unit" name="interval_unit" :options="['minutes' => 'Minutes', 'hours' => 'Hours', 'days' => 'Days', 'weeks' => 'Weeks']" :value="old('interval_unit', $schedule->interval_unit ?? 'days')" :required="true" :error="$errors->first('interval_unit')" />
-            <x-ui.input.text label="Timezone" name="timezone" :value="old('timezone', $schedule->timezone ?? config('app.timezone'))" :required="true" :error="$errors->first('timezone')" />
+            <x-ui.input.text label="Timezone" name="timezone" :value="old('timezone', $schedule->timezone ?? tenant()?->timezone ?? config('app.timezone'))" :required="true" :error="$errors->first('timezone')" />
             <x-ui.input.text type="datetime-local" label="Next Run" name="next_run_at" :value="old('next_run_at', optional($schedule->next_run_at)->format('Y-m-d\\TH:i'))" :error="$errors->first('next_run_at')" />
             <div class="flex items-center pt-6">
                 <x-ui.input.checkbox label="Enabled" name="is_enabled" :checked="old('is_enabled', $schedule->is_enabled ?? true)" :error="$errors->first('is_enabled')" />
