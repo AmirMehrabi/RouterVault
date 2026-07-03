@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Router;
+use App\Models\RouterBackup;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Backups\RouterBackupService;
@@ -130,6 +131,43 @@ class RouterBackupFormatTest extends TestCase
         $this->assertSame('success', $backup->artifacts->firstWhere('type', 'rsc')->status);
         $this->assertSame('failed', $backup->artifacts->firstWhere('type', 'binary')->status);
         Storage::disk('local')->assertExists($backup->artifacts->firstWhere('type', 'rsc')->path);
+    }
+
+    public function test_compare_workspace_identifies_base_and_comparison_snapshots(): void
+    {
+        Storage::fake('local');
+        [$tenant, $user] = $this->tenantUser();
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        $router = Router::factory()->create(['tenant_id' => $tenant->id]);
+        $base = RouterBackup::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'routeros_version' => '7.15',
+            'disk' => 'local',
+            'path' => 'router-backups/base.rsc',
+        ]);
+        $comparison = RouterBackup::factory()->create([
+            'tenant_id' => $tenant->id,
+            'router_id' => $router->id,
+            'routeros_version' => '7.16',
+            'disk' => 'local',
+            'path' => 'router-backups/comparison.rsc',
+        ]);
+        Storage::disk('local')->put($base->path, "/system identity\nset name=old\n");
+        Storage::disk('local')->put($comparison->path, "/system identity\nset name=new\n");
+
+        $this->get(route('backups.compare', [
+            'router_id' => $router->id,
+            'old_backup_id' => $base->id,
+            'new_backup_id' => $comparison->id,
+        ]))
+            ->assertOk()
+            ->assertSee("Backup #{$comparison->id}")
+            ->assertSee('compared with')
+            ->assertSee("#{$base->id}")
+            ->assertSee('RouterOS 7.15')
+            ->assertSee('7.16');
     }
 
     /**

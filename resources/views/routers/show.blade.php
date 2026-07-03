@@ -10,288 +10,145 @@
     ]" />
 @endpush
 
-@push('styles')
-<style>
-    [x-cloak] { display: none !important; }
-</style>
-@endpush
-
 @section('content')
-<div class="space-y-6" x-data="routerShow()" x-cloak>
-    <!-- Header -->
-    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center"
-                     :class="status === 'online' ? 'bg-green-50' : 'bg-red-50'">
-                    <svg class="w-7 h-7" :class="status === 'online' ? 'text-green-600' : 'text-red-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
-                    </svg>
+<div class="space-y-5 pb-10" x-data="routerShowWorkspace()" x-cloak>
+    <header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div class="flex min-w-0 items-start gap-4">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $router->isOnline() ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600' }}">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
                 </div>
-                <div>
-                    <div class="flex items-center gap-3">
-                        <h1 class="text-2xl font-bold text-gray-900">{{ $router->name }}</h1>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                              :class="status === 'online' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'">
-                            <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="status === 'online' ? 'bg-green-500' : 'bg-red-500'"></span>
-                            <span x-text="status.charAt(0).toUpperCase() + status.slice(1)"></span>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="truncate text-2xl font-bold tracking-tight text-slate-950">{{ $router->name }}</h1>
+                        <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold {{ $router->isOnline() ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }}">
+                            <span class="h-1.5 w-1.5 rounded-full {{ $router->isOnline() ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
+                            {{ ucfirst($router->status ?? 'offline') }}
                         </span>
                     </div>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-500">
+                    <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                         <span class="font-mono">{{ $router->ip_address }}</span>
-                        @if($router->model)
-                            <span>{{ $router->model }}</span>
-                        @endif
-                        @if($router->vendor)
-                            <span>{{ $router->vendor }}</span>
-                        @endif
-                        @if($router->version)
-                            <span>v{{ $router->version }}</span>
-                        @endif
-                        @if($router->uptime)
-                            <span>Up {{ $router->uptime }}</span>
-                        @endif
-                        @if($router->location)
-                            <span>{{ $router->location }}</span>
-                        @endif
+                        <span>{{ $router->model ?: $router->vendor }}</span>
+                        <span>RouterOS {{ $router->version ?: 'unknown' }}</span>
+                        @if($router->site || $router->location)<span>{{ $router->site ?: $router->location }}</span>@endif
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('routers.edit', $router) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                    Edit
-                </a>
-                <form method="POST" action="{{ route('backups.retry', ['backup' => 0]) }}" x-ref="backupForm">
-                    @csrf
-                </form>
+
+            <div class="flex flex-wrap items-center gap-2">
                 @if($router->backupsEnabled())
-                <button @click="triggerBackup()" :disabled="backupRunning" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50">
-                    <svg class="w-4 h-4" :class="{'animate-spin': backupRunning}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    <span x-text="backupRunning ? 'Backing up...' : 'Backup Now'"></span>
-                </button>
+                    <button type="button" @click="triggerBackup()" :disabled="backupRunning" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">
+                        <span x-text="backupRunning ? 'Queuing backup…' : 'Backup now'"></span>
+                    </button>
                 @else
-                    <span class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500">Backups disabled</span>
+                    <span class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">Backups disabled</span>
                 @endif
-                <button @click="deleteModal.show = true" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Delete
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p class="text-xs font-medium text-gray-500">CPU</p>
-            <div class="flex items-end gap-2 mt-1">
-                <p class="text-2xl font-bold text-gray-900">{{ $router->cpu_usage ?? 0 }}%</p>
-            </div>
-            <div class="mt-2 w-full bg-gray-100 rounded-full h-1.5">
-                <div class="h-1.5 rounded-full transition-all duration-500 {{ ($router->cpu_usage ?? 0) > 80 ? 'bg-red-500' : (($router->cpu_usage ?? 0) > 60 ? 'bg-yellow-500' : 'bg-blue-500') }}"
-                     style="width: {{ $router->cpu_usage ?? 0 }}%"></div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p class="text-xs font-medium text-gray-500">Memory</p>
-            <div class="flex items-end gap-2 mt-1">
-                <p class="text-2xl font-bold text-gray-900">{{ $router->memory_usage ?? 0 }}%</p>
-            </div>
-            <div class="mt-2 w-full bg-gray-100 rounded-full h-1.5">
-                <div class="h-1.5 rounded-full transition-all duration-500 {{ ($router->memory_usage ?? 0) > 80 ? 'bg-red-500' : (($router->memory_usage ?? 0) > 60 ? 'bg-yellow-500' : 'bg-green-500') }}"
-                     style="width: {{ $router->memory_usage ?? 0 }}%"></div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p class="text-xs font-medium text-gray-500">Active Sessions</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $router->active_sessions_count ?? 0 }}</p>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p class="text-xs font-medium text-gray-500">Customers</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $router->total_customers ?? 0 }}</p>
-        </div>
-    </div>
-
-    <!-- Connection & Info -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Connection Details</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">IP Address</span>
-                    <span class="text-sm font-medium text-gray-900 font-mono">{{ $router->ip_address }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">RouterOS API</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ ($router->enable_api ?? '1') === '1' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
-                        {{ ($router->enable_api ?? '1') === '1' ? 'Enabled (' . ($router->api_port ?: 8728) . ')' : 'Disabled' }}
-                    </span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">SSH</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ ($router->enable_ssh ?? '1') === '1' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
-                        {{ ($router->enable_ssh ?? '1') === '1' ? 'Enabled (' . ($router->ssh_port ?: 22) . ')' : 'Disabled' }}
-                    </span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Credential</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->passwordManagerCredential?->name ?: ($router->api_username ?: '—') }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Last Connected</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->last_connected_at?->diffForHumans() ?? 'Never' }}</span>
-                </div>
-                @if($router->last_error)
-                    <div class="flex justify-between py-2">
-                        <span class="text-sm text-gray-500">Last Error</span>
-                        <span class="text-sm font-medium text-red-600 max-w-[200px] truncate" title="{{ $router->last_error }}">{{ $router->last_error }}</span>
-                    </div>
+                @if($latestComparableBackups->count() >= 2)
+                    <a href="{{ route('backups.compare', ['router_id' => $router->id]) }}" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Compare latest</a>
                 @endif
+                <a href="{{ route('routers.edit', $router) }}" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Edit router</a>
+                <button type="button" @click="deleteModal.show = true" class="rounded-lg px-3 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50">Delete</button>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Router Information</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Vendor</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->vendor }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Model</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->model ?: '—' }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Location</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->location ?: '—' }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Site</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->site ?: '—' }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-sm text-gray-500">Version</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $router->version ?: '—' }}</span>
-                </div>
-                <div class="flex justify-between py-2">
-                    <span class="text-sm text-gray-500">Monitoring</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $router->enable_monitoring ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
-                        {{ $router->enable_monitoring ? 'Enabled' : 'Disabled' }}
-                    </span>
-                </div>
+        <dl class="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-slate-100 pt-5 sm:grid-cols-3 xl:grid-cols-6">
+            <div>
+                <dt class="text-xs font-medium text-slate-400">CPU</dt>
+                <dd class="mt-1 flex items-center gap-2"><strong class="text-sm text-slate-800">{{ $router->cpu_usage ?? 0 }}%</strong><span class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><span class="block h-full rounded-full bg-blue-500" style="width: {{ min(100, $router->cpu_usage ?? 0) }}%"></span></span></dd>
+            </div>
+            <div>
+                <dt class="text-xs font-medium text-slate-400">Memory</dt>
+                <dd class="mt-1 flex items-center gap-2"><strong class="text-sm text-slate-800">{{ $router->memory_usage ?? 0 }}%</strong><span class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"><span class="block h-full rounded-full bg-emerald-500" style="width: {{ min(100, $router->memory_usage ?? 0) }}%"></span></span></dd>
+            </div>
+            <div><dt class="text-xs font-medium text-slate-400">Active sessions</dt><dd class="mt-1 text-sm font-semibold text-slate-800">{{ number_format($router->active_sessions_count ?? 0) }}</dd></div>
+            <div><dt class="text-xs font-medium text-slate-400">Uptime</dt><dd class="mt-1 text-sm font-semibold text-slate-800">{{ $router->uptime ?: '—' }}</dd></div>
+            <div><dt class="text-xs font-medium text-slate-400">Last contact</dt><dd class="mt-1 text-sm font-semibold text-slate-800">{{ $router->last_connected_at?->diffForHumans() ?? 'Never' }}</dd></div>
+            <div><dt class="text-xs font-medium text-slate-400">Connection</dt><dd class="mt-1 text-sm font-semibold {{ $router->last_error ? 'text-red-700' : 'text-emerald-700' }}">{{ $router->last_error ? 'Attention needed' : 'Healthy' }}</dd></div>
+        </dl>
+    </header>
+
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-medium text-slate-400">Latest backup</p>
+            <p class="mt-2 text-lg font-bold text-slate-900">{{ $lastBackup?->created_at?->diffForHumans() ?? 'No backups yet' }}</p>
+            @if($lastBackup)<div class="mt-2"><x-backup-status :status="$lastBackup->status" /></div>@endif
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-medium text-slate-400">Backup formats</p>
+            <div class="mt-2 flex flex-wrap gap-2">
+                @if($router->backup_rsc_enabled)<span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">.rsc export</span>@endif
+                @if($router->backup_binary_enabled)<span class="rounded-md bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">.backup binary</span>@endif
+                @if(! $router->backupsEnabled())<span class="text-sm font-semibold text-slate-400">Disabled</span>@endif
             </div>
         </div>
-    </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-medium text-slate-400">Configuration changes</p>
+            <p class="mt-2 text-lg font-bold text-slate-900">{{ number_format($backupStats['changed']) }}</p>
+            <p class="mt-1 text-xs text-slate-500">across {{ number_format($backupStats['successful']) }} usable snapshots</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-medium text-slate-400">Backup health</p>
+            <p class="mt-2 text-lg font-bold {{ $backupStats['failed'] > 0 ? 'text-red-700' : 'text-emerald-700' }}">{{ $backupStats['failed'] > 0 ? $backupStats['failed'].' failed' : 'No failures' }}</p>
+            <p class="mt-1 text-xs text-slate-500">{{ number_format($backupStats['total']) }} total attempts</p>
+        </div>
+    </section>
 
-    <!-- Backups -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Backups</h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {{ $backupStats['total'] }} total, {{ $backupStats['successful'] }} successful, {{ $backupStats['failed'] }} failed
-                        @if($backupStats['changed'] > 0)
-                            <span class="text-amber-600">, {{ $backupStats['changed'] }} with changes</span>
-                        @endif
-                    </p>
-                </div>
-                <div class="flex items-center gap-3">
-                    @if($lastBackup)
-                        <div class="text-sm text-gray-500">
-                            Last backup: <span class="font-medium text-gray-700">{{ $lastBackup->created_at->diffForHumans() }}</span>
-                            @if($lastBackup->status === 'success' && $lastBackup->changed)
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 ml-1">Changed</span>
-                            @endif
-                        </div>
-                    @endif
-                    <a href="{{ route('backups.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">View All</a>
-                </div>
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-bold text-slate-900">Configuration history</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Every stored RouterOS snapshot, its artifacts, and the change from its predecessor.</p>
             </div>
+            <a href="{{ route('backups.compare', ['router_id' => $router->id]) }}" class="text-sm font-semibold text-blue-700 hover:text-blue-900">Open comparison workspace</a>
         </div>
 
-        @if($backups->count() > 0)
+        @if($backups->count())
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Size</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Changes</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Diff</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            @foreach(['Snapshot', 'Status', 'Version & source', 'Artifacts', 'Change', 'Created', ''] as $heading)
+                                <th class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ $heading }}</th>
+                            @endforeach
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-slate-100">
                         @foreach($backups as $backup)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    @if($backup->status === 'success')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
-                                    @elseif($backup->status === 'failed')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Failed</span>
+                            <tr class="group hover:bg-slate-50/70">
+                                <td class="px-5 py-4"><a href="{{ route('backups.show', $backup) }}" class="text-sm font-bold text-blue-700 hover:text-blue-900">#{{ $backup->id }}</a></td>
+                                <td class="px-5 py-4"><x-backup-status :status="$backup->status" /></td>
+                                <td class="px-5 py-4">
+                                    <p class="text-sm font-semibold text-slate-800">RouterOS {{ $backup->routeros_version ?: 'unknown' }}</p>
+                                    <p class="mt-0.5 text-xs text-slate-400">{{ $backup->schedule?->name ?? 'Manual' }}</p>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @forelse($backup->artifacts->where('status', 'success') as $artifact)
+                                            <span class="rounded-md bg-slate-100 px-2 py-1 font-mono text-[11px] font-semibold text-slate-600">.{{ $artifact->type === 'binary' ? 'backup' : 'rsc' }}</span>
+                                        @empty
+                                            @if($backup->path)<span class="rounded-md bg-slate-100 px-2 py-1 font-mono text-[11px] font-semibold text-slate-600">.rsc</span>@else<span class="text-xs text-slate-300">—</span>@endif
+                                        @endforelse
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    @if($backup->diff)
+                                        <a href="{{ route('backups.show', $backup) }}" class="inline-flex gap-2 font-mono text-xs font-bold"><span class="text-emerald-700">+{{ $backup->diff->added_lines }}</span><span class="text-red-700">−{{ $backup->diff->removed_lines }}</span></a>
+                                    @elseif($backup->changed === false)
+                                        <span class="text-xs text-slate-500">No changes</span>
                                     @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Running</span>
+                                        <span class="text-xs text-slate-300">—</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">{{ $backup->created_at->format('M d, Y H:i') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    @if($backup->started_at && $backup->finished_at)
-                                        {{ $backup->started_at->diffInSeconds($backup->finished_at) }}s
-                                    @else
-                                        —
-                                    @endif
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <p class="text-sm text-slate-700">{{ $backup->created_at?->format('M d, H:i') }}</p>
+                                    <p class="mt-0.5 text-xs text-slate-400">{{ $backup->created_at?->diffForHumans() }}</p>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    {{ $backup->size_bytes ? number_format($backup->size_bytes / 1024, 1) . ' KB' : '—' }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($backup->status === 'success')
-                                        @if($backup->changed)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Changed</span>
-                                        @else
-                                            <span class="text-xs text-gray-500">No changes</span>
+                                <td class="px-5 py-4 text-right">
+                                    <div class="flex justify-end gap-2">
+                                        @if($backup->previous_router_backup_id && $backup->path)
+                                            <a href="{{ route('backups.compare', ['router_id' => $router->id, 'old_backup_id' => $backup->previous_router_backup_id, 'new_backup_id' => $backup->id]) }}" class="text-xs font-semibold text-slate-600 hover:text-blue-700">Compare</a>
                                         @endif
-                                    @else
-                                        <span class="text-xs text-gray-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($backup->diff && $backup->status === 'success')
-                                        <a href="{{ route('backups.show', $backup) }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                                            +{{ $backup->diff->added_lines }} / -{{ $backup->diff->removed_lines }}
-                                        </a>
-                                    @else
-                                        <span class="text-xs text-gray-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        @if($backup->status === 'success' && $backup->path)
-                                            <a href="{{ route('backups.show', $backup) }}" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            </a>
-                                            <a href="{{ route('backups.download', $backup) }}" class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Download">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                            </a>
-                                        @endif
-                                        @if($backup->status === 'failed')
-                                            <form method="POST" action="{{ route('backups.retry', $backup) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Retry">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                                </button>
-                                            </form>
-                                        @endif
+                                        <a href="{{ route('backups.show', $backup) }}" class="text-xs font-semibold text-blue-700">Details</a>
                                     </div>
                                 </td>
                             </tr>
@@ -299,145 +156,84 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $backups->links() }}
-            </div>
+            <div class="border-t border-slate-200 px-5 py-4">{{ $backups->links() }}</div>
         @else
-            <div class="px-6 py-12 text-center">
-                <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                    </svg>
-                </div>
-                <p class="text-sm text-gray-500">No backups yet for this router.</p>
+            <div class="px-6 py-16 text-center">
+                <h3 class="text-sm font-semibold text-slate-900">No configuration history yet</h3>
+                <p class="mt-1 text-sm text-slate-500">Run the first backup to establish this router’s baseline.</p>
             </div>
         @endif
-    </div>
+    </section>
 
-    <!-- Quick Links -->
-    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Links</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <a href="{{ route('routers.sessions', $router) }}" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm">
-                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                </div>
-                <span class="font-medium text-gray-700">Sessions</span>
-            </a>
-            <a href="{{ route('routers.profiles', $router) }}" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm">
-                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                </div>
-                <span class="font-medium text-gray-700">Profiles</span>
-            </a>
-            <a href="{{ route('routers.interfaces', $router) }}" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm">
-                <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-                </div>
-                <span class="font-medium text-gray-700">Interfaces</span>
-            </a>
-            <a href="{{ route('routers.push-script', $router) }}" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm">
-                <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                </div>
-                <span class="font-medium text-gray-700">Push Script</span>
-            </a>
-            <a href="{{ route('routers.logs', $router) }}" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-sm">
-                <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <span class="font-medium text-gray-700">Logs</span>
-            </a>
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <button type="button" @click="detailsOpen = !detailsOpen" class="flex w-full items-center justify-between px-5 py-4 text-left">
+            <div><h2 class="text-sm font-bold text-slate-900">Router and connection details</h2><p class="mt-0.5 text-xs text-slate-500">Hardware, API, SSH, credential, and monitoring information.</p></div>
+            <svg class="h-5 w-5 text-slate-400 transition-transform" :class="detailsOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div x-show="detailsOpen" x-transition class="grid gap-x-10 gap-y-3 border-t border-slate-200 px-5 py-4 md:grid-cols-2">
+            @foreach([
+                'Vendor' => $router->vendor,
+                'Model' => $router->model ?: '—',
+                'Location' => $router->location ?: '—',
+                'Site' => $router->site ?: '—',
+                'RouterOS API' => $router->enable_api ? 'Enabled on port '.($router->api_port ?: 8728) : 'Disabled',
+                'SSH' => $router->enable_ssh ? 'Enabled on port '.($router->ssh_port ?: 22) : 'Disabled',
+                'Credential' => $router->passwordManagerCredential?->name ?: ($router->api_username ?: '—'),
+                'Monitoring' => $router->enable_monitoring ? 'Enabled' : 'Disabled',
+            ] as $label => $value)
+                <div class="flex justify-between gap-5 border-b border-slate-100 py-2 text-sm"><span class="text-slate-400">{{ $label }}</span><span class="text-right font-semibold text-slate-700">{{ $value }}</span></div>
+            @endforeach
+            @if($router->last_error)<div class="md:col-span-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">{{ $router->last_error }}</div>@endif
         </div>
-    </div>
+    </section>
 
-    <!-- Delete Modal -->
-    <div x-show="deleteModal.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="deleteModal.show = false"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Delete Router</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">Are you sure you want to delete "{{ $router->name }}"? This action cannot be undone.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button @click="deleteRouter()" :disabled="deleteModal.deleting" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                        <span x-show="!deleteModal.deleting">Delete</span>
-                        <span x-show="deleteModal.deleting">Deleting...</span>
-                    </button>
-                    <button @click="deleteModal.show = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
-                </div>
+    <div x-show="deleteModal.show" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+        <div class="absolute inset-0 bg-slate-950/50" @click="deleteModal.show = false"></div>
+        <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 class="text-lg font-bold text-slate-900">Delete {{ $router->name }}?</h2>
+            <p class="mt-2 text-sm text-slate-500">This removes the router and its backup history. This action cannot be undone.</p>
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" @click="deleteModal.show = false" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button>
+                <button type="button" @click="deleteRouter()" :disabled="deleteModal.deleting" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" x-text="deleteModal.deleting ? 'Deleting…' : 'Delete router'"></button>
             </div>
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
-function routerShow() {
+function routerShowWorkspace() {
     return {
-        status: '{{ $router->status ?? "offline" }}',
         backupRunning: false,
-        deleteModal: {
-            show: false,
-            deleting: false
-        },
-
+        detailsOpen: false,
+        deleteModal: { show: false, deleting: false },
         async triggerBackup() {
             this.backupRunning = true;
             try {
-                const response = await fetch('{{ route("routers.backup", $router) }}', {
+                const response = await fetch(@js(route('routers.backup', $router)), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'X-CSRF-TOKEN': @js(csrf_token()), Accept: 'application/json' }
                 });
-
-                if (response.ok) {
-                    setTimeout(() => window.location.reload(), 2000);
-                } else {
-                    const data = await response.json().catch(() => null);
-                    alert(data?.message || 'Failed to trigger backup.');
-                }
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Unable to queue the backup.');
+                setTimeout(() => window.location.reload(), 1800);
             } catch (error) {
-                alert('Failed to trigger backup.');
-            } finally {
+                alert(error.message);
                 this.backupRunning = false;
             }
         },
-
         async deleteRouter() {
             this.deleteModal.deleting = true;
             try {
-                const response = await fetch('{{ route("routers.index") }}/{{ $router->id }}', {
+                const response = await fetch(@js(route('routers.destroy', $router)), {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'X-CSRF-TOKEN': @js(csrf_token()), Accept: 'application/json' }
                 });
-
-                if (response.ok) {
-                    window.location.href = '{{ route("routers.index") }}';
-                } else {
-                    alert('Error deleting router. Please try again.');
-                }
+                if (!response.ok) throw new Error('Unable to delete the router.');
+                window.location.href = @js(route('routers.index'));
             } catch (error) {
-                alert('Error deleting router. Please try again.');
-            } finally {
+                alert(error.message);
                 this.deleteModal.deleting = false;
             }
         }
@@ -445,4 +241,3 @@ function routerShow() {
 }
 </script>
 @endpush
-@endsection

@@ -114,7 +114,11 @@ class RouterController extends Controller
         $backups = RouterBackup::query()
             ->where('tenant_id', $router->tenant_id)
             ->where('router_id', $router->id)
-            ->with('diff:id,router_backup_id,added_lines,removed_lines')
+            ->with([
+                'diff:id,router_backup_id,added_lines,removed_lines',
+                'schedule:id,name',
+                'artifacts:id,router_backup_id,type,status,size_bytes',
+            ])
             ->latest()
             ->paginate(10);
 
@@ -131,11 +135,21 @@ class RouterController extends Controller
             ->latest()
             ->first();
 
+        $latestComparableBackups = RouterBackup::query()
+            ->where('tenant_id', $router->tenant_id)
+            ->where('router_id', $router->id)
+            ->whereIn('status', ['success', 'partial_success'])
+            ->whereNotNull('path')
+            ->latest()
+            ->limit(2)
+            ->get();
+
         return view('routers.show', [
             'router' => $router->load('passwordManagerCredential:id,name,username'),
             'backups' => $backups,
             'backupStats' => $backupStats,
             'lastBackup' => $lastBackup,
+            'latestComparableBackups' => $latestComparableBackups,
         ]);
     }
 

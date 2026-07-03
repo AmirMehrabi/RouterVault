@@ -7,6 +7,21 @@ use PHPUnit\Framework\TestCase;
 
 class BackupDiffServiceTest extends TestCase
 {
+    public function test_diff_exposes_section_split_rows_and_intraline_segments(): void
+    {
+        $diff = (new BackupDiffService)->diff(
+            "/ip address\nadd address=10.0.0.1/24\n",
+            "/ip address\nadd address=10.0.0.2/24\n"
+        );
+
+        $this->assertSame('/ip address', $diff['hunks'][0]['section']);
+        $changedRow = collect($diff['hunks'][0]['split_rows'])
+            ->first(fn (array $row): bool => ($row['old']['type'] ?? null) === 'removed');
+        $this->assertNotNull($changedRow);
+        $this->assertSame('changed', collect($changedRow['old']['segments'])->firstWhere('type', 'changed')['type']);
+        $this->assertSame('changed', collect($changedRow['new']['segments'])->firstWhere('type', 'changed')['type']);
+    }
+
     public function test_diff_does_not_cascade_changes_after_a_deletion(): void
     {
         $old = "line one\nline two\nline three\nline four\n";

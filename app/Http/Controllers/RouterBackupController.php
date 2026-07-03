@@ -50,6 +50,19 @@ class RouterBackupController extends Controller
         return view('backups.show', [
             'backup' => $backup,
             'displayDiff' => $displayDiff,
+            'previousBackup' => $backup->previousBackup,
+            'previousHistoryBackup' => RouterBackup::query()
+                ->where('router_id', $backup->router_id)
+                ->whereNotNull('path')
+                ->where('id', '<', $backup->id)
+                ->latest('id')
+                ->first(),
+            'nextHistoryBackup' => RouterBackup::query()
+                ->where('router_id', $backup->router_id)
+                ->whereNotNull('path')
+                ->where('id', '>', $backup->id)
+                ->oldest('id')
+                ->first(),
             'preview' => $backup->path && Storage::disk($backup->disk)->exists($backup->path)
                 ? Str::of(Storage::disk($backup->disk)->get($backup->path))->limit(12000)->toString()
                 : '',
@@ -124,6 +137,8 @@ class RouterBackupController extends Controller
             'backups' => RouterBackup::query()
                 ->where('router_id', $router->id)
                 ->whereIn('status', ['success', 'partial_success'])
+                ->whereNotNull('path')
+                ->with(['diff:id,router_backup_id,added_lines,removed_lines', 'artifacts:id,router_backup_id,type,status'])
                 ->latest()
                 ->get()
                 ->map(fn (RouterBackup $backup): array => $this->payload($backup)),
@@ -139,20 +154,56 @@ class RouterBackupController extends Controller
 
     public function compare(CompareBackupsRequest $request, BackupDiffService $diffService): View
     {
-        $routers = Router::query()->whereHas('backups', fn ($query) => $query->where('status', 'success'))->orderBy('name')->get(['id', 'name']);
+        $routers = Router::query()
+            ->whereHas('backups', fn ($query) => $query
+                ->whereIn('status', ['success', 'partial_success'])
+                ->whereNotNull('path'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'version']);
         $diff = null;
+        $baseBackup = null;
+        $comparisonBackup = null;
+        $routerId = $request->integer('router_id');
+        $baseBackupId = $request->integer('old_backup_id');
+        $comparisonBackupId = $request->integer('new_backup_id');
 
-        if ($request->filled(['old_backup_id', 'new_backup_id'])) {
-            $old = RouterBackup::query()->whereIn('status', ['success', 'partial_success'])->whereNotNull('path')->findOrFail($request->integer('old_backup_id'));
-            $new = RouterBackup::query()->whereIn('status', ['success', 'partial_success'])->whereNotNull('path')->findOrFail($request->integer('new_backup_id'));
-            $this->authorizeTenant($old->tenant_id);
-            $this->authorizeTenant($new->tenant_id);
-            abort_unless($old->router_id === $new->router_id, 403);
-
-            $diff = $diffService->diff(Storage::disk($old->disk)->get($old->path), Storage::disk($new->disk)->get($new->path));
+        if ($routerId && ! $baseBackupId && ! $comparisonBackupId) {
+            $latest = RouterBackup::query()
+                ->where('router_id', $routerId)
+                ->whereIn('status', ['success', 'partial_success'])
+                ->whereNotNull('path')
+                ->latest()
+                ->limit(2)
+                ->get();
+            $comparisonBackupId = $latest->get(0)?->id;
+            $baseBackupId = $latest->get(1)?->id;
         }
 
-        return view('backups.compare', compact('routers', 'diff'));
+        if ($baseBackupId && $comparisonBackupId) {
+            $baseBackup = RouterBackup::query()->with(['router:id,name', 'schedule:id,name', 'diff'])->findOrFail($baseBackupId);
+            $comparisonBackup = RouterBackup::query()->with(['router:id,name', 'schedule:id,name', 'diff'])->findOrFail($comparisonBackupId);
+            $this->authorizeTenant($baseBackup->tenant_id);
+            $this->authorizeTenant($comparisonBackup->tenant_id);
+            abort_unless($baseBackup->router_id === $comparisonBackup->router_id, 403);
+            abort_unless($baseBackup->path && $comparisonBackup->path, 404);
+            abort_unless(Storage::disk($baseBackup->disk)->exists($baseBackup->path), 404);
+            abort_unless(Storage::disk($comparisonBackup->disk)->exists($comparisonBackup->path), 404);
+
+            $diff = $diffService->diff(
+                Storage::disk($baseBackup->disk)->get($baseBackup->path),
+                Storage::disk($comparisonBackup->disk)->get($comparisonBackup->path)
+            );
+        }
+
+        return view('backups.compare', compact(
+            'routers',
+            'diff',
+            'baseBackup',
+            'comparisonBackup',
+            'routerId',
+            'baseBackupId',
+            'comparisonBackupId'
+        ));
     }
 
     /** @return array<string, mixed> */
@@ -164,8 +215,14 @@ class RouterBackupController extends Controller
             'router_name' => $backup->router?->name,
             'schedule_name' => $backup->schedule?->name ?? 'Manual',
             'status' => $backup->status,
+            'routeros_version' => $backup->routeros_version,
             'changed' => $backup->changed,
             'size_bytes' => $backup->size_bytes,
+            'checksum' => $backup->checksum,
+            'source' => $backup->schedule?->name ?? 'Manual',
+            'added_lines' => $backup->diff?->added_lines ?? 0,
+            'removed_lines' => $backup->diff?->removed_lines ?? 0,
+            'artifact_types' => $backup->artifacts?->where('status', 'success')->pluck('type')->values()->all() ?? [],
             'created_at' => $backup->created_at?->toIso8601String(),
             'finished_at' => $backup->finished_at?->toIso8601String(),
             'error_message' => $backup->error_message,

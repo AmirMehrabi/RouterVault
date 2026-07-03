@@ -34,7 +34,8 @@ class CompareBackupsRequest extends FormRequest
                 Rule::exists('router_backups', 'id')->where(fn ($query) => $query
                     ->where('tenant_id', $tenantId)
                     ->where('router_id', $routerId)
-                    ->where('status', 'success')),
+                    ->whereIn('status', ['success', 'partial_success'])
+                    ->whereNotNull('path')),
             ],
             'new_backup_id' => [
                 'nullable',
@@ -43,7 +44,8 @@ class CompareBackupsRequest extends FormRequest
                 Rule::exists('router_backups', 'id')->where(fn ($query) => $query
                     ->where('tenant_id', $tenantId)
                     ->where('router_id', $routerId)
-                    ->where('status', 'success')),
+                    ->whereIn('status', ['success', 'partial_success'])
+                    ->whereNotNull('path')),
             ],
         ];
     }
