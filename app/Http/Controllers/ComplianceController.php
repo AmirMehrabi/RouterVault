@@ -16,7 +16,7 @@ class ComplianceController extends Controller
     {
         return view('compliance.index', [
             'routers' => Router::query()
-                ->with(['latestBackup:id,router_id,status,path,created_at', 'configurationBaseline.backup:id,checksum'])
+                ->with(['latestBackup:id,status,path,created_at', 'configurationBaseline.backup:id,checksum'])
                 ->withCount([
                     'complianceFindings as critical_findings_count' => fn ($query) => $query->where('status', 'critical'),
                     'complianceFindings as warning_findings_count' => fn ($query) => $query->where('status', 'warning'),
