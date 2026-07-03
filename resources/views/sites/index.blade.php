@@ -80,9 +80,9 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 align-top">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('sites.show', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">View</a>
-                                    <a href="{{ route('sites.edit', $site) }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">Edit</a>
+                                <div class="flex items-center justify-end gap-1">
+                                    <x-ui.table-action :href="route('sites.show', $site)" icon="eye" tooltip="View site" />
+                                    <x-ui.table-action :href="route('sites.edit', $site)" icon="edit" tooltip="Edit site" />
                                 </div>
                             </td>
                         </tr>

@@ -49,7 +49,7 @@
                             <td class="whitespace-nowrap px-4 py-4 text-slate-600">{{ $incident->assignee?->name ?? 'Unassigned' }}</td>
                             <td class="px-4 py-4"><x-ui.badge :status="$incident->status">{{ str($incident->status)->replace('_', ' ')->title() }}</x-ui.badge></td>
                             <td class="whitespace-nowrap px-4 py-4 text-xs text-slate-500">{{ $incident->created_at?->diffForHumans() }}</td>
-                            <td class="px-4 py-4 text-right"><a href="{{ route('incidents.show', $incident) }}" class="text-xs font-semibold text-blue-700">Open</a></td>
+                            <td class="px-4 py-4 text-right"><x-ui.table-action :href="route('incidents.show', $incident)" icon="eye" tooltip="View incident" /></td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -24,7 +24,7 @@
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left">Name</th><th class="px-4 py-3 text-left">Cadence</th><th class="px-4 py-3 text-left">Routers</th><th class="px-4 py-3 text-left">Next Run</th><th></th></tr></thead>
+                <thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left">Name</th><th class="px-4 py-3 text-left">Cadence</th><th class="px-4 py-3 text-left">Routers</th><th class="px-4 py-3 text-left">Next Run</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
                 <tbody class="divide-y divide-gray-200">
                     @foreach($schedules as $schedule)
                         <tr x-show="(!q || @js(strtolower($schedule->name)).includes(q.toLowerCase())) && (!status || status === '{{ $schedule->is_enabled ? 'enabled' : 'paused' }}') && (!cadence || cadence === '{{ $schedule->interval_unit }}')">
@@ -32,7 +32,13 @@
                             <td class="px-4 py-3">Every {{ $schedule->interval_value }} {{ $schedule->interval_unit }}</td>
                             <td class="px-4 py-3">{{ $schedule->routers_count }}</td>
                             <td class="px-4 py-3">{{ $schedule->next_run_at?->format('Y-m-d H:i') ?? 'Not set' }}</td>
-                            <td class="px-4 py-3 text-right"><a class="text-blue-600" href="{{ route('schedules.edit', $schedule) }}">Edit</a></td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <x-ui.table-action :href="route('schedules.show', $schedule)" icon="eye" tooltip="View schedule" />
+                                    <x-ui.table-action :href="route('schedules.edit', $schedule)" icon="edit" tooltip="Edit schedule" />
+                                    <x-ui.table-action :href="route('schedules.destroy', $schedule)" icon="trash" tooltip="Delete schedule" method="DELETE" confirm="Are you sure you want to delete this schedule?" variant="danger" />
+                                </div>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

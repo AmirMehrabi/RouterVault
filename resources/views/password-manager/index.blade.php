@@ -73,9 +73,9 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ $credential->updated_at?->diffForHumans() }}</td>
                             <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-3 text-sm">
-                                    <a href="{{ route('password-manager.show', $credential) }}" class="text-blue-600 hover:text-blue-700">View</a>
-                                    <a href="{{ route('password-manager.edit', $credential) }}" class="text-gray-700 hover:text-gray-900">Edit</a>
+                                <div class="flex items-center justify-end gap-1">
+                                    <x-ui.table-action :href="route('password-manager.show', $credential)" icon="eye" tooltip="View credential" />
+                                    <x-ui.table-action :href="route('password-manager.edit', $credential)" icon="edit" tooltip="Edit credential" />
                                 </div>
                             </td>
                         </tr>

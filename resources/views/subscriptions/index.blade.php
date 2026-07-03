@@ -175,7 +175,9 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="subscription.activation_date || '-'"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a :href="'/subscriptions/' + subscription.id" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                                <div class="flex items-center justify-end gap-1">
+                                    <x-ui.table-action :href="'/subscriptions/' + subscription.id" icon="eye" tooltip="View subscription" />
+                                </div>
                             </td>
                         </tr>
                     </template>

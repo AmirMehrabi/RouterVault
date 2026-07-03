@@ -26,11 +26,9 @@
                             <td class="px-5 py-4">{{ $router->configurationBaseline ? 'Approved' : 'Not set' }}</td>
                             <td class="px-5 py-4"><a href="{{ route('compliance.show', $router) }}" class="font-mono font-bold text-red-700">{{ $router->critical_findings_count }}</a><a href="{{ route('compliance.show', $router) }}" class="ml-3 font-mono font-bold text-amber-700">{{ $router->warning_findings_count }}</a></td>
                             <td class="px-5 py-4">
-                                <div class="flex flex-wrap gap-2">
-                                    <form method="POST" action="{{ route('compliance.scan', $router) }}">@csrf<button class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold">Scan now</button></form>
-                                    @if($router->latestBackup?->path && in_array($router->latestBackup->status, ['success', 'partial_success'], true))
-                                        <form method="POST" action="{{ route('compliance.baseline', $router) }}">@csrf<input type="hidden" name="router_backup_id" value="{{ $router->latestBackup->id }}"><input type="hidden" name="label" value="Approved baseline"><button class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Approve latest</button></form>
-                                    @endif
+                                <div class="flex items-center justify-end gap-1">
+                                    <x-ui.table-action :href="route('compliance.show', $router)" icon="eye" tooltip="View compliance findings" />
+                                    <form method="POST" action="{{ route('compliance.scan', $router) }}">@csrf<button type="submit" class="inline-flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600" title="Scan now"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button></form>
                                 </div>
                             </td>
                         </tr>

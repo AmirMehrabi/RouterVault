@@ -30,7 +30,7 @@
                         <td class="px-4 py-3"><x-backup-status :status="$backup->status" /></td>
                         <td class="px-4 py-3">{{ $backup->changed ? 'Yes' : 'No' }}</td>
                         <td class="px-4 py-3">{{ $backup->created_at?->format('Y-m-d H:i') }}</td>
-                        <td class="px-4 py-3 text-right"><a href="{{ route('backups.show', $backup) }}" class="font-semibold text-blue-700 hover:text-blue-900">View</a></td>
+                        <td class="px-4 py-3 text-right"><x-ui.table-action :href="route('backups.show', $backup)" icon="eye" tooltip="View backup" /></td>
                     </tr>
                 @endforeach
             </tbody>

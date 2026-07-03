@@ -133,21 +133,11 @@
                         {{ $user->created_at->diffForHumans() }}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.tenant.users.show', $user) }}" class="text-gray-600 hover:text-gray-900" title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('admin.tenant.users.edit', $user) }}" class="text-gray-600 hover:text-gray-900" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                        <div class="flex items-center justify-end gap-1">
+                            <x-ui.table-action :href="route('admin.tenant.users.show', $user)" icon="eye" tooltip="View user" />
+                            <x-ui.table-action :href="route('admin.tenant.users.edit', $user)" icon="edit" tooltip="Edit user" />
                             @if($user->id !== auth()->id() && $user->role !== 'owner')
-                            <form method="POST" action="{{ route('admin.tenant.users.destroy', $user) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
-                                @csrf
-                                @method('delete')
-                                <button type="submit" class="text-red-600 hover:text-red-900" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                                <x-ui.table-action :href="route('admin.tenant.users.destroy', $user)" icon="trash" tooltip="Delete user" method="DELETE" confirm="Are you sure you want to delete this user?" variant="danger" />
                             @endif
                         </div>
                     </td>

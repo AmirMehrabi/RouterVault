@@ -97,12 +97,8 @@
                             <td class="whitespace-nowrap px-4 py-4"><p class="text-xs text-slate-700">{{ $alert->created_at?->diffForHumans() }}</p><p class="mt-0.5 text-[11px] text-slate-400">{{ $alert->created_at?->format('M d, H:i') }}</p></td>
                             <td class="px-4 py-4"><span x-text="statusLabel({{ $alert->id }})" :class="statusClass({{ $alert->id }})" class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize"></span></td>
                             <td class="px-4 py-4">
-                                <div class="flex justify-end gap-2">
-                                    <a href="{{ route('diff-alerts.show', $alert) }}" class="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-blue-700" title="View alert"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.8"/></svg></a>
-                                    <button x-show="statuses[{{ $alert->id }}] !== 'acknowledged'" type="button" @click="acknowledge({{ $alert->id }}, @js(route('diff-alerts.status', $alert)))" :disabled="busy === {{ $alert->id }}" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="m5 13 4 4L19 7"/></svg>
-                                        Acknowledge
-                                    </button>
+                                <div class="flex justify-end gap-1">
+                                    <x-ui.table-action :href="route('diff-alerts.show', $alert)" icon="eye" tooltip="View alert" />
                                 </div>
                             </td>
                         </tr>

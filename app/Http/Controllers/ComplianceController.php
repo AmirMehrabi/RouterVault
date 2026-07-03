@@ -35,9 +35,9 @@ class ComplianceController extends Controller
     public function show(Router $router): View
     {
         $router->load([
-            'latestBackup:id,router_id,status,path,created_at',
+            'latestBackup:id,status,path,created_at',
             'configurationBaseline' => fn ($q) => $q->with('approver:id,name'),
-            'complianceFindings' => fn ($q) => $q->orderByDesc('status')->orderByDesc('checked_at'),
+            'complianceFindings' => fn ($q) => $q->orderByRaw("FIELD(status, 'critical', 'warning', 'unknown', 'compliant')")->orderByDesc('checked_at'),
         ]);
 
         return view('compliance.show', [
