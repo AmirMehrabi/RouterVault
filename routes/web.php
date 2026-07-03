@@ -7,10 +7,13 @@ use App\Http\Controllers\Auth\TenantLoginController;
 use App\Http\Controllers\Auth\TenantRegistrationController;
 use App\Http\Controllers\BackupScheduleController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ChangeControlController;
+use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiffAlertController;
 use App\Http\Controllers\DummyPaymentController;
+use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IpamController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PagesController;
@@ -22,6 +25,7 @@ use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SystemHealthController;
 use App\Http\Controllers\WirelessClientController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,11 +70,25 @@ Route::middleware(['auth', 'initialize_tenancy'])->prefix('onboarding')->name('o
 });
 
 // Protected Routes (Require Authentication & Tenancy)
-Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce_plan'])->group(function () {
+Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce_plan', 'audit_user_action'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
+
+    Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
+    Route::get('/incidents/{incident}', [IncidentController::class, 'show'])->name('incidents.show');
+    Route::put('/incidents/{incident}', [IncidentController::class, 'update'])->name('incidents.update');
+
+    Route::get('/compliance', [ComplianceController::class, 'index'])->name('compliance.index');
+    Route::post('/compliance/routers/{router}/scan', [ComplianceController::class, 'scan'])->name('compliance.scan');
+    Route::post('/compliance/routers/{router}/baseline', [ComplianceController::class, 'baseline'])->name('compliance.baseline');
+
+    Route::get('/system-health', SystemHealthController::class)->name('system-health.index');
+    Route::get('/change-control', [ChangeControlController::class, 'index'])->name('change-control.index');
+    Route::post('/change-control/changes', [ChangeControlController::class, 'storeChange'])->name('change-control.changes.store');
+    Route::put('/change-control/changes/{changeRequest}', [ChangeControlController::class, 'updateChange'])->name('change-control.changes.update');
+    Route::post('/change-control/maintenance', [ChangeControlController::class, 'storeMaintenance'])->name('change-control.maintenance.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

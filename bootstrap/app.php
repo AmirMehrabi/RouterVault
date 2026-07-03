@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuditUserAction;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckTenantStatus;
 use App\Http\Middleware\EnforcePlanLimits;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check_tenant_status' => CheckTenantStatus::class,
             'enforce_plan' => EnforcePlanLimits::class,
             'can' => CheckPermission::class,
+            'audit_user_action' => AuditUserAction::class,
         ]);
 
         $middleware->redirectGuestsTo('/auth/login');

@@ -15,6 +15,16 @@
         </a>
     </li>
 
+    <li class="pt-4">
+        <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-blue-200">Attention</div>
+    </li>
+    <li>
+        <a href="{{ route('incidents.index') }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium {{ str_starts_with($currentRoute, 'incidents.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.7 2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.7a2 2 0 00-3.4 0z"/></svg>
+            <span>Incidents</span>
+        </a>
+    </li>
 
 
     <!-- Routers -->
@@ -29,7 +39,7 @@
     </li>
 
     <li class="pt-4">
-        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Backup Management</div>
+        <div class="px-3 py-2 text-xs font-semibold text-blue-200 uppercase tracking-wider">Protection</div>
     </li>
 
 
@@ -60,6 +70,20 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9"></path>
             </svg>
             <span>Diff Alerts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('compliance.index') }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium {{ str_starts_with($currentRoute, 'compliance.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Zm-3 9 2 2 4-4"/></svg>
+            <span>Compliance</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('change-control.index') }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium {{ str_starts_with($currentRoute, 'change-control.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Zm3 10 2 2 4-4"/></svg>
+            <span>Change Control</span>
         </a>
     </li>
 
@@ -158,6 +182,13 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 016 0v2H9z"></path>
             </svg>
             <span>Password Manager</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('system-health.index') }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium {{ str_starts_with($currentRoute, 'system-health.') ? 'bg-blue-700 text-white' : 'text-blue-50 hover:bg-blue-700 hover:text-white' }}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+            <span>System Health</span>
         </a>
     </li>
 

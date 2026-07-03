@@ -6,12 +6,16 @@ use App\Models\DiffAlert;
 use App\Models\DiffAlertSetting;
 use App\Models\RouterBackupDiff;
 use App\Models\Tenant;
+use App\Services\Operations\IncidentService;
 use App\Services\Saas\AlertNotificationService;
 use Illuminate\Support\Str;
 
 class DiffAlertService
 {
-    public function __construct(protected AlertNotificationService $notificationService) {}
+    public function __construct(
+        protected AlertNotificationService $notificationService,
+        protected IncidentService $incidentService
+    ) {}
 
     public function createForDiff(RouterBackupDiff $diff): ?DiffAlert
     {
@@ -53,6 +57,10 @@ class DiffAlertService
         $tenant = Tenant::find($tenantId);
         if ($tenant) {
             $this->notificationService->send($alert, $tenant);
+        }
+
+        if (in_array($severity, ['high', 'medium'], true)) {
+            $this->incidentService->forDiffAlert($alert);
         }
 
         return $alert;

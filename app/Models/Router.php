@@ -126,6 +126,21 @@ class Router extends Model
         return $this->hasMany(DiffAlert::class);
     }
 
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
+    public function configurationBaseline(): HasOne
+    {
+        return $this->hasOne(ConfigurationBaseline::class);
+    }
+
+    public function complianceFindings(): HasMany
+    {
+        return $this->hasMany(ComplianceFinding::class);
+    }
+
     public function resolvedApiUsername(): ?string
     {
         return $this->passwordManagerCredential?->username ?? $this->api_username;

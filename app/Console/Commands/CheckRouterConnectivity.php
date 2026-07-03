@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Router;
+use App\Models\SystemHeartbeat;
 use App\Services\RouterOs\RouterConnectivityService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -108,6 +109,13 @@ class CheckRouterConnectivity extends Command
             'failed' => $failed,
             'duration_ms' => $this->durationMs($startedAt),
         ]);
+
+        SystemHeartbeat::record('router-connectivity', [
+            'checked' => $checked,
+            'online' => $online,
+            'offline' => $offline,
+            'failed' => $failed,
+        ], $failed > 0 ? 'warning' : 'healthy');
 
         $this->info("Checked {$checked} router(s). Online: {$online}. Offline: {$offline}. Failed: {$failed}.");
 

@@ -98,6 +98,37 @@
             </section>
         </div>
 
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-6 py-5">
+                <h2 class="text-base font-bold text-slate-900">Notification delivery</h2>
+                <p class="mt-1 text-sm text-slate-500">Channels are used when they are included in the tenant’s active plan.</p>
+            </div>
+            <div class="grid gap-6 p-6 lg:grid-cols-2">
+                <x-ui.input.textarea
+                    label="Email recipients"
+                    name="email_recipients"
+                    :value="old('email_recipients', implode(PHP_EOL, $setting->email_recipients ?? []))"
+                    :error="$errors->first('email_recipients')"
+                    hint="One address per line. The tenant account email is used when this is empty."
+                    rows="5"
+                />
+                <div class="space-y-5">
+                    <x-ui.input.text
+                        label="Telegram chat ID"
+                        name="telegram_chat_id"
+                        :value="old('telegram_chat_id', $setting->telegram_chat_id)"
+                        :error="$errors->first('telegram_chat_id')"
+                    />
+                    <x-ui.input.password
+                        label="Telegram bot token"
+                        name="telegram_bot_token"
+                        :error="$errors->first('telegram_bot_token')"
+                        placeholder="Leave blank to keep the current token"
+                    />
+                </div>
+            </div>
+        </section>
+
         <div class="flex justify-end gap-3">
             <a href="{{ route('diff-alerts.index') }}" class="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</a>
             <button class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">

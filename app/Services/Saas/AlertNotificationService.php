@@ -2,8 +2,11 @@
 
 namespace App\Services\Saas;
 
+use App\Mail\DiffAlertMail;
 use App\Models\DiffAlert;
+use App\Models\DiffAlertSetting;
 use App\Models\Tenant;
+use Illuminate\Support\Facades\Mail;
 
 class AlertNotificationService
 {
@@ -32,14 +35,11 @@ class AlertNotificationService
 
     protected function sendEmail(DiffAlert $alert, Tenant $tenant): void
     {
-        // Email notification logic
-        // This would use Laravel's Mail facade with a Mailable class
-        // For MVP, we'll log this action
-        \Log::info('Alert email sent', [
-            'alert_id' => $alert->id,
-            'tenant_id' => $tenant->id,
-            'router_name' => $alert->router?->name,
-            'severity' => $alert->severity,
-        ]);
+        $settings = DiffAlertSetting::forTenant($tenant->id);
+        $recipients = $settings->email_recipients ?: [$tenant->email];
+
+        foreach (array_filter($recipients) as $recipient) {
+            Mail::to($recipient)->queue(new DiffAlertMail($alert));
+        }
     }
 }

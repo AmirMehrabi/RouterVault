@@ -7,6 +7,7 @@ use App\Models\BackupSchedule;
 use App\Models\Router;
 use App\Models\RouterBackup;
 use App\Models\RouterBackupArtifact;
+use App\Services\Operations\IncidentService;
 use App\Services\RouterOs\RouterOsClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +24,8 @@ class RouterBackupService
     public function __construct(
         protected BackupDiffService $diffService,
         protected DiffAlertService $alertService,
-        protected RouterOsClientFactory $clientFactory
+        protected RouterOsClientFactory $clientFactory,
+        protected IncidentService $incidentService
     ) {}
 
     public function fakeExportUsing(?callable $exporter): void
@@ -107,6 +109,10 @@ class RouterBackupService
             'finished_at' => now(),
             'error_message' => $errors ?: null,
         ])->save();
+
+        if ($status === 'failed') {
+            $this->incidentService->forFailedBackup($backup->fresh('router'));
+        }
 
         if ($successfulCount > 0) {
             $this->enforceRetention($router, $schedule);
