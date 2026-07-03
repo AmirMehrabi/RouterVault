@@ -6,6 +6,7 @@ use App\Models\BackupRun;
 use App\Models\BackupSchedule;
 use App\Models\Router;
 use App\Models\RouterBackup;
+use App\Models\RouterBackupArtifact;
 use App\Services\RouterOs\RouterOsClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,8 @@ class RouterBackupService
 {
     protected $exporter = null;
 
+    protected $binaryBackuper = null;
+
     public function __construct(
         protected BackupDiffService $diffService,
         protected DiffAlertService $alertService,
@@ -26,6 +29,11 @@ class RouterBackupService
     public function fakeExportUsing(?callable $exporter): void
     {
         $this->exporter = $exporter;
+    }
+
+    public function fakeBinaryBackupUsing(?callable $backuper): void
+    {
+        $this->binaryBackuper = $backuper;
     }
 
     public function create(Router $router, ?BackupSchedule $schedule = null, ?BackupRun $run = null): RouterBackup
@@ -44,7 +52,7 @@ class RouterBackupService
 
     public function process(RouterBackup $backup): RouterBackup
     {
-        $backup->loadMissing(['router.passwordManagerCredential', 'schedule']);
+        $backup->loadMissing(['router.passwordManagerCredential', 'schedule', 'artifacts']);
         $router = $backup->router;
         $schedule = $backup->schedule;
 
@@ -60,39 +68,93 @@ class RouterBackupService
             'error_message' => null,
         ])->save();
 
+        if (! $router->backupsEnabled()) {
+            $backup->forceFill([
+                'status' => 'failed',
+                'changed' => false,
+                'finished_at' => now(),
+                'error_message' => 'Backups are disabled for this router.',
+            ])->save();
+
+            return $backup;
+        }
+
+        $artifacts = [];
+
+        if ($router->backup_rsc_enabled) {
+            $artifacts[] = $this->processRscArtifact($backup, $router, $tenantId);
+        }
+
+        if ($router->backup_binary_enabled) {
+            $artifacts[] = $this->processBinaryArtifact($backup, $router);
+        }
+
+        $successfulCount = collect($artifacts)->where('status', 'success')->count();
+        $status = match (true) {
+            $successfulCount === count($artifacts) => 'success',
+            $successfulCount > 0 => 'partial_success',
+            default => 'failed',
+        };
+
+        $errors = collect($artifacts)
+            ->filter(fn (RouterBackupArtifact $artifact): bool => $artifact->status === 'failed')
+            ->map(fn (RouterBackupArtifact $artifact): string => strtoupper($artifact->type).': '.$artifact->error_message)
+            ->implode("\n");
+
+        $backup->forceFill([
+            'status' => $status,
+            'routeros_version' => $router->version,
+            'finished_at' => now(),
+            'error_message' => $errors ?: null,
+        ])->save();
+
+        if ($successfulCount > 0) {
+            $this->enforceRetention($router, $schedule);
+        }
+
+        return $backup->fresh(['artifacts', 'diff', 'alert']);
+    }
+
+    protected function processRscArtifact(RouterBackup $backup, Router $router, string $tenantId): RouterBackupArtifact
+    {
+        $artifact = $this->artifact($backup, 'rsc');
+
         try {
-            $export = $this->export($router);
-            $export = trim($export);
-
+            $export = trim($this->export($router));
             $this->ensureValidExport($export);
-
-            $normalizedExport = $this->diffService->normalizeForComparison($export."\n");
+            $content = $export."\n";
+            $normalizedExport = $this->diffService->normalizeForComparison($content);
             $checksum = hash('sha256', $normalizedExport);
             $previous = RouterBackup::query()
                 ->where('tenant_id', $tenantId)
                 ->where('router_id', $router->id)
-                ->where('status', 'success')
+                ->whereIn('status', ['success', 'partial_success'])
+                ->whereNotNull('path')
                 ->latest('id')
                 ->first();
             $changed = $previous === null || $previous->checksum !== $checksum;
-            $path = $this->path($router, $backup);
+            $path = $this->path($router, $backup, 'rsc');
 
-            Storage::disk($backup->disk)->put($path, $export."\n");
-
-            $backup->forceFill([
-                'previous_router_backup_id' => $previous?->id,
+            Storage::disk('local')->put($path, $content);
+            $artifact->forceFill([
                 'status' => 'success',
-                'changed' => $changed,
+                'disk' => 'local',
                 'path' => $path,
                 'checksum' => $checksum,
-                'size_bytes' => strlen($export."\n"),
-                'routeros_version' => $router->version,
-                'finished_at' => now(),
+                'size_bytes' => strlen($content),
+                'error_message' => null,
+            ])->save();
+            $backup->forceFill([
+                'previous_router_backup_id' => $previous?->id,
+                'changed' => $changed,
+                'disk' => 'local',
+                'path' => $path,
+                'checksum' => $checksum,
+                'size_bytes' => strlen($content),
             ])->save();
 
-            if ($changed && $previous !== null) {
-                $oldContent = Storage::disk($previous->disk)->get($previous->path);
-                $diff = $this->diffService->diff($oldContent, $export."\n");
+            if ($changed && $previous?->path && Storage::disk($previous->disk)->exists($previous->path)) {
+                $diff = $this->diffService->diff(Storage::disk($previous->disk)->get($previous->path), $content);
                 $backupDiff = $backup->diff()->create([
                     'previous_router_backup_id' => $previous->id,
                     'added_lines' => $diff['added'],
@@ -100,23 +162,45 @@ class RouterBackupService
                     'unified_diff' => $diff['unified_diff'],
                     'hunks' => $diff['hunks'],
                 ]);
-
                 $this->alertService->createForDiff($backupDiff);
             }
-
-            $this->enforceRetention($router, $schedule);
-
-            return $backup->fresh(['diff', 'alert']);
         } catch (Throwable $throwable) {
-            $backup->forceFill([
-                'status' => 'failed',
-                'changed' => false,
-                'finished_at' => now(),
-                'error_message' => $throwable->getMessage(),
-            ])->save();
-
-            return $backup;
+            $artifact->forceFill(['status' => 'failed', 'error_message' => $throwable->getMessage()])->save();
         }
+
+        return $artifact->fresh();
+    }
+
+    protected function processBinaryArtifact(RouterBackup $backup, Router $router): RouterBackupArtifact
+    {
+        $artifact = $this->artifact($backup, 'binary');
+
+        try {
+            $result = $this->binaryBackuper !== null
+                ? call_user_func($this->binaryBackuper, $router, $backup)
+                : $this->takeBinaryBackup($router, $backup);
+            $artifact->forceFill([
+                'status' => 'success',
+                'disk' => 'local',
+                'path' => $result['path'],
+                'checksum' => $result['checksum'],
+                'size_bytes' => $result['size_bytes'],
+                'cleanup_error' => $result['cleanup_error'] ?? null,
+                'error_message' => null,
+            ])->save();
+        } catch (Throwable $throwable) {
+            $artifact->forceFill(['status' => 'failed', 'error_message' => $throwable->getMessage()])->save();
+        }
+
+        return $artifact->fresh();
+    }
+
+    protected function artifact(RouterBackup $backup, string $type): RouterBackupArtifact
+    {
+        return $backup->artifacts()->firstOrCreate(
+            ['type' => $type],
+            ['tenant_id' => $backup->tenant_id, 'status' => 'running', 'disk' => 'local']
+        );
     }
 
     protected function export(Router $router): string
@@ -293,9 +377,9 @@ class RouterBackupService
         }
     }
 
-    protected function path(Router $router, RouterBackup $backup): string
+    protected function path(Router $router, RouterBackup $backup, string $extension): string
     {
-        return 'router-backups/'.$router->tenant_id.'/'.$router->id.'/'.now()->format('Ymd_His').'_backup_'.$backup->id.'_'.Str::random(8).'.rsc';
+        return 'router-backups/'.$router->tenant_id.'/'.$router->id.'/'.$backup->id.'/'.now()->format('Ymd_His').'_'.Str::random(8).'.'.$extension;
     }
 
     protected function enforceRetention(Router $router, ?BackupSchedule $schedule): void
@@ -308,17 +392,184 @@ class RouterBackupService
             ->where('tenant_id', $router->tenant_id)
             ->where('router_id', $router->id)
             ->where('backup_schedule_id', $schedule->id)
-            ->where('status', 'success')
+            ->whereIn('status', ['success', 'partial_success'])
             ->latest('id')
             ->skip($schedule->retention_count)
             ->take(PHP_INT_MAX)
             ->get()
             ->each(function (RouterBackup $backup): void {
-                if ($backup->path) {
+                $backup->loadMissing('artifacts');
+                $backup->artifacts->each(fn (RouterBackupArtifact $artifact) => $artifact->path
+                    ? Storage::disk($artifact->disk)->delete($artifact->path)
+                    : null);
+
+                if ($backup->path && $backup->artifacts->isEmpty()) {
                     Storage::disk($backup->disk)->delete($backup->path);
                 }
 
                 $backup->delete();
             });
+    }
+
+    /**
+     * @return array{path: string, checksum: string, size_bytes: int, cleanup_error: ?string}
+     */
+    protected function takeBinaryBackup(Router $router, RouterBackup $backup): array
+    {
+        if (! $router->enable_ssh) {
+            throw new \RuntimeException('SSH must be enabled to transfer RouterOS binary backups.');
+        }
+
+        $remoteBase = 'skybase-'.$backup->id.'-'.Str::lower(Str::random(10));
+        $remoteFile = $remoteBase.'.backup';
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'router-backup-');
+        $cleanupError = null;
+        $result = null;
+        $stagingPath = null;
+
+        if ($temporaryPath === false) {
+            throw new \RuntimeException('Unable to create a temporary server file.');
+        }
+
+        try {
+            $this->runRouterSshCommand($router, '/system backup save name='.$remoteBase);
+            $this->waitForStableRemoteFile($router, $remoteFile);
+            $this->downloadRemoteFile($router, $remoteFile, $temporaryPath);
+            $size = filesize($temporaryPath);
+
+            if ($size === false || $size < 1) {
+                throw new \RuntimeException('The transferred RouterOS binary backup is empty.');
+            }
+
+            $path = $this->path($router, $backup, 'backup');
+            $stagingPath = $path.'.part';
+            $stream = fopen($temporaryPath, 'rb');
+
+            if ($stream === false || ! Storage::disk('local')->put($stagingPath, $stream)) {
+                throw new \RuntimeException('Unable to store the RouterOS binary backup.');
+            }
+
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            if (! Storage::disk('local')->move($stagingPath, $path)) {
+                Storage::disk('local')->delete($stagingPath);
+
+                throw new \RuntimeException('Unable to finalize the RouterOS binary backup.');
+            }
+
+            $checksum = hash_file('sha256', $temporaryPath);
+
+            if ($checksum === false) {
+                Storage::disk('local')->delete($path);
+
+                throw new \RuntimeException('Unable to checksum the RouterOS binary backup.');
+            }
+
+            $result = [
+                'path' => $path,
+                'checksum' => $checksum,
+                'size_bytes' => $size,
+                'cleanup_error' => null,
+            ];
+        } finally {
+            @unlink($temporaryPath);
+
+            if ($stagingPath !== null) {
+                Storage::disk('local')->delete($stagingPath);
+            }
+
+            try {
+                $this->runRouterSshCommand($router, '/file remove [find name="'.$remoteFile.'"]');
+            } catch (Throwable $throwable) {
+                $cleanupError = $throwable->getMessage();
+                Log::warning('Unable to remove temporary RouterOS backup file.', [
+                    'router_id' => $router->id,
+                    'remote_file' => $remoteFile,
+                    'error' => $cleanupError,
+                ]);
+            }
+        }
+
+        $result['cleanup_error'] = $cleanupError;
+
+        return $result;
+    }
+
+    protected function waitForStableRemoteFile(Router $router, string $remoteFile): void
+    {
+        $previousSize = null;
+
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $output = trim($this->runRouterSshCommand($router, ':put [/file get [find name="'.$remoteFile.'"] size]'));
+            $size = filter_var($output, FILTER_VALIDATE_INT);
+
+            if ($size !== false && $size > 0 && $size === $previousSize) {
+                return;
+            }
+
+            $previousSize = $size;
+            usleep(500000);
+        }
+
+        throw new \RuntimeException('RouterOS binary backup did not become ready before the timeout.');
+    }
+
+    protected function runRouterSshCommand(Router $router, string $command): string
+    {
+        $config = $router->routerOsConfig();
+        $process = Process::fromShellCommandline($this->sshCommand($router, $config, $command));
+        $process->setTimeout($config['ssh_timeout']);
+        $process->mustRun();
+
+        return $process->getOutput();
+    }
+
+    protected function downloadRemoteFile(Router $router, string $remoteFile, string $temporaryPath): void
+    {
+        $config = $router->routerOsConfig();
+        $options = sprintf(
+            '-P %d -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q -o ConnectTimeout=%d',
+            $config['ssh_port'],
+            $config['ssh_timeout']
+        );
+        $source = escapeshellarg($config['user'].'@'.$config['host'].':'.$remoteFile);
+        $command = ($router->ssh_auth_method ?: 'private_key') === 'password'
+            ? sprintf("sshpass -p '%s' scp %s %s %s", str_replace("'", "'\\''", $config['pass']), $options, $source, escapeshellarg($temporaryPath))
+            : sprintf('scp %s -i %s %s %s', $options, escapeshellarg($config['ssh_private_key']), $source, escapeshellarg($temporaryPath));
+        $process = Process::fromShellCommandline($command);
+        $process->setTimeout($config['ssh_timeout']);
+        $process->mustRun();
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    protected function sshCommand(Router $router, array $config, string $command): string
+    {
+        $options = sprintf(
+            '-p %d -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q -T -o ConnectTimeout=%d',
+            $config['ssh_port'],
+            $config['ssh_timeout']
+        );
+
+        if (($router->ssh_auth_method ?: 'private_key') === 'password') {
+            return sprintf(
+                "sshpass -p '%s' ssh %s %s %s",
+                str_replace("'", "'\\''", $config['pass']),
+                $options,
+                escapeshellarg($config['user'].'@'.$config['host']),
+                escapeshellarg($command)
+            );
+        }
+
+        return sprintf(
+            'ssh %s -i %s %s %s',
+            $options,
+            escapeshellarg($config['ssh_private_key']),
+            escapeshellarg($config['user'].'@'.$config['host']),
+            escapeshellarg($command)
+        );
     }
 }

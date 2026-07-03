@@ -32,6 +32,8 @@ class Router extends Model
         'api_username',
         'api_password',
         'enable_ssh',
+        'backup_rsc_enabled',
+        'backup_binary_enabled',
         'ssh_port',
         'ssh_auth_method',
         'ssh_private_key',
@@ -65,6 +67,8 @@ class Router extends Model
             'is_dashboard_visible' => 'boolean',
             'enable_api' => 'boolean',
             'enable_ssh' => 'boolean',
+            'backup_rsc_enabled' => 'boolean',
+            'backup_binary_enabled' => 'boolean',
             'use_ssl' => 'boolean',
             'legacy_login' => 'boolean',
             'last_checked_at' => 'datetime',
@@ -100,6 +104,11 @@ class Router extends Model
     public function backups(): HasMany
     {
         return $this->hasMany(RouterBackup::class);
+    }
+
+    public function backupsEnabled(): bool
+    {
+        return $this->backup_rsc_enabled || $this->backup_binary_enabled;
     }
 
     public function latestBackup(): HasOne
@@ -181,8 +190,19 @@ class Router extends Model
             ->values()
             ->toArray();
 
+        $vendors = self::query()
+            ->whereNotNull('vendor')
+            ->where('vendor', '!=', '')
+            ->distinct()
+            ->orderBy('vendor')
+            ->pluck('vendor')
+            ->map(fn ($vendor) => ['value' => $vendor, 'label' => $vendor])
+            ->values()
+            ->toArray();
+
         return [
             'sites' => $sites,
+            'vendors' => $vendors,
         ];
     }
 

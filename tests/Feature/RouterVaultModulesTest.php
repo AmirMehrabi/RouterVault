@@ -116,6 +116,46 @@ class RouterVaultModulesTest extends TestCase
             ->assertJsonPath('routers.0.edit_url', route('routers.edit', $router));
     }
 
+    public function test_router_data_filters_and_paginates_cards(): void
+    {
+        [$tenant, $user] = $this->createTenantUser('tenant-one');
+        $this->actingAs($user);
+        app()->instance('current_tenant', $tenant);
+        Router::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Core Router',
+            'vendor' => 'Mikrotik',
+            'site' => 'Tehran',
+            'status' => 'online',
+        ]);
+        Router::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Branch Router',
+            'vendor' => 'Cisco',
+            'site' => 'Shiraz',
+            'status' => 'offline',
+        ]);
+
+        $this->getJson(route('routers.data', [
+            'search' => 'Core',
+            'status' => 'online',
+            'vendor' => 'Mikrotik',
+            'site' => 'Tehran',
+            'per_page' => 6,
+        ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'routers')
+            ->assertJsonPath('routers.0.name', 'Core Router')
+            ->assertJsonPath('pagination.current_page', 1)
+            ->assertJsonPath('pagination.per_page', 6)
+            ->assertJsonPath('pagination.total', 1);
+
+        $this->getJson(route('routers.filter-options'))
+            ->assertOk()
+            ->assertJsonFragment(['value' => 'Mikrotik', 'label' => 'Mikrotik'])
+            ->assertJsonFragment(['value' => 'Tehran', 'label' => 'Tehran']);
+    }
+
     public function test_backup_details_recompute_historical_timestamp_only_diffs(): void
     {
         [$tenant, $user] = $this->createTenantUser('tenant-one');

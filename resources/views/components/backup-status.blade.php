@@ -5,6 +5,7 @@
         'pending' => 'Pending',
         'running' => 'Running',
         'success' => 'Successful',
+        'partial_success' => 'Partial success',
         'failed' => 'Failed',
     ];
 @endphp

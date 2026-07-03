@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RouterBackup extends Model
@@ -67,5 +68,15 @@ class RouterBackup extends Model
     public function alert(): HasOne
     {
         return $this->hasOne(DiffAlert::class);
+    }
+
+    public function artifacts(): HasMany
+    {
+        return $this->hasMany(RouterBackupArtifact::class);
+    }
+
+    public function rscArtifact(): HasOne
+    {
+        return $this->hasOne(RouterBackupArtifact::class)->where('type', 'rsc');
     }
 }

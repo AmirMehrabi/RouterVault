@@ -116,21 +116,20 @@
                 <input type="text" x-model="filters.search" @input="debouncedLoadRouters" placeholder="Search by name, IP, site..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border">
             </div>
 
-            <select x-model="filters.status" @change="loadRouters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
+            <select x-model="filters.status" @change="applyFilters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
                 <option value="">All Statuses</option>
                 <option value="online">Online</option>
                 <option value="offline">Offline</option>
             </select>
 
-            <select x-model="filters.vendor" @change="loadRouters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
+            <select x-model="filters.vendor" @change="applyFilters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
                 <option value="">All Vendors</option>
-                <option value="Mikrotik">Mikrotik</option>
-                <option value="Cisco">Cisco</option>
-                <option value="Juniper">Juniper</option>
-                <option value="Huawei">Huawei</option>
+                <template x-for="option in filterOptions.vendors" :key="option.value">
+                    <option :value="option.value" x-text="option.label"></option>
+                </template>
             </select>
 
-            <select x-model="filters.site" @change="loadRouters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
+            <select x-model="filters.site" @change="applyFilters" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3 border bg-white">
                 <option value="">All Sites</option>
                 <template x-for="option in filterOptions.sites" :key="option.value">
                     <option :value="option.value" x-text="option.label"></option>
@@ -139,125 +138,68 @@
         </div>
     </div>
 
-    <!-- Routers Table -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Router</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Model</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendor</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Site</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sessions</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CPU / Memory</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Uptime</th>
-                        <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <template x-for="router in routers" :key="router.id">
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-gray-900" x-text="router.name"></span>
-                                    <span class="text-xs text-gray-500" x-text="router.location"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-700" x-text="router.model || '—'"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-700" x-text="router.vendor"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-700 font-mono" x-text="router.ip_address"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-700" x-text="router.site || '—'"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                                      :class="router.status === 'online' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'"
-                                      x-text="router.status.charAt(0).toUpperCase() + router.status.slice(1)"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-700" x-text="router.active_sessions_count"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-500">CPU:</span>
-                                        <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-                                            <div class="h-1.5 rounded-full transition-all duration-300"
-                                                 :class="router.cpu_usage > 80 ? 'bg-red-500' : (router.cpu_usage > 60 ? 'bg-yellow-500' : 'bg-green-500')"
-                                                 :style="`width: ${router.cpu_usage}%`"></div>
-                                        </div>
-                                        <span class="text-xs text-gray-700" x-text="router.cpu_usage + '%'"></span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-gray-500">MEM:</span>
-                                        <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-                                            <div class="h-1.5 rounded-full bg-blue-500 transition-all duration-300"
-                                                 :style="`width: ${router.memory_usage}%`"></div>
-                                        </div>
-                                        <span class="text-xs text-gray-700" x-text="router.memory_usage + '%'"></span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-500" x-text="router.uptime || '—'"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a :href="urls.show + '/' + router.id" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                    </a>
-                                    <a :href="router.edit_url" class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                    </a>
-                                    <button @click="confirmDelete(router)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
-
-                    <tr x-show="routers.length === 0 && !loading" style="display: none;">
-                        <td colspan="10" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center justify-center space-y-3">
-                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
-                                    </svg>
-                                </div>
-                                <p class="text-sm text-gray-500">No routers found</p>
-                                <button @click="clearFilters()" x-show="hasActiveFilters()" class="text-sm text-blue-600 hover:text-blue-700 font-medium" style="display: none;">
-                                    Clear Filters
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- Router Cards -->
+    <div class="relative">
+        <div x-show="loading" class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm" style="display: none;">
+            <svg class="h-8 w-8 animate-spin text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </div>
 
-        <!-- Loading State -->
-        <div x-show="loading" class="px-6 py-12 text-center" style="display: none;">
-            <svg class="w-8 h-8 animate-spin text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            <p class="text-sm text-gray-500 mt-2">Loading routers...</p>
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <template x-for="router in routers" :key="router.id">
+                <article class="group flex min-h-80 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="router.status === 'online' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                            </div>
+                            <div class="min-w-0">
+                                <a :href="router.show_url" class="block truncate text-base font-bold text-gray-900 transition group-hover:text-blue-700" x-text="router.name"></a>
+                                <p class="mt-0.5 truncate font-mono text-xs text-gray-500" x-text="router.ip_address"></p>
+                            </div>
+                        </div>
+                        <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold" :class="router.status === 'online' ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'"><span class="h-1.5 w-1.5 rounded-full" :class="router.status === 'online' ? 'bg-green-500' : 'bg-red-500'"></span><span x-text="router.status.charAt(0).toUpperCase() + router.status.slice(1)"></span></span>
+                    </div>
+
+                    <dl class="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-y border-gray-100 py-4 text-sm">
+                        <div><dt class="text-xs text-gray-500">Model</dt><dd class="mt-1 truncate font-medium text-gray-800" x-text="router.model || '—'"></dd></div>
+                        <div><dt class="text-xs text-gray-500">Vendor</dt><dd class="mt-1 truncate font-medium text-gray-800" x-text="router.vendor || '—'"></dd></div>
+                        <div><dt class="text-xs text-gray-500">Site</dt><dd class="mt-1 truncate font-medium text-gray-800" x-text="router.site || '—'"></dd></div>
+                        <div><dt class="text-xs text-gray-500">Uptime</dt><dd class="mt-1 truncate font-medium text-gray-800" x-text="router.uptime || '—'"></dd></div>
+                    </dl>
+
+                    <div class="mt-4 space-y-3">
+                        <div class="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-2 text-xs"><span class="text-gray-500">CPU</span><div class="h-1.5 overflow-hidden rounded-full bg-gray-100"><div class="h-full rounded-full transition-all duration-500" :class="usageColor(router.cpu_usage)" :style="`width: ${Math.min(router.cpu_usage, 100)}%`"></div></div><span class="text-right font-semibold text-gray-700" x-text="router.cpu_usage + '%'"></span></div>
+                        <div class="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-2 text-xs"><span class="text-gray-500">Memory</span><div class="h-1.5 overflow-hidden rounded-full bg-gray-100"><div class="h-full rounded-full bg-blue-500 transition-all duration-500" :style="`width: ${Math.min(router.memory_usage, 100)}%`"></div></div><span class="text-right font-semibold text-gray-700" x-text="router.memory_usage + '%'"></span></div>
+                    </div>
+
+                    <div class="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
+                        <div class="text-xs text-gray-500"><span class="font-bold text-gray-900" x-text="router.active_sessions_count"></span> active sessions</div>
+                        <div class="flex items-center gap-1">
+                            <a :href="router.show_url" class="rounded-lg px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50">View</a>
+                            <a :href="router.edit_url" class="rounded-lg px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100">Edit</a>
+                            <button @click="confirmDelete(router)" class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Delete router"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+            </template>
+        </div>
+
+        <div x-show="routers.length === 0 && !loading" class="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center" style="display: none;">
+            <p class="text-sm font-semibold text-gray-900">No routers found</p>
+            <p class="mt-1 text-sm text-gray-500">Adjust your filters or add a new router.</p>
+            <button @click="clearFilters()" x-show="hasActiveFilters()" class="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700">Clear filters</button>
+        </div>
+
+        <div x-show="pagination.total > 0" class="mt-5 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-3 text-sm text-gray-500">
+                <span>Showing <strong class="text-gray-800" x-text="pagination.from"></strong>–<strong class="text-gray-800" x-text="pagination.to"></strong> of <strong class="text-gray-800" x-text="pagination.total"></strong></span>
+                <select x-model.number="pagination.per_page" @change="changePerPage" class="rounded-lg border border-gray-300 bg-white py-1.5 pl-2 pr-7 text-xs focus:border-blue-500 focus:ring-blue-500"><option :value="6">6</option><option :value="12">12</option><option :value="24">24</option></select>
+            </div>
+            <nav class="flex items-center gap-1" aria-label="Router pagination">
+                <button @click="goToPage(pagination.current_page - 1)" :disabled="pagination.current_page === 1" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                <template x-for="page in visiblePages()" :key="page"><button @click="goToPage(page)" class="h-9 min-w-9 rounded-lg px-2 text-xs font-semibold" :class="page === pagination.current_page ? 'bg-blue-600 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'" x-text="page"></button></template>
+                <button @click="goToPage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+            </nav>
         </div>
     </div>
 
@@ -308,7 +250,8 @@ function routersIndex() {
             activeSessions: 0
         },
         filterOptions: {
-            sites: []
+            sites: [],
+            vendors: []
         },
         filters: {
             search: '',
@@ -317,12 +260,21 @@ function routersIndex() {
             site: ''
         },
         loading: true,
+        pagination: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 12,
+            total: 0,
+            from: 0,
+            to: 0
+        },
         deleteModal: {
             show: false,
             router: null,
             deleting: false
         },
         debounceTimer: null,
+        requestController: null,
         urls: {
             show: '{{ url('routers') }}',
             destroy: '{{ url('routers') }}'
@@ -335,6 +287,9 @@ function routersIndex() {
         },
 
         async loadRouters() {
+            this.requestController?.abort();
+            const requestController = new AbortController();
+            this.requestController = requestController;
             this.loading = true;
             try {
                 const params = new URLSearchParams();
@@ -342,15 +297,23 @@ function routersIndex() {
                 if (this.filters.status) params.append('status', this.filters.status);
                 if (this.filters.vendor) params.append('vendor', this.filters.vendor);
                 if (this.filters.site) params.append('site', this.filters.site);
+                params.append('page', this.pagination.current_page);
+                params.append('per_page', this.pagination.per_page);
 
-                const response = await fetch('{{ route('routers.data') }}?' + params.toString());
+                const response = await fetch('{{ route('routers.data') }}?' + params.toString(), {
+                    headers: { Accept: 'application/json' },
+                    signal: requestController.signal
+                });
+                if (!response.ok) throw new Error('Unable to load routers.');
                 const data = await response.json();
                 this.routers = data.routers;
+                this.pagination = { ...this.pagination, ...data.pagination };
             } catch (error) {
+                if (error.name === 'AbortError') return;
                 console.error('Error loading routers:', error);
                 alert('Error loading routers. Please try again.');
             } finally {
-                this.loading = false;
+                if (this.requestController === requestController) this.loading = false;
             }
         },
 
@@ -377,8 +340,34 @@ function routersIndex() {
         debouncedLoadRouters() {
             clearTimeout(this.debounceTimer);
             this.debounceTimer = setTimeout(() => {
-                this.loadRouters();
-            }, 300);
+                this.applyFilters();
+            }, 250);
+        },
+
+        applyFilters() {
+            this.pagination.current_page = 1;
+            this.loadRouters();
+        },
+
+        goToPage(page) {
+            if (page < 1 || page > this.pagination.last_page || page === this.pagination.current_page) return;
+            this.pagination.current_page = page;
+            this.loadRouters();
+        },
+
+        changePerPage() {
+            this.pagination.current_page = 1;
+            this.loadRouters();
+        },
+
+        visiblePages() {
+            const start = Math.max(1, Math.min(this.pagination.current_page - 2, this.pagination.last_page - 4));
+            const end = Math.min(this.pagination.last_page, start + 4);
+            return Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
+        },
+
+        usageColor(value) {
+            return value > 80 ? 'bg-red-500' : (value > 60 ? 'bg-yellow-500' : 'bg-green-500');
         },
 
         hasActiveFilters() {
@@ -392,7 +381,7 @@ function routersIndex() {
                 vendor: '',
                 site: ''
             };
-            this.loadRouters();
+            this.applyFilters();
         },
 
         confirmDelete(router) {

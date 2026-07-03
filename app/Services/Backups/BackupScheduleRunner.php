@@ -35,6 +35,10 @@ class BackupScheduleRunner
 
         $routers = $schedule->routers()
             ->where('routers.tenant_id', $run->tenant_id)
+            ->where(function ($query): void {
+                $query->where('routers.backup_rsc_enabled', true)
+                    ->orWhere('routers.backup_binary_enabled', true);
+            })
             ->get();
         $run->forceFill([
             'status' => 'running',
@@ -51,8 +55,12 @@ class BackupScheduleRunner
         foreach ($routers as $router) {
             $backup = $this->backupService->create($router, $schedule, $run);
 
-            if ($backup->status === 'success') {
+            if (in_array($backup->status, ['success', 'partial_success'], true)) {
                 $run->increment('successful_backups');
+
+                if ($backup->status === 'partial_success') {
+                    $failedMessages[] = "{$router->name}: {$backup->error_message}";
+                }
             } else {
                 $run->increment('failed_backups');
                 $failedMessages[] = "{$router->name}: {$backup->error_message}";
@@ -61,6 +69,7 @@ class BackupScheduleRunner
 
         $run->refresh();
         $status = match (true) {
+            $failedMessages !== [] && $run->successful_backups > 0 => 'partial_failed',
             $run->successful_backups === $run->total_routers => 'success',
             $run->successful_backups > 0 => 'partial_failed',
             default => 'failed',

@@ -6,6 +6,7 @@ use App\Http\Requests\Backup\CompareBackupsRequest;
 use App\Jobs\ProcessRouterBackup;
 use App\Models\Router;
 use App\Models\RouterBackup;
+use App\Models\RouterBackupArtifact;
 use App\Services\Backups\BackupDiffService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,7 @@ class RouterBackupController extends Controller
         $base = RouterBackup::query();
         $stats = [
             'total' => (clone $base)->count(),
-            'successful' => (clone $base)->where('status', 'success')->count(),
+            'successful' => (clone $base)->whereIn('status', ['success', 'partial_success'])->count(),
             'changed' => (clone $base)->where('changed', true)->count(),
             'failed' => (clone $base)->where('status', 'failed')->count(),
         ];
@@ -34,7 +35,7 @@ class RouterBackupController extends Controller
     public function show(RouterBackup $backup): View
     {
         $this->authorizeTenant($backup->tenant_id);
-        $backup->load(['router', 'schedule', 'previousBackup', 'diff']);
+        $backup->load(['router', 'schedule', 'previousBackup', 'diff', 'artifacts']);
         $displayDiff = $backup->diff?->hunks ?? [];
 
         if ($backup->path && $backup->previousBackup?->path
@@ -63,10 +64,27 @@ class RouterBackupController extends Controller
         return Storage::disk($backup->disk)->download($backup->path, "router-backup-{$backup->id}.rsc");
     }
 
+    public function downloadArtifact(RouterBackup $backup, RouterBackupArtifact $artifact): StreamedResponse
+    {
+        $this->authorizeTenant($backup->tenant_id);
+        abort_unless(
+            $artifact->router_backup_id === $backup->id
+            && $artifact->tenant_id === $backup->tenant_id
+            && $artifact->status === 'success'
+            && $artifact->path
+            && Storage::disk($artifact->disk)->exists($artifact->path),
+            404
+        );
+
+        $extension = $artifact->type === 'binary' ? 'backup' : 'rsc';
+
+        return Storage::disk($artifact->disk)->download($artifact->path, "router-backup-{$backup->id}.{$extension}");
+    }
+
     public function retry(Request $request, RouterBackup $backup): JsonResponse|RedirectResponse
     {
         $this->authorizeTenant($backup->tenant_id);
-        abort_unless($backup->status === 'failed', 422);
+        abort_unless(in_array($backup->status, ['failed', 'partial_success'], true), 422);
 
         $alreadyQueued = RouterBackup::query()
             ->where('router_id', $backup->router_id)
@@ -86,7 +104,7 @@ class RouterBackupController extends Controller
             'router_id' => $backup->router_id,
             'backup_schedule_id' => $backup->backup_schedule_id,
             'status' => 'pending',
-            'disk' => 'public',
+            'disk' => 'local',
         ]);
 
         ProcessRouterBackup::dispatch($retry->id);
@@ -105,7 +123,7 @@ class RouterBackupController extends Controller
         return response()->json([
             'backups' => RouterBackup::query()
                 ->where('router_id', $router->id)
-                ->where('status', 'success')
+                ->whereIn('status', ['success', 'partial_success'])
                 ->latest()
                 ->get()
                 ->map(fn (RouterBackup $backup): array => $this->payload($backup)),
@@ -125,8 +143,8 @@ class RouterBackupController extends Controller
         $diff = null;
 
         if ($request->filled(['old_backup_id', 'new_backup_id'])) {
-            $old = RouterBackup::query()->where('status', 'success')->findOrFail($request->integer('old_backup_id'));
-            $new = RouterBackup::query()->where('status', 'success')->findOrFail($request->integer('new_backup_id'));
+            $old = RouterBackup::query()->whereIn('status', ['success', 'partial_success'])->whereNotNull('path')->findOrFail($request->integer('old_backup_id'));
+            $new = RouterBackup::query()->whereIn('status', ['success', 'partial_success'])->whereNotNull('path')->findOrFail($request->integer('new_backup_id'));
             $this->authorizeTenant($old->tenant_id);
             $this->authorizeTenant($new->tenant_id);
             abort_unless($old->router_id === $new->router_id, 403);

@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div><h1 class="text-2xl font-bold text-gray-900">Backup #{{ $backup->id }}</h1><p class="text-sm text-gray-500">{{ $backup->router?->name }} · {{ $backup->created_at?->format('Y-m-d H:i') }}</p></div>
-        @if($backup->status === 'success')
+        @if($backup->status === 'success' && $backup->artifacts->isEmpty())
             <a href="{{ route('backups.download', $backup) }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">Download</a>
         @endif
     </div>
@@ -16,10 +16,31 @@
             <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">{{ $label }}</p><p class="mt-2 break-all text-lg font-semibold">{{ $value }}</p></div>
         @endforeach
     </div>
-    @if($backup->status === 'failed' && $backup->error_message)
+    @if(in_array($backup->status, ['failed', 'partial_success'], true) && $backup->error_message)
         <div class="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
             <h2 class="mb-2 text-lg font-semibold text-red-900">Backup Error</h2>
             <pre class="whitespace-pre-wrap break-words text-sm text-red-800">{{ $backup->error_message }}</pre>
+        </div>
+    @endif
+    @if($backup->artifacts->isNotEmpty())
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 class="mb-3 text-lg font-semibold text-gray-900">Files</h2>
+            <div class="space-y-3">
+                @foreach($backup->artifacts as $artifact)
+                    <div class="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ $artifact->type === 'binary' ? 'Binary backup (.backup)' : 'Configuration export (.rsc)' }}</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ $artifact->status === 'success' ? number_format((int) $artifact->size_bytes).' bytes' : $artifact->error_message }}</p>
+                            @if($artifact->cleanup_error)<p class="mt-1 text-xs text-amber-700">Router cleanup warning: {{ $artifact->cleanup_error }}</p>@endif
+                        </div>
+                        @if($artifact->status === 'success')
+                            <a href="{{ route('backups.artifacts.download', [$backup, $artifact]) }}" class="rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-medium text-white">Download</a>
+                        @else
+                            <x-backup-status :status="$artifact->status" />
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
     <div>

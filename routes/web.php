@@ -182,6 +182,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce
         Route::post('/{backup}/retry', [RouterBackupController::class, 'retry'])->name('retry');
         Route::get('/{backup}', [RouterBackupController::class, 'show'])->name('show');
         Route::get('/{backup}/download', [RouterBackupController::class, 'download'])->name('download');
+        Route::get('/{backup}/artifacts/{artifact}/download', [RouterBackupController::class, 'downloadArtifact'])->name('artifacts.download');
     });
 
     Route::prefix('diff-alerts')->name('diff-alerts.')->group(function () {

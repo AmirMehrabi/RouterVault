@@ -136,6 +136,23 @@
         </div>
 
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-900">Configuration Backups</h3>
+            <p class="mt-1 text-sm text-gray-500">Choose the RouterOS files this router should produce. Leave both disabled to disable backups.</p>
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="rounded-xl border border-gray-200 p-4">
+                    <input type="hidden" name="backup_rsc_enabled" value="0">
+                    <x-ui.input.checkbox label="RouterOS export (.rsc)" name="backup_rsc_enabled" :checked="old('backup_rsc_enabled', true)" :error="$errors->first('backup_rsc_enabled')" />
+                    <p class="mt-2 pl-7 text-xs text-gray-500">Text configuration used for previews, diffs, and change alerts.</p>
+                </div>
+                <div class="rounded-xl border border-gray-200 p-4">
+                    <input type="hidden" name="backup_binary_enabled" value="0">
+                    <x-ui.input.checkbox label="Binary RouterOS backup (.backup)" name="backup_binary_enabled" :checked="old('backup_binary_enabled', false)" :error="$errors->first('backup_binary_enabled')" />
+                    <p class="mt-2 pl-7 text-xs text-gray-500">Full binary backup transferred with SCP; requires SSH.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Advanced Settings</h3>
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <x-ui.input.text type="number" label="Connection Timeout (seconds)" name="timeout" :value="old('timeout', 30)" :error="$errors->first('timeout')" hint="Overall connection timeout" />

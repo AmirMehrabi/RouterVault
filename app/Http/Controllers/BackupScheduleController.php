@@ -65,7 +65,7 @@ class BackupScheduleController extends Controller
             'backups' => $backups,
             'backupStats' => [
                 'total' => $schedule->backups()->count(),
-                'success' => $schedule->backups()->where('status', 'success')->count(),
+                'success' => $schedule->backups()->whereIn('status', ['success', 'partial_success'])->count(),
                 'failed' => $schedule->backups()->where('status', 'failed')->count(),
                 'active' => $schedule->backups()->whereIn('status', ['pending', 'running'])->count(),
             ],
@@ -142,7 +142,12 @@ class BackupScheduleController extends Controller
 
     protected function routers()
     {
-        return Router::query()->orderBy('name')->get(['id', 'name', 'ip_address']);
+        return Router::query()
+            ->where(function ($query): void {
+                $query->where('backup_rsc_enabled', true)->orWhere('backup_binary_enabled', true);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'ip_address']);
     }
 
     /**

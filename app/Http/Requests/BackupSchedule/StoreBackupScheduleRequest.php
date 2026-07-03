@@ -33,7 +33,9 @@ class StoreBackupScheduleRequest extends FormRequest
             'next_run_at' => ['nullable', 'date'],
             'retention_count' => ['required', 'integer', 'min:1', 'max:3650'],
             'router_ids' => ['required', 'array', 'min:1'],
-            'router_ids.*' => ['integer', Rule::exists('routers', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
+            'router_ids.*' => ['integer', Rule::exists('routers', 'id')->where(fn ($query) => $query
+                ->where('tenant_id', $tenantId)
+                ->where(fn ($backupQuery) => $backupQuery->where('backup_rsc_enabled', true)->orWhere('backup_binary_enabled', true)))],
         ];
     }
 }

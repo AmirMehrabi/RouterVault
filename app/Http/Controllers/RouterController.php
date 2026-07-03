@@ -29,7 +29,7 @@ class RouterController extends Controller
             ->with('passwordManagerCredential:id,name')
             ->filter($filters)
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 15))
+            ->paginate(max(6, min($request->integer('per_page', 12), 24)))
             ->through(fn (Router $router) => [
                 'id' => $router->id,
                 'name' => $router->name,
@@ -120,7 +120,7 @@ class RouterController extends Controller
 
         $backupStats = [
             'total' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->count(),
-            'successful' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'success')->count(),
+            'successful' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->whereIn('status', ['success', 'partial_success'])->count(),
             'failed' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'failed')->count(),
             'changed' => RouterBackup::query()->where('tenant_id', $router->tenant_id)->where('router_id', $router->id)->where('status', 'success')->where('changed', true)->count(),
         ];
@@ -187,6 +187,10 @@ class RouterController extends Controller
     {
         $this->authorizeTenantAccess($router);
 
+        if (! $router->backupsEnabled()) {
+            return response()->json(['message' => 'Backups are disabled for this router.'], 422);
+        }
+
         $alreadyQueued = RouterBackup::query()
             ->where('tenant_id', $router->tenant_id)
             ->where('router_id', $router->id)
@@ -201,7 +205,7 @@ class RouterController extends Controller
             'tenant_id' => $router->tenant_id,
             'router_id' => $router->id,
             'status' => 'pending',
-            'disk' => 'public',
+            'disk' => 'local',
         ]);
 
         ProcessRouterBackup::dispatch($backup->id);
@@ -286,6 +290,8 @@ class RouterController extends Controller
 
         $validated['enable_api'] = (bool) ($validated['enable_api'] ?? true);
         $validated['enable_ssh'] = (bool) ($validated['enable_ssh'] ?? true);
+        $validated['backup_rsc_enabled'] = (bool) ($validated['backup_rsc_enabled'] ?? false);
+        $validated['backup_binary_enabled'] = (bool) ($validated['backup_binary_enabled'] ?? false);
         $validated['use_ssl'] = (bool) ($validated['use_ssl'] ?? false);
         $validated['legacy_login'] = (bool) ($validated['legacy_login'] ?? false);
         $validated['is_dashboard_visible'] = (bool) ($validated['is_dashboard_visible'] ?? false);

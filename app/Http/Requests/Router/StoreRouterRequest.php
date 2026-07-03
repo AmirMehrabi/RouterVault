@@ -42,6 +42,8 @@ class StoreRouterRequest extends FormRequest
             'status' => ['nullable', 'string', Rule::in(['pending', 'online', 'offline'])],
             'enable_api' => ['nullable', 'boolean'],
             'enable_ssh' => ['nullable', 'boolean'],
+            'backup_rsc_enabled' => ['nullable', 'boolean'],
+            'backup_binary_enabled' => ['nullable', 'boolean'],
             'enable_monitoring' => ['nullable', 'boolean'],
             'enable_provisioning' => ['nullable', 'boolean'],
             'is_dashboard_visible' => ['nullable', 'boolean'],
@@ -70,6 +72,7 @@ class StoreRouterRequest extends FormRequest
             $credentialSource = $this->string('credential_source')->value();
             $username = trim((string) $this->input('api_username', ''));
             $password = trim((string) $this->input('api_password', ''));
+            $binaryBackupEnabled = $this->boolean('backup_binary_enabled');
 
             if ($credentialSource === 'password_manager' && ! $this->filled('password_manager_credential_id')) {
                 $validator->errors()->add('password_manager_credential_id', 'Select a credential from Password Manager.');
@@ -77,6 +80,10 @@ class StoreRouterRequest extends FormRequest
 
             if ($credentialSource !== 'password_manager' && (($username !== '' && $password === '') || ($username === '' && $password !== ''))) {
                 $validator->errors()->add('api_password', 'Enter both the username and password for manual credentials.');
+            }
+
+            if ($binaryBackupEnabled && ! $this->boolean('enable_ssh')) {
+                $validator->errors()->add('backup_binary_enabled', 'SSH must be enabled to transfer .backup files.');
             }
         });
     }
