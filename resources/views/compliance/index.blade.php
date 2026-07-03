@@ -24,7 +24,7 @@
                             <td class="px-5 py-4"><a href="{{ route('routers.show', $router) }}" class="font-bold text-blue-700">{{ $router->name }}</a><p class="mt-0.5 text-xs text-slate-400">{{ $router->ip_address }}</p></td>
                             <td class="px-5 py-4 text-slate-600">{{ $router->latestBackup?->created_at?->diffForHumans() ?? 'Never' }}</td>
                             <td class="px-5 py-4">{{ $router->configurationBaseline ? 'Approved' : 'Not set' }}</td>
-                            <td class="px-5 py-4"><span class="font-mono font-bold text-red-700">{{ $router->critical_findings_count }}</span><span class="ml-3 font-mono font-bold text-amber-700">{{ $router->warning_findings_count }}</span></td>
+                            <td class="px-5 py-4"><a href="{{ route('compliance.show', $router) }}" class="font-mono font-bold text-red-700">{{ $router->critical_findings_count }}</a><a href="{{ route('compliance.show', $router) }}" class="ml-3 font-mono font-bold text-amber-700">{{ $router->warning_findings_count }}</a></td>
                             <td class="px-5 py-4">
                                 <div class="flex flex-wrap gap-2">
                                     <form method="POST" action="{{ route('compliance.scan', $router) }}">@csrf<button class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold">Scan now</button></form>

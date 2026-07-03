@@ -81,6 +81,7 @@ Route::middleware(['auth', 'initialize_tenancy', 'check_tenant_status', 'enforce
     Route::put('/incidents/{incident}', [IncidentController::class, 'update'])->name('incidents.update');
 
     Route::get('/compliance', [ComplianceController::class, 'index'])->name('compliance.index');
+    Route::get('/compliance/routers/{router}', [ComplianceController::class, 'show'])->name('compliance.show');
     Route::post('/compliance/routers/{router}/scan', [ComplianceController::class, 'scan'])->name('compliance.scan');
     Route::post('/compliance/routers/{router}/baseline', [ComplianceController::class, 'baseline'])->name('compliance.baseline');
 
